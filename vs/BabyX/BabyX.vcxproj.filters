@@ -14,7 +14,7 @@
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
     <Filter Include="Source Files\src">
-      <UniqueIdentifier>{53f43eda-e889-4f67-bbac-8b2664998a3b}</UniqueIdentifier>
+      <UniqueIdentifier>{ea4fc451-9117-4647-9a4d-09c55e338403}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -96,10 +96,10 @@
     <ClCompile Include="..\..\src\fixedfont.c">
       <Filter>Source Files\src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\verattf.c">
+    <ClCompile Include="..\..\src\testbed.c">
       <Filter>Source Files\src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\testbed.c">
+    <ClCompile Include="..\..\src\verattf.c">
       <Filter>Source Files\src</Filter>
     </ClCompile>
   </ItemGroup>
