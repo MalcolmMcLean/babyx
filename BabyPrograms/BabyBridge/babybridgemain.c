@@ -4,7 +4,6 @@
 #include <time.h>
 
 #include "BabyX.h"
-#include "rgbautil.h"
 
 #include "shuffle.h"
 #include "deck.h"
