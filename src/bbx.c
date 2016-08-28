@@ -221,18 +221,43 @@ int bbx_setpos(BABYX *bbx, void *obj, int x, int y, int width, int height)
 {
   int i;
   HWND win;
+  static int called = 0;
+  static HDWP hdwp;
+  int top = 0;
 
+  if (!called)
+  {
+	// hdwp = BeginDeferWindowPos(50);
+	  top = 1;
+  }
+  called = 1;
   for(i=0;i<bbx->Nchildren;i++)
     if(bbx->child[i].ptr == obj)
     {
       win = bbx->child[i].window;
-	  MoveWindow(win, x, y, width, height, TRUE);
+	// if (!IsWindowVisible(win))
+			MoveWindow(win, x, y, width, height, TRUE);
+	// else
+	   // hdwp = DeferWindowPos(hdwp, win, HWND_TOP, x, y, width, height, SWP_SHOWWINDOW);
 	  if (bbx->child[i].message_handler)
 		  (*bbx->child[i].message_handler)(obj, BBX_RESIZE, width, height, 0);
 	  ShowWindow(win, SW_SHOWNORMAL);
+	  
 	  UpdateWindow(win);
+	
+	  if (top)
+	  {
+		  called = 0;
+		//  EndDeferWindowPos(hdwp);
+	  }
       return 0;
     }
+
+  if (top)
+  {
+	  EndDeferWindowPos(hdwp);
+	  called = 0;
+  }
   return -1;
 }
 
@@ -258,6 +283,31 @@ int bbx_setsize(BABYX *bbx, void *obj, int width, int height)
       return 0;
     }
   return -1;
+}
+
+int bbx_getpos(BABYX *bbx, void *obj, int *x, int *y, int *width, int *height)
+{
+	int i;
+	HWND win;
+	HWND hparent;
+	RECT rect;
+	POINT pt;
+
+	for (i = 0; i<bbx->Nchildren; i++)
+		if (bbx->child[i].ptr == obj)
+		{
+		win = bbx->child[i].window;
+		hparent = GetParent(win);
+		POINT p = { 0 };
+
+		MapWindowPoints(win, hparent, &p, 1);
+
+		(*x) = p.x;
+		(*y) = p.y;
+		
+		return 0;
+		}
+	return -1;
 }
 
 int bbx_getsize(BABYX *bbx, void *obj, int *width, int *height)
