@@ -1,0 +1,10 @@
+To compile
+
+gcc *.c -lX11 -lm
+
+testbed.c contains main, modify it to use BabyX in your own projects.
+
+
+have fun ...
+
+
