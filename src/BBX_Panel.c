@@ -161,9 +161,7 @@ int bbx_panel_gotmouse(BBX_Panel *pan, int *x, int *y)
 static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	BBX_Panel *pan;
-	int width, height;
 	HDC hdc;
-	PAINTSTRUCT ps;
 	int x, y;
 	int button;
 	RECT rect;
@@ -349,6 +347,7 @@ static int message_handler(void *obj, int message, int a, int b, void *params)
 		if (pan->changesize)
 			(*pan->changesize)(pan->ptr, a, b);
 	}
+	return 0;
 }
 
 

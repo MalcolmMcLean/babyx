@@ -100,7 +100,7 @@ static void sorthand(CARD *hand, int N, int trumps);
 int _stdcall WinMain(HINSTANCE hInst, HINSTANCE hPrev, LPSTR lpCmndline, int show )
 {
 	APP *app;
-	srand(time(0));
+	srand((unsigned int) time(0));
 	app = malloc(sizeof(APP));
 	startbabyx(hInst, "Baby Bridge", 1000, 800, create, layout, app);
 	free(app);
@@ -285,11 +285,7 @@ static void clickbutton(void *obj)
   APP *app = obj;
   int i;
   GAME *game;
-  unsigned char *rgba;
-  int width, height;
-  unsigned char *cardrgba;
-  int cw, ch;
-
+ 
   game = app->game;
  
   if(app->state == 0)
@@ -605,7 +601,7 @@ static void app_playcard(APP *app, CARD *card)
   rotbuff = malloc( (cw + 30) * (ch + 30) * 4);
   memset(rotbuff, 0x0, (cw+30) * (ch+30) * 4);
   theta = app->playtheta[app->game->gp->Nplayed %4];
-  rgbapasterot(rotbuff, cw+30, ch+30, cardrgba, cw, ch, 15, 15, theta); 
+  bbx_pasterot(rotbuff, cw+30, ch+30, cardrgba, cw, ch, 15, 15, theta); 
   
   switch(togo(app->game->gp))
   {
@@ -877,7 +873,7 @@ static void app_updatedummy(APP *app)
       for(i=0;i<Nhand;i++)
       {
         cardrgba = card_rgba(&hand[i], &cw, &ch);
-        rgbapaste(rgba, width, height, cardrgba, cw, ch, app->dummyhand_xpos[i], app->dummyhand_ypos[i]);
+        bbx_paste(rgba, width, height, cardrgba, cw, ch, app->dummyhand_xpos[i], app->dummyhand_ypos[i]);
         if(i == app->seldummy)
 	{
           bluergba = malloc(75*108*4);
@@ -888,7 +884,7 @@ static void app_updatedummy(APP *app)
             bluergba[ii*4+2] = 255;
             bluergba[ii*4+3] = 0x80;
           }
-          rgbapaste(rgba, width, height, bluergba, 75, 108, app->dummyhand_xpos[i], app->dummyhand_ypos[i]);
+          bbx_paste(rgba, width, height, bluergba, 75, 108, app->dummyhand_xpos[i], app->dummyhand_ypos[i]);
           free(bluergba);
         }
       }
@@ -897,8 +893,8 @@ static void app_updatedummy(APP *app)
       for(i=0;i<Nhand;i++)
       {
         cardrgba = card_rgba(&hand[i], &cw, &ch);
-        rot = rgbarot90(cardrgba, cw, ch);
-        rgbapaste(rgba, width, height, rot, ch, cw, 30-app->dummyhand_ypos[i], app->dummyhand_xpos[i]);
+        rot = bbx_rot90(cardrgba, cw, ch);
+        bbx_paste(rgba, width, height, rot, ch, cw, 30-app->dummyhand_ypos[i], app->dummyhand_xpos[i]);
         free(rot);
       }
       break;
@@ -906,8 +902,8 @@ static void app_updatedummy(APP *app)
       for(i=0;i<Nhand;i++)
       {
         cardrgba = card_rgba(&hand[i], &cw, &ch);
-        rot = rgbarot90(cardrgba, cw, ch);
-        rgbapaste(rgba, width, height, rot, ch, cw, app->dummyhand_ypos[i], height - cw - app->dummyhand_xpos[i]);
+        rot = bbx_rot90(cardrgba, cw, ch);
+        bbx_paste(rgba, width, height, rot, ch, cw, app->dummyhand_ypos[i], height - cw - app->dummyhand_xpos[i]);
         free(rot);
       }
       break;
@@ -944,10 +940,10 @@ static void app_updateuserhand(APP *app)
   for(i=0;i<Nhand;i++)
   {
     cardrgba = card_rgba(&hand[i], &cw, &ch);
-    rgbapaste(rgba, width, height, cardrgba, cw, ch, app->userhand_xpos[i], 
+    bbx_paste(rgba, width, height, cardrgba, cw, ch, app->userhand_xpos[i], 
       app->userhand_ypos[i]);
     if(i== app->selcard)
-      rgbapaste(rgba, width, height, bluergba, 75, 108, app->userhand_xpos[i],
+      bbx_paste(rgba, width, height, bluergba, 75, 108, app->userhand_xpos[i],
         app->userhand_ypos[i]);
   }
   bbx_canvas_flush(app->can);

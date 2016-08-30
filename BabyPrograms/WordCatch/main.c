@@ -3,7 +3,6 @@
 #include <time.h>
 #include "BabyX.h"
 
-void rgbapaste(unsigned char *rgba, int width, int height, unsigned char *sub, int swidth, int sheight, int x, int y);
 
 #include "simplexnoise.h"
 #include "wordmatcher.h"
@@ -68,6 +67,7 @@ void game_tick(GAME *game, int deltams);
 void game_catchletter(GAME *game, char ch);
 static void game_refill(GAME *game);
 static int game_collision(GAME *game, LETTER *let);
+static int scoreword(char *str);
 char game_chooseletter(GAME *game);
 
 extern unsigned char basket_rgba[];
@@ -126,7 +126,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 	unsigned char *tune;
 	int N;
 
-	srand(time(0));
+	srand((unsigned int) time(0));
 	tune = slurpb("C:\\Users\\Malcolm\\Music\\away-in-a-manger.mp3", &N);
 	playmp3(tune, N);
 	startbabyx(hInstance, "Wordcatch", 320, 480, create, layout, &app);
@@ -160,7 +160,6 @@ static void layout(void *ptr, int width, int height)
 
 static void redraw(APP *app)
 {
-	char buff[256];
 	unsigned char *rgba;
 	int width, height;
 	GAME *game;
@@ -173,8 +172,8 @@ static void redraw(APP *app)
 	
 	bbx_rectangle(rgba, width, height, 0, 0, width, height, bbx_rgba(0, 255, 255, 255));
 	//sky(rgba, width, height, game->inc);
-	rgbapaste(rgba, width, height, app->skybuff, width, height, 0, 0);
-	rgbapaste(rgba, width, height, basket_rgba, basket_width, basket_height, game->playerx, game->playery - 2);
+	bbx_paste(rgba, width, height, app->skybuff, width, height, 0, 0);
+	bbx_paste(rgba, width, height, basket_rgba, basket_width, basket_height, game->playerx, game->playery - 2);
 	//bbx_drawstring(rgba, width, height, game->playerx, game->playery + 15, "XXX", 3, app->bbx->gui_font, bbx_rgba(0, 0, 0, 255));
 	for (i = 0; i < game->Nletters; i++)
 	{
@@ -184,8 +183,8 @@ static void redraw(APP *app)
 	}
 	for (i = 0; i < game->Nsnowflakes; i++)
 	{
-		rgbapaste(rgba, width, height, snowflake_rgba, snowflake_width, snowflake_height, game->snowflakes[i].x,
-			game->snowflakes[i].y);
+		bbx_paste(rgba, width, height, snowflake_rgba, snowflake_width, snowflake_height, (int) game->snowflakes[i].x,
+			(int) game->snowflakes[i].y);
 	}
 	bbx_rectangle(rgba, width, height, 0, 5, width, 30, bbx_rgba(0, 0, 255, 128));
 	
@@ -193,7 +192,7 @@ static void redraw(APP *app)
 	sprintf(score, "% 5d", game->points);
 	bbx_drawstring(rgba, width, height, 250, 25, score, strlen(score), app->bbx->gui_font, bbx_rgba(255, 255, 0, 255));
 	//bbx_rectangle(rgba, width, height, 0, game->playery +15, width, 480, bbx_rgba(255, 255, 255, 255));
-	rgbapaste(rgba, width, height, app->snowbuff, width, app->snowdepth, 0, game->playery + 15);
+	bbx_paste(rgba, width, height, app->snowbuff, width, app->snowdepth, 0, game->playery + 15);
 
 	bbx_canvas_flush(app->can);
 }
@@ -262,8 +261,8 @@ GAME *newgame(void)
 	}
 	for (i = 0; i < 40; i++)
 	{
-		game->snowflakes[i].x = rand() % 310;
-		game->snowflakes[i].y = (rand() % 480);
+		game->snowflakes[i].x = (float) (rand() % 310);
+		game->snowflakes[i].y = (float) (rand() % 480);
 		game->Nsnowflakes++;
 	}
 	return game;
@@ -278,8 +277,8 @@ void game_tick(GAME *game, int deltams)
 		game->snowflakes[i].y += 3;
 		if (game->snowflakes[i].y > 490)
 		{
-			game->snowflakes[i].y = -8;
-			game->snowflakes[i].x = rand() % 310;
+			game->snowflakes[i].y = -8.0f;
+			game->snowflakes[i].x = (float) (rand() % 310);
 		}
 	}
 
@@ -512,7 +511,7 @@ static void sky(unsigned char *rgba, int width, int height, int inc)
 	{
 		for (x = 0; x < width; x++)
 		{
-			t = scaled_octave_noise_2d(2, 1.0, 0.003, 0.5, 1.0, x + inc, y);
+			t = scaled_octave_noise_2d(2.0f, 1.0f, 0.003f, 0.5f, 1.0f, (float) x + inc, (float) y);
 			rgba[(y*width + x) * 4] = (unsigned char)(t * 255);
 			rgba[(y*width + x) * 4+1] = (unsigned char)(t * 255);
 			rgba[(y*width + x) * 4+2] = (unsigned char)(255);
@@ -535,7 +534,7 @@ static void scrollsky(unsigned char *rgba, int width, int height, int inc)
 	{
 		for (x = width-1; x < width; x++)
 		{
-			t = scaled_octave_noise_2d(2, 1.0, 0.003, 0.5, 1.0, x + inc, y);
+			t = scaled_octave_noise_2d(2.0f, 1.0f, 0.003f, 0.5f, 1.0f, (float) x + inc, (float) y);
 			rgba[(y*width + x) * 4] = (unsigned char)(t * 255);
 			rgba[(y*width + x) * 4 + 1] = (unsigned char)(t * 255);
 			rgba[(y*width + x) * 4 + 2] = (unsigned char)(255);
@@ -553,7 +552,7 @@ static void snow(unsigned char *rgba, int width, int height, int inc)
 	{
 		for (x = 0; x < width; x++)
 		{
-			t = scaled_octave_noise_2d(3, 5.0, 0.1, 0.5, 1.0, x + inc, y);
+			t = scaled_octave_noise_2d(3.0f, 5.0f, 0.1f, 0.5f, 1.0f, (float)x + inc, (float) y);
 			rgba[(y*width + x) * 4] = (unsigned char)(t * 255);
 			rgba[(y*width + x) * 4 + 1] = (unsigned char)(t * 255);
 			rgba[(y*width + x) * 4 + 2] = (unsigned char)(t * 255);
@@ -564,7 +563,7 @@ static void snow(unsigned char *rgba, int width, int height, int inc)
 
 	for (x = 0; x < width; x++)
 	{
-		t = scaled_octave_noise_2d(1, 5.0, 0.1, 0.0, 5.0, x + 100, y);
+		t = scaled_octave_noise_2d(1.0f, 5.0f, 0.1f, 0.0f, 5.0f, (float) x + 100, (float) y);
 		for (y = 0; y < (int)t && y < height;y++)
 			rgba[(y*width + x) * 4 + 3] = 0;
 	}

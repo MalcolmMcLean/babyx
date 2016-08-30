@@ -176,7 +176,6 @@ void bbx_canvas_setmousefunc(BBX_Canvas *can, void (*mousefunc)(void *ptr, int a
 static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	BBX_Canvas *can;
-	int width, height;
 	HDC hdc;
 	HDC hdcbmp;
 	PAINTSTRUCT ps;
@@ -297,6 +296,8 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
 	default:
 		return DefWindowProc(hwnd, msg, wParam, lParam);
 	}
+
+	return 0;
 }
 
 static void TranslateCoords(HWND hwnd, HWND other, int *x, int *y)
@@ -358,7 +359,7 @@ static HBITMAP MakeBitmap(unsigned char *rgba, int width, int height, VOID **buf
 static void resizergba(unsigned char *dest, int dwidth, int dheight, unsigned char *src, int swidth, int sheight)
 {
   float a = 0.0f, b = 0.0f;
-  int red, green, blue, alpha;
+  float red, green, blue, alpha;
   float dx, dy;
   float rx, ry;
   int x, y;
@@ -399,10 +400,10 @@ static void resizergba(unsigned char *dest, int dwidth, int dheight, unsigned ch
       blue = blue < 0 ? 0 : blue > 255 ? 255 : blue;
       alpha = alpha < 0 ? 0 : alpha > 255 ? 255 : alpha;
 
-      dest[(y*dwidth+x)*4] = red;
-      dest[(y*dwidth+x)*4+1] = green;
-      dest[(y*dwidth+x)*4+2] = blue;
-      dest[(y*dwidth+x)*4+3] = alpha;
+      dest[(y*dwidth+x)*4] = (unsigned char) red;
+      dest[(y*dwidth+x)*4+1] = (unsigned char) green;
+      dest[(y*dwidth+x)*4+2] = (unsigned char) blue;
+      dest[(y*dwidth+x)*4+3] = (unsigned char) alpha;
     }
     index0 = (int)ry * swidth + (int) rx;
     index1 = index0;
@@ -431,10 +432,10 @@ static void resizergba(unsigned char *dest, int dwidth, int dheight, unsigned ch
     blue = blue < 0 ? 0 : blue > 255 ? 255 : blue;
 
     alpha = alpha < 0 ? 0 : alpha > 255 ? 255 : alpha;
-    dest[(y*dwidth+x)*4] = red;
-    dest[(y*dwidth+x)*4+1] = green;
-    dest[(y*dwidth+x)*4+2] = blue;
-    dest[(y*dwidth+x)*4+3] = alpha;
+    dest[(y*dwidth+x)*4] = (unsigned char) red;
+    dest[(y*dwidth+x)*4+1] = (unsigned char) green;
+    dest[(y*dwidth+x)*4+2] = (unsigned char) blue;
+    dest[(y*dwidth+x)*4+3] = (unsigned char) alpha;
   }
   index0 = (int)ry * swidth + (int) rx;
   index1 = index0;
@@ -471,10 +472,10 @@ static void resizergba(unsigned char *dest, int dwidth, int dheight, unsigned ch
     blue = blue < 0 ? 0 : blue > 255 ? 255 : blue;
     alpha = alpha < 0 ? 0 : alpha > 255 ? 255 : alpha;
       
-    dest[(y*dwidth+x)*4] = red;
-    dest[(y*dwidth+x)*4+1] = green;
-    dest[(y*dwidth+x)*4+2] = blue;
-    dest[(y*dwidth+x)*4+3] = alpha;
+    dest[(y*dwidth+x)*4] = (unsigned char) red;
+    dest[(y*dwidth+x)*4+1] = (unsigned char) green;
+    dest[(y*dwidth+x)*4+2] = (unsigned char) blue;
+    dest[(y*dwidth+x)*4+3] = (unsigned char) alpha;
   }
   
   dest[(y*dwidth+x)*4] = src[((sheight-1)*swidth+swidth-1)*4];

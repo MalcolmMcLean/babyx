@@ -125,14 +125,14 @@ void ticktick(void *ptr)
   for(y=0;y<height;y++)
     for(x=0;x<width;x++)
     {
-       noise = scaled_octave_noise_3d( app->octaves,
-                           app->persistence,
-                           app->scale,
+       noise = scaled_octave_noise_3d( (float) app->octaves,
+                           (float) app->persistence,
+                           (float) app->scale,
                            loBound,
                            hiBound,
-			   (x + app->xpos) * app->delta_x,
-			   (y + app->ypos) * app->delta_y,
-				       t * app->delta_t);
+			   (float) ((x + app->xpos) * app->delta_x),
+			   (float) ((y + app->ypos) * app->delta_y),
+				(float)       (t * app->delta_t));
 
        index = (int) noise;
 
@@ -162,13 +162,13 @@ void clickok(void *ptr)
   for(y=0;y<height;y++)
     for(x=0;x<width;x++)
     {
-       noise = scaled_octave_noise_2d( app->octaves,
-                           app->persistence,
-                           app->scale,
+       noise = scaled_octave_noise_2d( (float) app->octaves,
+                           (float) app->persistence,
+                           (float) app->scale,
                            loBound,
                            hiBound,
-			   (x + app->xpos) * app->delta_x,
-			   (y + app->ypos) * app->delta_y);
+			   (float) ((x + app->xpos) * app->delta_x),
+			   (float) ((y + app->ypos) * app->delta_y));
 
        index = (int) noise;
 
@@ -776,7 +776,6 @@ void openfile(APP *app, char *fname)
 void loadpalettefromgif(APP *app)
 {
   char *fname;
-  int N;
   unsigned char pal[256*3];
   unsigned char *img;
   int width, height;
@@ -826,13 +825,13 @@ static void saveasgif(APP *app, char *fname)
   for(y=0;y<height;y++)
     for(x=0;x<width;x++)
     {
-       noise = scaled_octave_noise_2d( app->octaves,
-                           app->persistence,
-                           app->scale,
+       noise = scaled_octave_noise_2d( (float) app->octaves,
+                           (float) app->persistence,
+                           (float) app->scale,
                            loBound,
                            hiBound,
-                           x * app->delta_x,
-                           y * app->delta_y);
+                           (float) (x * app->delta_x),
+                           (float) (y * app->delta_y));
 
        index = (int) noise;
        img[y*width+x] = (unsigned char) index;

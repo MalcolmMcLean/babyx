@@ -5,6 +5,7 @@
 #include <ctype.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <direct.h>
 
 #include "BabyX.h"
 
@@ -107,7 +108,7 @@ char *bbx_getopenfile(BABYX *bbx, char *filt)
   op.directory_lab = bbx_label(bbx, op.pan, "");
   
   op.hidden_chk = bbx_checkbox(bbx, op.pan, "Hidden", opencheckhidden, &op);
-  getcwd(op.directory, FILENAME_MAX);
+  _getcwd(op.directory, FILENAME_MAX);
   op.filter_lab = bbx_label(bbx, op.pan, "Filter");
   op.filter_edt = bbx_lineedit(bbx, op.pan, op.filt, openeditfilter, &op); 
   op.dir = readdirectoryfilt(op.directory, &op.Nfiles, 0, op.filt);
@@ -165,7 +166,7 @@ char *bbx_getsavefile(BABYX *bbx, char *filt)
   sp.directory_lab = bbx_label(bbx, sp.pan, "");
   sp.answer_edt = bbx_lineedit(bbx, sp.pan, "", saveeditanswer, &sp); 
   sp.hidden_chk = bbx_checkbox(bbx, sp.pan, "Hidden", savecheckhidden, &sp);
-  getcwd(sp.directory, FILENAME_MAX);
+  _getcwd(sp.directory, FILENAME_MAX);
   sp.filter_lab = bbx_label(bbx, sp.pan, "Filter");
   sp.filter_edt = bbx_lineedit(bbx, sp.pan, sp.filt, saveeditfilter, &sp); 
   sp.dir = readdirectoryfilt(sp.directory, &sp.Nfiles, 0, sp.filt);
@@ -494,9 +495,9 @@ DIRENTRY *readdirectoryfilt(char *dir, int *N, int hidden, char *filt)
 DIRENTRY *readdirectory(char *dir, int *N, int hidden)
 {
 	WIN32_FIND_DATA ffd;
-	LARGE_INTEGER filesize;
+	//LARGE_INTEGER filesize;
 	TCHAR szDir[MAX_PATH];
-	size_t length_of_arg;
+	//size_t length_of_arg;
 	HANDLE hFind = INVALID_HANDLE_VALUE;
 	DWORD dwError = 0;
 	int Nch;

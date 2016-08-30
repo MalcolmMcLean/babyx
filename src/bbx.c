@@ -290,8 +290,6 @@ int bbx_getpos(BABYX *bbx, void *obj, int *x, int *y, int *width, int *height)
 	int i;
 	HWND win;
 	HWND hparent;
-	RECT rect;
-	POINT pt;
 
 	for (i = 0; i<bbx->Nchildren; i++)
 		if (bbx->child[i].ptr == obj)
@@ -314,7 +312,6 @@ int bbx_getsize(BABYX *bbx, void *obj, int *width, int *height)
 {
   int i;
   HWND win;
-  int x, y; 
   RECT rect;
 
   for(i=0;i<bbx->Nchildren;i++)

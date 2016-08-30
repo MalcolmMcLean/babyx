@@ -769,7 +769,7 @@ static BBX_COLOR colorlist[753] =
 {139, 139,   0, "yellow4"},
   };
 
-unsigned long BBX_Color(char *str)
+unsigned long BBX_Color(const char *str)
 {
   int low = 0;
   int high = NCOLORS -1;
@@ -790,7 +790,7 @@ unsigned long BBX_Color(char *str)
   return ~0;
 }
 
-BBX_RGBA bbx_color(char *str)
+BBX_RGBA bbx_color(const char *str)
 {
   unsigned long col = BBX_Color(str);
   return (col << 8) | 0xFF;

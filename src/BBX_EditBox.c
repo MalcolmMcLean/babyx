@@ -309,7 +309,7 @@ static void keyfunc(void *obj, int ch)
     break;
      
   case BBX_KEY_DELETE:
-    if(box->cursorpos < strlen(line))
+    if(box->cursorpos < (int) strlen(line))
     {
       nb = bbx_utf8_skip(line + box->cursorpos);
       memmove(line + box->cursorpos, line+box->cursorpos +nb,
@@ -354,7 +354,7 @@ static void keyfunc(void *obj, int ch)
  
     break;                           
   case BBX_KEY_RIGHT:
-    if(box->cursorpos < strlen(line))
+    if(box->cursorpos < (int) strlen(line))
       box->cursorpos+= bbx_utf8_skip(line + box->cursorpos);
     break;                        
   case BBX_KEY_DOWN:

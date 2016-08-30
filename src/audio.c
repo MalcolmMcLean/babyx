@@ -115,7 +115,7 @@ void *playmp3(unsigned char *mp3_stream, int stream_size)
 	if (!stream->byte_count)
 	{
 		out("\nError: not a valid MP2 audio file!\n");
-		return 1;
+		return 0;
 	}
 
 	// set up wave output
@@ -125,7 +125,7 @@ void *playmp3(unsigned char *mp3_stream, int stream_size)
 		!= MMSYSERR_NOERROR)
 	{
 		out("\nError: cannot open wave output!\n");
-		return 1;
+		return 0;
 	}
 
 	// allocate buffers

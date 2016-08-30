@@ -36,7 +36,6 @@ BBX_Panel *bbx_popuppanel(BABYX *bbx, BBX_Panel *parent, char *tag, void (*chang
 BBX_Panel *BBX_popuppanel(BABYX *bbx, HWND parent, char *tag, void (*changesize)(void *ptr, int width, int height), void *ptr, int x, int y)
 {
   BBX_Panel *answer;
-  unsigned long grey, dimgrey;
   POINT pt;
 
   answer = bbx_malloc(sizeof(BBX_Panel));
@@ -88,7 +87,6 @@ void bbx_popuppanel_dropmodal(BBX_DialogPanel *pan)
 static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   BBX_Panel *pan;
-  int width, height;
   int button;
   int x, y;
 
@@ -153,4 +151,6 @@ static int message_handler(void *obj, int message, int a, int b, void *params)
 		if (pan->changesize)
 			(*pan->changesize)(pan->ptr, a, b);
 	}
+
+	return 0;
 }

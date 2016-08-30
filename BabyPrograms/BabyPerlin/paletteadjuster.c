@@ -277,9 +277,9 @@ static void rescale(unsigned char *rgb, int N, unsigned char *out, int Nout)
     if(jj >= N)
       jj = j;
     t -= j;
-    out[i*3] = lerp(rgb[j*3], rgb[jj*3], t);
-    out[i*3+1] = lerp(rgb[j*3+1], rgb[jj*3+1], t);
-    out[i*3+2] = lerp(rgb[j*3+2], rgb[jj*3+2], t);
+    out[i*3] = (unsigned char) lerp(rgb[j*3], rgb[jj*3], t);
+    out[i*3+1] = (unsigned char) lerp(rgb[j*3+1], rgb[jj*3+1], t);
+    out[i*3+2] = (unsigned char) lerp(rgb[j*3+2], rgb[jj*3+2], t);
   }
 }
 

@@ -12,7 +12,7 @@ void shuffle(void *ptr, int N, int size)
 
   for(i=0;i<N;i++)
   {
-    target = i + uniform() * (N-i);
+    target = i + (int) (uniform() * (N-i));
     tptr = cptr + target * size;
     for(ii=0;ii<size;ii++)
     {

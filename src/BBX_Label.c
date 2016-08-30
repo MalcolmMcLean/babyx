@@ -176,7 +176,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
   {
   case WM_CREATE:
 	  lab = (BBX_Label *)((CREATESTRUCT *)lParam)->lpCreateParams;
-	  lab->win = lab;
+//	  lab->win = lab;
 	  SetWindowLongPtr(hwnd, GWL_USERDATA, (LONG)((CREATESTRUCT *)lParam)->lpCreateParams);
 	  break;
   case WM_PAINT:

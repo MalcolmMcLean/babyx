@@ -146,11 +146,11 @@ static void drawswatch(COLORPICKER *cp)
   int width, height;
   unsigned long col;
   int i;
-  unsigned char higrey[4];
-  unsigned char dimgrey[4];
+  BBX_RGBA higrey;
+  BBX_RGBA dimgrey;
 
-  bbx_color(dimgrey, "dim gray");
-  bbx_color(higrey, "light gray");
+  dimgrey = bbx_color("dim gray");
+  higrey = bbx_color("light gray");
   col = hsv2rgb(cp->hue/256.0 *2 * PI, cp->sat, cp->val);
   rgba = bbx_canvas_rgba(cp->can, &width, &height);
   for(i=0;i<width*height;i++)
