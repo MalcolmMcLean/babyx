@@ -19,8 +19,8 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{62CCEF19-06DE-4D4C-9926-841C852DEE16}</ProjectGuid>
-    <RootNamespace>BabyBridge</RootNamespace>
+    <ProjectGuid>{73E65628-F55A-449E-A493-EE56755C412F}</ProjectGuid>
+    <RootNamespace>BabyHelloWorld</RootNamespace>
     <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -68,14 +68,13 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>C:\Users\Malcolm\Documents\Visual Studio 2015\Projects\BabyX\src;$(IncludePath)</IncludePath>
-  </PropertyGroup>
+  <PropertyGroup />
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <SDLCheck>true</SDLCheck>
+      <SDLCheck>false</SDLCheck>
+      <AdditionalIncludeDirectories>C:\Users\Malcolm\Documents\Visual Studio 2015\Projects\BabyX\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
@@ -155,14 +154,7 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\verattf.c" />
-    <ClCompile Include="..\..\babybridgemain.c" />
-    <ClCompile Include="..\..\bridgeai.c" />
-    <ClCompile Include="..\..\bridgegame.c" />
-    <ClCompile Include="..\..\cardpic.c" />
-    <ClCompile Include="..\..\cards.c" />
-    <ClCompile Include="..\..\deck.c" />
-    <ClCompile Include="..\..\shuffle.c" />
-    <ClCompile Include="..\..\verabd12.c" />
+    <ClCompile Include="..\..\HelloBabyX.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\src\BabyX.h" />
@@ -190,11 +182,6 @@
     <ClInclude Include="..\..\..\..\src\BBX_ScrollPanel.h" />
     <ClInclude Include="..\..\..\..\src\BBX_Spinner.h" />
     <ClInclude Include="..\..\..\..\src\font.h" />
-    <ClInclude Include="..\..\bridgeai.h" />
-    <ClInclude Include="..\..\bridgegame.h" />
-    <ClInclude Include="..\..\cardpic.h" />
-    <ClInclude Include="..\..\deck.h" />
-    <ClInclude Include="..\..\shuffle.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -263,8 +263,8 @@ void createapp(void *obj, BABYX *bbx, BBX_Panel *root)
 
   app->paletteadjuster_wgt = paladjuster(bbx, root, app->pal.rgb, app->pal.N, paletteadjusted, app); 
 
-  bbx_label_setbackground(app->width_lab, BBX_Color("LightGray"));
-  bbx_label_setbackground(app->height_lab, BBX_Color("LightGray"));
+  bbx_label_setbackground(app->width_lab, bbx_color("LightGray"));
+  bbx_label_setbackground(app->height_lab, bbx_color("LightGray"));
   bbx_label_setbackground(app->octaves_lab, BBX_Color("LightGray"));
   bbx_label_setbackground(app->persistence_lab, BBX_Color("LightGray"));
   bbx_label_setbackground(app->scale_lab, BBX_Color("LightGray"));
