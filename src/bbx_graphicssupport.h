@@ -10,5 +10,12 @@ int bbx_circle(unsigned char *rgba, int width, int height, double x, double y, d
 int bbx_polygon(unsigned char *rgba, int width, int height, double *x, double *y, int N, BBX_RGBA col);
 int bbx_polygonaa(unsigned char *rgba, int width, int height, double *x, double *y, int N, BBX_RGBA col);
 
+void bbx_paste(unsigned char *rgba, int width, int height, unsigned char *sub, int swidth, int sheight, int x, int y);
+void bbx_pasterot(unsigned char *rgba, int width, int height, unsigned char *sub, int swidth, int sheight, int x, int y, double theta);
+int bbx_rotatebyshear(unsigned char *rgba, int width, int height, double cx, double cy, double theta, unsigned char *out);
+unsigned char *bbx_rot90(unsigned char *rgba, int width, int height);
+unsigned char *bbx_rot270(unsigned char *rgba, int width, int height);
+
+
 #endif
 
