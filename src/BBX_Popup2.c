@@ -24,7 +24,7 @@ typedef struct
   void *ptr;
 } POPUP;
 
-static POPUP *popup(BBX_Popup *pop, HWND parent, int x, int y);
+static POPUP *popup(BBX_Popup *pop, Window parent, int x, int y);
 static void popup_kill(POPUP *pp);
 static void pplayout(void *obj, int width, int height);
 static  void ppmousefunc(void *obj, int action, int x, int y, int buttons);
@@ -55,7 +55,6 @@ void bbx_popup2_kill(BBX_PopUp2 *pop)
 void bbx_popup2_makemodal(BBX_PopUp2 *pop)
 {
     POPUP *pp = bbx_panel_getptr(pop);
-	/*
     XGrabPointer(pop->bbx->dpy, pp->pan->win, False,
 		 ButtonPressMask |
                  ButtonReleaseMask |
@@ -69,8 +68,6 @@ void bbx_popup2_makemodal(BBX_PopUp2 *pop)
 	       RootWindow(pop->bbx->dpy, DefaultScreen(pop->bbx->dpy)),
                None,
                CurrentTime);
-			   */
-	SetCapture(pp->pan->win);
  
    bbx_popuppanel_makemodal(pop);
 }
@@ -78,11 +75,10 @@ void bbx_popup2_makemodal(BBX_PopUp2 *pop)
 void bbx_popup2_dropmodal(BBX_PopUp2 *pop)
 {
   POPUP *pp = bbx_panel_getptr(pop);
-  if (pp->sub)
-	  bbx_popup2_dropmodal(pp->sub);
+  if(pp->sub)
+    bbx_popup2_dropmodal(pp->sub);
   else
-	  ReleaseCapture();
-    //XUngrabPointer(pp->bbx->dpy, CurrentTime); 
+    XUngrabPointer(pp->bbx->dpy, CurrentTime); 
   bbx_popuppanel_dropmodal(pop);
 }
 
@@ -100,7 +96,6 @@ void bbx_popup2_doptr(BBX_PopUp2 *pop)
        bbx_popuppanel_dropmodal(pp->sub);
        bbx_popup2_kill(pp->sub);
        pp->sub = 0;
-	   /*
        XGrabPointer(pop->bbx->dpy, pp->pan->win, False,
 		 ButtonPressMask |
                  ButtonReleaseMask |
@@ -114,8 +109,6 @@ void bbx_popup2_doptr(BBX_PopUp2 *pop)
 	       RootWindow(pop->bbx->dpy, DefaultScreen(pop->bbx->dpy)),
                None,
                CurrentTime);
-			   */
-	   SetCapture(pp->pan->win);
  
      }
      if(x < pp->sweetx)
@@ -146,13 +139,12 @@ void bbx_popup2_doptr(BBX_PopUp2 *pop)
 
 
 
-int BBX_popuppopup(BBX_Popup *pop, HWND parent, int x, int y)
+int BBX_popuppopup(BBX_Popup *pop, Window parent, int x, int y)
 {
   POPUP *pp;
   int answer;
 
   pp = popup(pop, parent, x, y);
-  /*
   XGrabPointer(pop->bbx->dpy, pp->pan->win, True,
 		 ButtonPressMask |
                  ButtonReleaseMask |
@@ -166,8 +158,6 @@ int BBX_popuppopup(BBX_Popup *pop, HWND parent, int x, int y)
 	       RootWindow(pop->bbx->dpy, DefaultScreen(pop->bbx->dpy)),
                None,
                CurrentTime);
-			   */
-  SetCapture(pp->pan->win);
  
   bbx_popuppanel_makemodal(pp->pan);
   answer = pp->answer;
@@ -175,7 +165,7 @@ int BBX_popuppopup(BBX_Popup *pop, HWND parent, int x, int y)
   return answer;
 }
 
-static POPUP *popup(BBX_Popup *pop, HWND parent, int x, int y)
+static POPUP *popup(BBX_Popup *pop, Window parent, int x, int y)
 {
   POPUP *pp;
   int maxleft = 10;
@@ -370,7 +360,6 @@ int bbx_quickpopup(BABYX *bbx, BBX_Panel *parent, int x, int y, char **str, int 
   int answer;
 
   qp = qpopup(bbx, parent, x, y, str, N);
-  /*
   XGrabPointer(bbx->dpy, qp->pan->win, True,
 		 ButtonPressMask |
                  ButtonReleaseMask |
@@ -384,7 +373,6 @@ int bbx_quickpopup(BABYX *bbx, BBX_Panel *parent, int x, int y, char **str, int 
 	       RootWindow(bbx->dpy, DefaultScreen(bbx->dpy)),
                None,
                CurrentTime);
-			     */
  
   bbx_popuppanel_makemodal(qp->pan);
   answer = qp->sel;
@@ -454,7 +442,7 @@ static void mousefunc(void *obj, int action, int x, int y, int buttons)
 
   if(action == BBX_MOUSE_CLICK)
   {
-    //XUngrabPointer(qp->bbx->dpy, CurrentTime);
+    XUngrabPointer(qp->bbx->dpy, CurrentTime);
     bbx_popuppanel_dropmodal(qp->pan);
   }
   else if(action == BBX_MOUSE_MOVE)

@@ -8,7 +8,5 @@ void bbx_dialogpanel_makemodal(BBX_DialogPanel *pan);
 void bbx_dialogpanel_dropmodal(BBX_DialogPanel *pan);
 void bbx_dialogpanel_setclosefunc(BBX_DialogPanel *pan, void (*closefunc)(void *ptr), void *ptr);
 
-ATOM BBX_RegisterDialogPanel(HINSTANCE hInstance);
-
 #endif
 

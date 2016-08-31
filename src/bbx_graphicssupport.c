@@ -65,11 +65,11 @@ int bbx_line(unsigned char *rgba, int width, int height, double x1, double y1, d
 	dydx = (y1 - y2)/(x1 - x2);
 	for(i=(int)x1;i<=(int)x2;i++)
 	{
+	  y1 += dydx;
 	  offset = (((int) y1) * width + i) * 4;
 	  rgba[ offset ] = ((int) red * alpha + rgba[offset] * (255 - alpha))/255;
 	  rgba[ offset + 1] = (((int) green) * alpha + rgba[offset+1] * (255 - alpha)) / 255;
 	  rgba[ offset + 2] = (((int) blue) * alpha + rgba[offset+2] * (255 - alpha)) / 255;
-	  y1 += dydx;
 	}
   }
   else
@@ -86,11 +86,11 @@ int bbx_line(unsigned char *rgba, int width, int height, double x1, double y1, d
 	dxdy = (x1 - x2)/(y1 - y2);
 	for(i=(int)y1;i<=(int)y2;i++)
 	{
+	  x1 += dxdy;
 	  offset = ( i * width + (int) x1) * 4;
 	  rgba[ offset ] = ((int) red * alpha + rgba[offset] * (255 - alpha))/255;
 	  rgba[ offset + 1] = (((int) green) * alpha + rgba[offset+1] * (255 - alpha)) / 255;
-	  rgba[ offset + 2] = (((int) blue) * alpha + rgba[offset+2] * (255 - alpha)) / 255;
-	  x1 += dxdy;
+	  rgba[ offset + 2] = (((int) blue) * alpha + rgba[offset+2] * (255 - alpha)) / 255;	
 	}
   }
 
@@ -456,7 +456,7 @@ int bbx_polygonaa(unsigned char *rgba, int width, int height, double *x, double 
   return 0;
 }
 
-void bbx_paste(unsigned char *rgba, int width, int height, unsigned char *sub, int swidth, int sheight, int x, int y)
+void rgbapaste(unsigned char *rgba, int width, int height, unsigned char *sub, int swidth, int sheight, int x, int y)
 {
   int sx, sy;
   int red, green, blue, alpha;
@@ -719,10 +719,10 @@ static unsigned long bilerp(unsigned char *rgba, int width, int height, float x,
   ta = x - (int) floor(x);
   tb = y - (int) floor(y);
 
-  red =  (int) (r[0] * (1-ta)*(1-tb) + r[1]*ta*(1-tb) + r[2]*(1-ta)*tb + r[3]*ta*tb);
-  green =  (int) (g[0] * (1-ta)*(1-tb) + g[1]*ta*(1-tb) + g[2]*(1-ta)*tb + g[3]*ta*tb);
-  blue =  (int) (b[0] * (1-ta)*(1-tb) + b[1]*ta*(1-tb) + b[2]*(1-ta)*tb + b[3]*ta*tb);
-  alpha  =  (int) (a[0] * (1-ta)*(1-tb) + a[1]*ta*(1-tb) + a[2]*(1-ta)*tb + a[3]*ta*tb);
+  red =  r[0] * (1-ta)*(1-tb) + r[1]*ta*(1-tb) + r[2]*(1-ta)*tb + r[3]*ta*tb;
+  green =  g[0] * (1-ta)*(1-tb) + g[1]*ta*(1-tb) + g[2]*(1-ta)*tb + g[3]*ta*tb;
+  blue =  b[0] * (1-ta)*(1-tb) + b[1]*ta*(1-tb) + b[2]*(1-ta)*tb + b[3]*ta*tb;
+  alpha  =  a[0] * (1-ta)*(1-tb) + a[1]*ta*(1-tb) + a[2]*(1-ta)*tb + a[3]*ta*tb;
 
   if(red < 0) red = 0; if(red > 255) red = 255;
   if(green < 0) green = 0; if(green > 255) green = 255;
@@ -734,7 +734,7 @@ static unsigned long bilerp(unsigned char *rgba, int width, int height, float x,
    
 }
 
-void bbx_pasterot(unsigned char *rgba, int width, int height, unsigned char *sub, int swidth, int sheight, int x, int y, double theta)
+void rgbapasterot(unsigned char *rgba, int width, int height, unsigned char *sub, int swidth, int sheight, int x, int y, double theta)
 {
   float sint = (float) sin(theta);
   float cost = (float) cos(theta);
@@ -845,7 +845,7 @@ void bbx_pasterot(unsigned char *rgba, int width, int height, unsigned char *sub
 	colour-index images, interpolation isn't possible. The shearing method preserves the
 	pixels, at some cost in rotational accuracy.
   */
-int bbx_rotatebyshear(unsigned char *rgba, int width, int height, double cx, double cy, double theta, unsigned char *out)
+int rgbarotatebyshear(unsigned char *rgba, int width, int height, double cx, double cy, double theta, unsigned char *out)
 {
 	double alpha;
 	double beta;
@@ -904,7 +904,7 @@ int bbx_rotatebyshear(unsigned char *rgba, int width, int height, double cx, dou
 
 
 
-unsigned char *bbx_rot90(unsigned char *rgba, int width, int height)
+unsigned char *rgbarot90(unsigned char *rgba, int width, int height)
 {
   unsigned char *answer;
   int i, j;
@@ -928,7 +928,7 @@ unsigned char *bbx_rot90(unsigned char *rgba, int width, int height)
 }
 
 
-unsigned char *bbx_rot270(unsigned char *rgba, int width, int height)
+unsigned char *rgbarot270(unsigned char *rgba, int width, int height)
 {
   unsigned char *answer;
   int i, j;
@@ -1103,7 +1103,7 @@ void sprshrink(unsigned char *dest, int dwidth, int dheight, unsigned char *src,
 
   for(yt= 0, y=0;y<dheight;y++, yt += dy)
   {
-    yfrag = (float) ceil(yt) - yt;
+    yfrag = ceil(yt) - yt;
     if(yfrag == 0)
       yfrag = 1;
     yfrag2 = yt+dy - (float) floor(yt + dy);

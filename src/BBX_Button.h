@@ -20,7 +20,7 @@ typedef struct
 typedef BBX_Panel BBX_Button;
 
 BBX_Button *bbx_button(BABYX *bbx, BBX_Panel *parent, char *text, void (*fptr)(void *ptr), void *ptr );
-BBX_Button *BBX_button(BABYX *bbx, HWND parent, char *str, void (*fptr)(void *ptr), void *ptr);
+BBX_Button *BBX_button(BABYX *bbx, Window parent, char *str, void (*fptr)(void *ptr), void *ptr);
 
 void bbx_button_kill(BBX_Button *obj);
 void bbx_button_settext(BBX_Button *obj, char *str);

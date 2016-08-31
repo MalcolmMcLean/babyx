@@ -8,8 +8,8 @@
 typedef struct
 {
   BABYX *bbx;
-  HWND win;
-  void (*event_handler)(void *obj);
+  Window win;
+  void (*event_handler)(void *obj, XEvent *event);
   int (*message_handler)(void *obj, int message, int a, int b, void *params);
   /* private stuff */
   char *text;
@@ -17,12 +17,11 @@ typedef struct
   BBX_RGBA bgcol;
   struct bitmap_font *font;
   int align;
-  HBITMAP img;
+  XImage *img;
 } BBX_Label;
 
-ATOM BBX_RegisterLabel(HINSTANCE hInstance);
 BBX_Label *bbx_label(BABYX *bbx, BBX_Panel *parent, char *text);
-BBX_Label *BBX_label(BABYX *bbx, HWND parent, char *text);
+BBX_Label *BBX_label(BABYX *bbx, Window parent, char *text);
 void bbx_label_kill(BBX_Label *obj);
 void bbx_label_settext(BBX_Label *obj, char *text);
 void bbx_label_setalignment(BBX_Label *obj, int align);

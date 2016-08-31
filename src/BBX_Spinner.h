@@ -8,7 +8,7 @@
 typedef BBX_Panel BBX_Spinner;
 
 BBX_Spinner *bbx_spinner(BABYX *bbx, BBX_Panel *pan, double val, double minval, double maxval, double delta, void (*change)(void *ptr, double val), void *ptr);
-BBX_Spinner *BBX_spinner(BABYX *bbx, HWND parent, double val, double minval, double maxval, double delta, void (*change)(void *ptr, double val), void *ptr);
+BBX_Spinner *BBX_spinner(BABYX *bbx, Window parent, double val, double minval, double maxval, double delta, void (*change)(void *ptr, double val), void *ptr);
 void bbx_spinner_kill(BBX_Spinner *sp);
 double bbx_spinner_getvalue(BBX_Spinner *sp);
 void bbx_spinner_setvalue(BBX_Spinner *sp, double val);

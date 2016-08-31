@@ -27,19 +27,19 @@ BBX_Button *bbx_button(BABYX *bbx, BBX_Panel *parent, char *str, void (*fptr)(vo
 }
 
 
-BBX_Button *BBX_button(BABYX *bbx, HWND parent, char *str, void (*fptr)(void *ptr), void *ptr)
+BBX_Button *BBX_button(BABYX *bbx, Window parent, char *str, void (*fptr)(void *ptr), void *ptr)
 {
   BUTTON *but;
 
   but = bbx_malloc(sizeof(BUTTON));
   but->bbx = bbx;
+  but->pan = BBX_panel(bbx, parent, "button", layout, but);
   but->str = bbx_strdup(str);
   but->can = 0;
   but->fptr = fptr;
   but->ptr = ptr;
   but->font = bbx->gui_font;
   but->disabled = 0;
-  but->pan = BBX_panel(bbx, parent, "button", layout, but);
 
   return but->pan;
 }

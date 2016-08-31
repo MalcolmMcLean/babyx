@@ -1,16 +1,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <ctype.h>
-#include <Windows.h>
+#include <unistd.h>
+#include <sys/time.h>
+
+#include <X11/Xlib.h>
 
 #include "BabyX.h"
 
-static int subfiletime(FILETIME *t1, FILETIME *t2);
-int specialkeytovkey(int code);
-static int unicodetoVkey(int code);
-
-/*
 int BBX_Event(BABYX *bbx, XEvent *event)
 {
   int i;
@@ -26,14 +23,9 @@ int BBX_Event(BABYX *bbx, XEvent *event)
 
   return 0;
 }
-*/
 
 void BBX_Tick(BABYX *bbx)
 {
-	BBX_TICKER *tickptr;
-	FILETIME tock;
-
-	/*
   struct timeval tock;
   BBX_TICKER *tickptr;
   int elapsed;
@@ -51,55 +43,16 @@ void BBX_Tick(BABYX *bbx)
         tickptr->tick = tock;
     }
   }
-  */
-	GetSystemTimeAsFileTime(&tock);
-	for (tickptr = bbx->ticker; tickptr != 0; tickptr = tickptr->next)
-	{
-		int elapsed = subfiletime(&tock, &tickptr->tick);
-		if (elapsed >= tickptr->interval)
-		{
-			(*tickptr->fptr)(tickptr->ptr);
-			tickptr->tick = tock;
-		}
-	}
 
 }
 
-static int subfiletime(FILETIME *t1, FILETIME *t2)
+static Bool alwaysmatch(Display *dpy, XEvent *event, XPointer arg)
 {
-	if (t1->dwHighDateTime == t2->dwHighDateTime)
-		return (int)(t1->dwLowDateTime - t2->dwLowDateTime) / 10000;
-	else
-		return(int)(t1->dwLowDateTime + ~t2->dwLowDateTime + 1) / 10000;
-
+  return True;
 }
 
-
-int BBX_MakeModal(BABYX *bbx, HWND win)
+int BBX_MakeModal(BABYX *bbx, Window win)
 {
-	MSG msg;
-	int modalpush;
-
-	modalpush = bbx->modalpush;
-	bbx->modalpush++;
-
-	while (bbx->running && bbx->modalpush > modalpush)
-	{
-		while (PeekMessage(&msg, 0, 0, 0, PM_NOREMOVE))
-		{
-			GetMessage(&msg, 0, 0, 0);
-			if (win == msg.hwnd || IsChild(win, msg.hwnd) || msg.message == WM_PAINT)
-			{
-				TranslateMessage(&msg);
-				DispatchMessage(&msg);
-			}
-		}
-		Sleep(1);
-		BBX_Tick(bbx);
-	}
-			//if (msg.message == WM_DESTROY && msg.hwnd == root->win)
-				//bbx->running = 0;
-	/*
   int modalpush = bbx->modalpush;
   XEvent event;
   int motionflagged = 0;
@@ -129,7 +82,6 @@ int BBX_MakeModal(BABYX *bbx, HWND win)
     usleep(100);
     BBX_Tick(bbx);
   }
-  */
     
   return 0;
 }
@@ -141,7 +93,7 @@ int BBX_DropModal(BABYX *bbx)
   return 0;
 }
 
-int BBX_Register(BABYX *bbx, HWND win, void (*event_handler)(void *ptr), int (*message_handler)(void *ptr, int message, int a, int b, void *params), void *ptr)
+int BBX_Register(BABYX *bbx, Window win, void (*event_handler)(void *ptr, XEvent *event), int (*message_handler)(void *ptr, int message, int a, int b, void *params), void *ptr)
 {
   void *temp;
 
@@ -163,7 +115,7 @@ int BBX_Register(BABYX *bbx, HWND win, void (*event_handler)(void *ptr), int (*m
   return 0; 
 }
 
-int BBX_Deregister(BABYX *bbx, HWND win)
+int BBX_Deregister(BABYX *bbx, Window win)
 {
   int i;
 
@@ -184,15 +136,13 @@ void *bbx_addticker(BABYX *bbx, int ms_interval, void (*fptr)(void *ptr), void *
   tick = bbx_malloc(sizeof(BBX_TICKER));
   tick->next = bbx->ticker;
   tick->interval = ms_interval;
-  GetSystemTimeAsFileTime(&tick->tick);
+  gettimeofday(&tick->tick, 0);
   tick->modelevel = bbx->modalpush;
   tick->fptr = fptr;
   tick->ptr = ptr;
   bbx->ticker = tick;
 
   return tick;
-
-
 }
 
 void bbx_removeticker(BABYX *bbx, void *ticker)
@@ -200,8 +150,6 @@ void bbx_removeticker(BABYX *bbx, void *ticker)
   BBX_TICKER *tick;
   BBX_TICKER *prev = 0;
 
-  if (!ticker)
-	  return;
   for(tick = bbx->ticker; tick; tick=tick->next)
   {
     if(tick == ticker)
@@ -220,44 +168,18 @@ void bbx_removeticker(BABYX *bbx, void *ticker)
 int bbx_setpos(BABYX *bbx, void *obj, int x, int y, int width, int height)
 {
   int i;
-  HWND win;
-  static int called = 0;
-  static HDWP hdwp;
-  int top = 0;
+  Window win;
 
-  if (!called)
-  {
-	// hdwp = BeginDeferWindowPos(50);
-	  top = 1;
-  }
-  called = 1;
   for(i=0;i<bbx->Nchildren;i++)
     if(bbx->child[i].ptr == obj)
     {
       win = bbx->child[i].window;
-	// if (!IsWindowVisible(win))
-			MoveWindow(win, x, y, width, height, TRUE);
-	// else
-	   // hdwp = DeferWindowPos(hdwp, win, HWND_TOP, x, y, width, height, SWP_SHOWWINDOW);
-	  if (bbx->child[i].message_handler)
-		  (*bbx->child[i].message_handler)(obj, BBX_RESIZE, width, height, 0);
-	  ShowWindow(win, SW_SHOWNORMAL);
-	  
-	  UpdateWindow(win);
-	
-	  if (top)
-	  {
-		  called = 0;
-		//  EndDeferWindowPos(hdwp);
-	  }
+      XUnmapWindow(bbx->dpy, win);
+      XMoveWindow(bbx->dpy, win, x, y);
+      XResizeWindow(bbx->dpy, win, width, height); 
+      XMapWindow(bbx->dpy, win);
       return 0;
     }
-
-  if (top)
-  {
-	  EndDeferWindowPos(hdwp);
-	  called = 0;
-  }
   return -1;
 }
 
@@ -265,86 +187,43 @@ int bbx_setpos(BABYX *bbx, void *obj, int x, int y, int width, int height)
 int bbx_setsize(BABYX *bbx, void *obj, int width, int height)
 {
   int i;
-  HWND win;
-  POINT pt;
-  RECT rect;
+  Window win;
 
   for(i=0;i<bbx->Nchildren;i++)
     if(bbx->child[i].ptr == obj)
     {
       win = bbx->child[i].window;
-	  GetWindowRect(win, &rect);
-	  pt.x = rect.left;
-	  pt.y = rect.top;
-	  ScreenToClient(GetParent(win), &pt);
-	  MoveWindow(win, pt.x, pt.y, width, height, TRUE);
-	  if (bbx->child[i].message_handler)
-		  (*bbx->child[i].message_handler)(obj, BBX_RESIZE, width, height, 0);
+      XUnmapWindow(bbx->dpy, win);
+      XResizeWindow(bbx->dpy, win, width, height); 
+      XMapWindow(bbx->dpy, win);
       return 0;
     }
   return -1;
-}
-
-int bbx_getpos(BABYX *bbx, void *obj, int *x, int *y, int *width, int *height)
-{
-	int i;
-	HWND win;
-	HWND hparent;
-
-	for (i = 0; i<bbx->Nchildren; i++)
-		if (bbx->child[i].ptr == obj)
-		{
-		win = bbx->child[i].window;
-		hparent = GetParent(win);
-		POINT p = { 0 };
-
-		MapWindowPoints(win, hparent, &p, 1);
-
-		(*x) = p.x;
-		(*y) = p.y;
-		
-		return 0;
-		}
-	return -1;
 }
 
 int bbx_getsize(BABYX *bbx, void *obj, int *width, int *height)
 {
   int i;
-  HWND win;
-  RECT rect;
+  Window win;
+  Window root;
+  int x, y; 
+  unsigned int uwidth, uheight, border_width, depth;
 
   for(i=0;i<bbx->Nchildren;i++)
     if(bbx->child[i].ptr == obj)
     {
       win = bbx->child[i].window;
-	  GetClientRect(win, &rect);
-	  *width = rect.right - rect.left;
-	  *height = rect.bottom - rect.top;
+      XGetGeometry(bbx->dpy, win, &root, &x, &y, &uwidth, 
+		  &uheight, &border_width, &depth);
+      *width = (int) uwidth;
+      *height = (int) uheight;      
       return 0;
     }
   return -1;
 }
 
-int bbx_setfocus(BABYX *bbx, void *obj)
+int BBX_IsDescendant(BABYX *bbx, Window ancestor, Window descendant)
 {
-	int i;
-	HWND win;
-
-	for (i = 0; i<bbx->Nchildren; i++)
-		if (bbx->child[i].ptr == obj)
-		{
-			win = bbx->child[i].window;
-			SetFocus(win);
-			return 0;
-		}
-		
-	return -1;
-}
-
-int BBX_IsDescendant(BABYX *bbx, HWND ancestor, HWND descendant)
-{
-	/*
   Window win;
   Window root;
   Window parent;
@@ -372,17 +251,24 @@ int BBX_IsDescendant(BABYX *bbx, HWND ancestor, HWND descendant)
        return 0;
      win = parent;
   }
-  */
-
-	return 0;
    
 }
 
 
-void BBX_InvalidateWindow(BABYX *bbx, HWND win)
+void BBX_InvalidateWindow(BABYX *bbx, Window win)
 {
-	InvalidateRect(win, 0, 0);
-	UpdateWindow(win);
+  XEvent event;
+
+  event.xany.type = Expose; 
+  event.xany.display = bbx->dpy;
+  event.xany.window = win;
+  event.xexpose.x  = 0;
+  event.xexpose.y = 0;
+  event.xexpose.width  = 1; 
+  event.xexpose.height = 1; 
+  event.xexpose.count = 0;
+  
+  XSendEvent(bbx->dpy, win, 0, 0, &event);
 }
 
 
@@ -425,51 +311,4 @@ char *bbx_strdup(const char *str)
   answer = bbx_malloc(strlen(str) + 1);
   strcpy(answer, str);
   return answer;
-}
-
-int bbx_kbhit(BABYX *bbx, int code)
-{
-	SHORT state;
-	int vKey;
-
-	if (code < 0)
-		vKey = specialkeytovkey(code);
-	else
-		vKey = unicodetoVkey(code);
-	state = GetAsyncKeyState(vKey);
-	return (state & 0x8000) ? 1 : 0;
-}
-
-int specialkeytovkey(int code)
-{
-	switch (code)
-	{
-	case BBX_KEY_BACKSPACE: return VK_BACK;
-	case BBX_KEY_DELETE: return VK_DELETE;
-	case BBX_KEY_ESCAPE: return VK_ESCAPE;
-	case BBX_KEY_HOME: return VK_HOME;
-	case BBX_KEY_LEFT: return VK_LEFT;
-	case BBX_KEY_UP: return VK_UP;
-	case BBX_KEY_RIGHT: return VK_RIGHT;
-	case BBX_KEY_DOWN: return VK_DOWN; 
-	case BBX_KEY_END: return VK_END;
-	}
-	return 0;
-}
-
-static int unicodetoVkey(int code)
-{
-	if (isalnum(code))
-		return toupper(code);
-	switch (code)
-	{
-	case '\n': return VK_RETURN;
-	case ' ': return VK_SPACE;
-	case '\t': return VK_TAB;
-	case '*': return VK_MULTIPLY;
-	case '+': return VK_ADD;
-	case '/': return VK_DIVIDE;
-	case '-': return VK_SUBTRACT;
-	default: return 0;
-	}
 }

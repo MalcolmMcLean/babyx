@@ -322,28 +322,6 @@ int bbx_utf8_putch(char *out, int ch)
   return dest - out;
 }
 
-int bbx_utf8_charwidth(int ch)
-{
-	if (ch < 0x80)
-	{
-		return 1;
-	}
-	else if (ch < 0x800)
-	{
-		return 2;
-	}
-	else if (ch < 0x10000)
-	{
-		return 3;
-	}
-	else if (ch < 0x110000)
-	{
-		return 4;
-	}
-	else
-		return 0;
-}
-
 int bbx_utf8_Nchars(const char *utf8)
 {
   int answer = 0;

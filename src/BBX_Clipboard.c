@@ -1,8 +1,5 @@
 #include <stdlib.h>
 #include <string.h>
-#include "BabyX.h"
-
-#if 0
 #include <unistd.h>
 
 #include "BabyX.h"
@@ -225,100 +222,6 @@ char *getTextFromClipboard(BBX_Clipboard *clip)
     return content;
   }
 
-#endif
-
-BBX_Clipboard *BBX_clipboard(HWND win)
-{
-	BBX_Clipboard *answer;
-
-	answer = bbx_malloc(sizeof(BBX_Clipboard));
-	answer->hwnd = win;
-	answer->text = 0;
-
-	return answer;
-}
-
-void BBX_clipboard_kill(BBX_Clipboard *clip)
-{
-	if (clip)
-	{
-		free(clip->text);
-		free(clip);
-	}
-}
-
-void copyTextToClipboard(BBX_Clipboard *clipboard, char *text)
-{
-	HGLOBAL hglbCopy;
-	LPTSTR  lptstrCopy;
-	int N;
-	int i;
-
-	if (clipboard->text)
-		free(clipboard->text);
-	clipboard->text = bbx_strdup(text);
-
-	OpenClipboard(clipboard->hwnd);
-	EmptyClipboard();
-	N = bbx_utf8_Nchars(text);
-	hglbCopy = GlobalAlloc(GMEM_MOVEABLE,
-		(N + 1) * sizeof(TCHAR));
-	if (hglbCopy == NULL)
-	{
-		CloseClipboard();
-		return;
-	}
-
-	// Lock the handle and copy the text to the buffer. 
-
-	lptstrCopy = GlobalLock(hglbCopy);
-	for (i = 0; i < N; i++)
-	{
-		lptstrCopy[i] = (TCHAR) bbx_utf8_getch(text);
-		text += bbx_utf8_skip(text);
-	}
-	lptstrCopy[N] = (TCHAR)0;    
-	GlobalUnlock(hglbCopy);
-
-	// Place the handle on the clipboard. 
-
-	SetClipboardData(CF_TEXT, hglbCopy);
-	CloseClipboard();
-}
-
-char *getTextFromClipboard(BBX_Clipboard *clipboard)
-{
-	HGLOBAL hglb;
-	TCHAR *lptstr;
-	char *answer = 0;
-	int len = 0;
-	int pos = 0;
-	int i;
-
-	if (!IsClipboardFormatAvailable(CF_TEXT))
-		return 0;
-	if (!OpenClipboard(clipboard->hwnd))
-		return 0;
-
-	hglb = GetClipboardData(CF_TEXT);
-	if (hglb != NULL)
-	{
-		lptstr = GlobalLock(hglb);
-		if (lptstr != NULL)
-		{
-			for (i = 0; lptstr[i]; i++)
-				len += bbx_utf8_charwidth(lptstr[i]);
-			answer = bbx_malloc(len + 1);
-			for (i = 0; lptstr[i]; i++)
-				pos += bbx_utf8_putch(answer + pos, lptstr[i]);
-			answer[pos] = 0;
-			GlobalUnlock(hglb);
-		}
-	}
-	CloseClipboard();
-
-	return answer;
-}
 
 void bbx_copytexttoclipboard(BABYX *bbx, char *text)
 {

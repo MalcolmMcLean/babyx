@@ -3,6 +3,8 @@
 #include <string.h>
 
 #include "BabyX.h"
+#include "tabpanel.h"
+#include "datepicker.h"
 
 char *fslurp(char *fname);
 
@@ -28,7 +30,6 @@ static void dodialog(APP *app);
 static void menuchosen(void *obj, int id);
 static void canvasfunc(void *obj, int action, int x, int y, int buttons);
 
-/*
 int main(void)
 {
   APP *app;
@@ -36,18 +37,6 @@ int main(void)
   startbabyx("Baby X", 500, 200, create, layout, app);
   free(app);
   return 0;
-}
-*/
-
-
-
-int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstnace, LPSTR lpCommandLine, int nCmdShow )
-{
-	APP *app;
-	app = malloc(sizeof(APP));
-	startbabyx(hInstance, "Baby X", 500, 200, create, layout, app);
-	free(app);
-	return 0;
 }
 
 void create(void *obj, BABYX *bbx, BBX_Panel *root)
@@ -174,6 +163,7 @@ static void menuchosen(void *obj, int id)
       bbx_messagebox(bbx, BBX_MB_YES_NO_CANCEL, "File save", "You want to save\n%s.\n", fname);
     free(fname);
   case 4:
+    pickdate(bbx, 2015, 3, 1, 0, 0, 0);
     app->col = bbx_rgba(0xFF, 0, 0, 255);
     break;
   case 5:

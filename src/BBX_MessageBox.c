@@ -37,7 +37,6 @@ int bbx_messagebox(BABYX *bbx, int type, char *title, char *msg, ...)
   mb.bbx = bbx;
   mb.type = type;
   mb.pan = bbx_dialogpanel(bbx, title, 100, 100, layout, &mb);
-  bbx_dialogpanel_setclosefunc(mb.pan, pressok, &mb);
   mb.msg_lab = bbx_label(bbx, mb.pan, buffer);
   bbx_label_setbackground(mb.msg_lab, bbx_color("white"));
   mb.ok_but = 0;

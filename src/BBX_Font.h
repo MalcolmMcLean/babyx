@@ -14,6 +14,5 @@ int bbx_utf8_skip(const char *utf8);
 int bbx_utf8_getch(const char *utf8);
 int bbx_utf8_putch(char *out, int ch);
 int bbx_utf8_Nchars(const char *utf8);
-int bbx_utf8_charwidth(int ch);
 
 #endif

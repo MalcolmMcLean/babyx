@@ -32,8 +32,8 @@ void bbx_popup2_makemodal(BBX_PopUp2 *pop);
 void bbx_popup2_dropmodal(BBX_PopUp2 *pop);
 void bbx_popup2_doptr(BBX_PopUp2 *pop);
 
-int BBX_PopupPopup(BBX_Popup *obj, HWND parent, int x, int y);
+int BBX_PopupPopup(BBX_Popup *obj, Window parent, int x, int y);
 
-int BBX_QuickPopup(BABYX *bbx, HWND parent, int x, int y, char **str, int N);
+int BBX_QuickPopup(BABYX *bbx, Window parent, int x, int y, char **str, int N);
 
 #endif

@@ -23,7 +23,7 @@ BBX_CheckBox *bbx_checkbox(BABYX *bbx, BBX_Panel *parent, char *text, void (*fpt
   return BBX_checkbox(bbx, parent->win, text, fptr, ptr);
 }
 
-BBX_CheckBox *BBX_checkbox(BABYX *bbx, HWND parent, char *text, void (*fptr)(void *ptr, int state), void *ptr)
+BBX_CheckBox *BBX_checkbox(BABYX *bbx, Window parent, char *text, void (*fptr)(void *ptr, int state), void *ptr)
 {
   CHECKBOX *chk;
 

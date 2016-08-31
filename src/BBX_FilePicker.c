@@ -5,7 +5,8 @@
 #include <ctype.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <direct.h>
+#include <dirent.h>
+#include <unistd.h>
 
 #include "BabyX.h"
 
@@ -27,7 +28,6 @@ typedef struct
 { 
   BABYX *bbx;
   BBX_Panel *pan; 
-  BBX_Label *directory_lab;
   BBX_ListBox *list;
   BBX_CheckBox *hidden_chk;
   BBX_Label *filter_lab;
@@ -46,8 +46,7 @@ typedef struct
 typedef struct
 { 
   BABYX *bbx;
-  BBX_Panel *pan;
-  BBX_Label *directory_lab;
+  BBX_Panel *pan; 
   BBX_ListBox *list;
   BBX_LineEdit *answer_edt;
   BBX_CheckBox *hidden_chk;
@@ -78,7 +77,6 @@ static void savecheckhidden(void *obj, int state);
 static void saveeditanswer(void *obj, char *text);
 static void saveeditfilter(void *obj, char *text);
 
-static void filldirectory(BBX_Label *lab, char *dir);
 static void filllistbox(BBX_ListBox *list, DIRENTRY *entries, int N);
 
 static void makepath(char *out, int N, char *dir, char *sub);
@@ -105,15 +103,13 @@ char *bbx_getopenfile(BABYX *bbx, char *filt)
   op.ok_but = bbx_button(bbx, op.pan, "OK", openpressok, &op);
   op.cancel_but = bbx_button(bbx, op.pan, "Cancel", openpresscancel, &op); 
   op.list = bbx_listbox(bbx, op.pan, 0, 0);
-  op.directory_lab = bbx_label(bbx, op.pan, "");
   
   op.hidden_chk = bbx_checkbox(bbx, op.pan, "Hidden", opencheckhidden, &op);
-  _getcwd(op.directory, FILENAME_MAX);
+  getcwd(op.directory, FILENAME_MAX);
   op.filter_lab = bbx_label(bbx, op.pan, "Filter");
   op.filter_edt = bbx_lineedit(bbx, op.pan, op.filt, openeditfilter, &op); 
   op.dir = readdirectoryfilt(op.directory, &op.Nfiles, 0, op.filt);
   filllistbox(op.list, op.dir, op.Nfiles); 
-  filldirectory(op.directory_lab, op.directory);
   bbx_panel_setbackground(op.pan, bbx_color("gray"));
   
   op.hidden = 0;
@@ -141,7 +137,6 @@ char *bbx_getopenfile(BABYX *bbx, char *filt)
   bbx_button_kill(op.cancel_but);
   bbx_label_kill(op.filter_lab);
   bbx_lineedit_kill(op.filter_edt);
-  bbx_label_kill(op.directory_lab);
   bbx_dialogpanel_kill(op.pan);
 
   return answer;
@@ -163,15 +158,13 @@ char *bbx_getsavefile(BABYX *bbx, char *filt)
   sp.ok_but = bbx_button(bbx, sp.pan, "OK", savepressok, &sp);
   sp.cancel_but = bbx_button(bbx, sp.pan, "Cancel", savepresscancel, &sp); 
   sp.list = bbx_listbox(bbx, sp.pan, saveselectionchanged, &sp);
-  sp.directory_lab = bbx_label(bbx, sp.pan, "");
   sp.answer_edt = bbx_lineedit(bbx, sp.pan, "", saveeditanswer, &sp); 
   sp.hidden_chk = bbx_checkbox(bbx, sp.pan, "Hidden", savecheckhidden, &sp);
-  _getcwd(sp.directory, FILENAME_MAX);
+  getcwd(sp.directory, FILENAME_MAX);
   sp.filter_lab = bbx_label(bbx, sp.pan, "Filter");
   sp.filter_edt = bbx_lineedit(bbx, sp.pan, sp.filt, saveeditfilter, &sp); 
   sp.dir = readdirectoryfilt(sp.directory, &sp.Nfiles, 0, sp.filt);
   filllistbox(sp.list, sp.dir, sp.Nfiles); 
-  filldirectory(sp.directory_lab, sp.directory);
   bbx_panel_setbackground(sp.pan, bbx_color("gray"));
   
   sp.hidden = 0;
@@ -206,7 +199,6 @@ char *bbx_getsavefile(BABYX *bbx, char *filt)
   bbx_button_kill(sp.cancel_but);
   bbx_label_kill(sp.filter_lab);
   bbx_lineedit_kill(sp.filter_edt);
-  bbx_label_kill(sp.directory_lab);
   bbx_dialogpanel_kill(sp.pan);
 
   return answer;
@@ -216,7 +208,6 @@ static void openlayout(void *obj, int width, int height)
 {
   OPENPICKER *op = obj;
 
-  bbx_setpos(op->bbx, op->directory_lab, 5, 10, width - 5, 25);
   bbx_setpos(op->bbx, op->list, 10, 100, width-20, height-200);
   bbx_setpos(op->bbx, op->hidden_chk, 10, height-60, 100, 25);
   bbx_setpos(op->bbx, op->filter_lab, 110, height-60, 70, 25);
@@ -255,7 +246,6 @@ static void openpressok(void *obj)
       killentries(op->dir, op->Nfiles);
       op->dir = readdirectoryfilt(op->directory, &op->Nfiles, op->hidden, op->filt);
       filllistbox(op->list, op->dir, op->Nfiles); 
-	  filldirectory(op->directory_lab, op->directory);
     }
     else
     {
@@ -299,7 +289,6 @@ static void savelayout(void *obj, int width, int height)
   SAVEPICKER *sp = obj;
 
   bbx_setpos(sp->bbx, sp->list, 10, 100, width-20, height-200);
-  bbx_setpos(sp->bbx, sp->directory_lab, 5, 10, width - 5, 25);
   bbx_setpos(sp->bbx, sp->answer_edt, 20, height-90, width-40, 25);
   bbx_setpos(sp->bbx, sp->hidden_chk, 10, height-60, 100, 25);
   bbx_setpos(sp->bbx, sp->filter_lab, 110, height-60, 70, 25);
@@ -354,7 +343,6 @@ static void savepressok(void *obj)
       killentries(sp->dir, sp->Nfiles);
       sp->dir = readdirectoryfilt(sp->directory, &sp->Nfiles, sp->hidden, sp->filt);
       filllistbox(sp->list, sp->dir, sp->Nfiles); 
-	  filldirectory(sp->directory_lab, sp->directory);
     }
     else
     {
@@ -417,31 +405,6 @@ static void saveeditfilter(void *obj, char *text)
 }
 
 
-static void filldirectory(BBX_Label *lab, char *dir)
-{
-	int len;
-	int width, height;
-	int size;
-	int i = 0;
-	int N;
-
-	bbx_getsize(lab->bbx, lab, &width, &height);
-	len = (int) strlen(dir);
-	N = (int) bbx_utf8_Nchars(dir);
-	while (N > 0 && i < len)
-	{
-		size = bbx_utf8width(lab->font, dir + i, N);
-		
-		if (size < width - 10)
-		{
-			bbx_label_settext(lab, dir + i);
-			break;
-		}
-		i += bbx_utf8_skip(dir + i);
-		N--;
-	}
-}
-
 
 static void filllistbox(BBX_ListBox *list, DIRENTRY *entries, int N)
 {
@@ -470,11 +433,6 @@ DIRENTRY *readdirectoryfilt(char *dir, int *N, int hidden, char *filt)
   int i;
   
   fulldir = readdirectory(dir, N, hidden);
-  if (!fulldir)
-  {
-	  *N = 0;
-	  return 0;
-  }
   answer = bbx_malloc(*N * sizeof(DIRENTRY));
   for(i=0;i<*N;i++)
   {
@@ -491,138 +449,6 @@ DIRENTRY *readdirectoryfilt(char *dir, int *N, int hidden, char *filt)
   return answer;
 }
 
-#include <assert.h>
-DIRENTRY *readdirectory(char *dir, int *N, int hidden)
-{
-	WIN32_FIND_DATA ffd;
-	//LARGE_INTEGER filesize;
-	TCHAR szDir[MAX_PATH];
-	//size_t length_of_arg;
-	HANDLE hFind = INVALID_HANDLE_VALUE;
-	DWORD dwError = 0;
-	int Nch;
-	int Nread = 0;
-	int i, j;
-	char *ptr;
-	int len;
-	int count;
-	DIRENTRY *answer = 0;
-
-	if (!strcmp(dir, "\\"))
-	{
-		GetLogicalDriveStrings(MAX_PATH, szDir);
-		i = 0;
-		while (szDir[i])
-		{
-			Nread++;
-			while (szDir[i])
-				i++;
-			i++;
-		}
-		answer = bbx_malloc(Nread * sizeof(DIRENTRY));
-		i = 0;
-		count = 0;
-
-		while (szDir[i])
-		{
-			Nch = 0;
-			j = i;
-			while (szDir[j])
-			{
-				Nch += bbx_utf8_charwidth(szDir[j]);
-				j++;
-			}
-			answer[count].name = bbx_malloc(Nch + 1);
-			Nch = 0;
-			j = i;
-			while (szDir[j])
-			{
-				Nch += bbx_utf8_putch(answer[count].name + Nch, szDir[j]);
-				j++;
-			}
-			answer[count].name[Nch] = 0;
-			answer[count].folder = 1;
-			answer[count].name[strlen(answer[count].name) - 1] = 0;
-			i = j+1;
-			count++;
-		}
-		*N = Nread;
-		return answer;
-	}
-
-	
-
-	Nch = bbx_utf8_Nchars(dir);
-	ptr = dir;
-	for (i = 0; i < Nch; i++)
-	{
-		szDir[i] = bbx_utf8_getch(ptr);
-		ptr += bbx_utf8_skip(ptr);
-	}
-	szDir[i] = '\\';
-	szDir[i + 1] = '*';
-	szDir[i + 2] = 0;
-
-	// Find the first file in the directory.
-	hFind = FindFirstFile(szDir, &ffd);
-
-	if (INVALID_HANDLE_VALUE == hFind)
-	{
-		answer = bbx_malloc(sizeof(DIRENTRY));
-		answer[0].name = bbx_strdup("..");
-		answer[0].folder = 1;
-		*N = 1;
-		return answer;
-	}
-
-	// List all the files in the directory with some info about them.
-
-	do
-	{
-		if ( (ffd.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN) && !hidden)
-			continue;
-		answer = bbx_realloc(answer, (Nread + 1) * sizeof(DIRENTRY));
-		if (ffd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-			answer[Nread].folder = 1;
-		else
-			answer[Nread].folder = 0;
-		len = 0;
-		for (i = 0; ffd.cFileName[i]; i++)
-		{
-			len += bbx_utf8_charwidth(ffd.cFileName[i]);
-		}
-		answer[Nread].name = bbx_malloc(len + 1);
-		ptr = answer[Nread].name;
-		for (i = 0; ffd.cFileName[i]; i++)
-			ptr += bbx_utf8_putch(ptr, ffd.cFileName[i]);
-		*ptr = 0;
-		Nread++;
-	} while (FindNextFile(hFind, &ffd) != 0);
-
-	dwError = GetLastError();
-	if (dwError != ERROR_NO_MORE_FILES)
-	{
-		return 0;
-	}
-
-	FindClose(hFind);
-
-	for (i = 0; i < Nread;i++)
-		if (!strcmp(answer[i].name, ".."))
-			break;
-		if (i == Nread)
-		{
-			answer = bbx_realloc(answer, (Nread + 1)*sizeof(DIRENTRY));
-			answer[Nread].name = bbx_strdup("..");
-			answer[Nread].folder = 1;
-			Nread++;
-		}
-
-	*N = Nread;
-	return answer;
-}
-
-/*
 DIRENTRY *readdirectory(char *dir, int *N, int hidden)
 {
   struct dirent *de=NULL;
@@ -675,7 +501,6 @@ DIRENTRY *readdirectory(char *dir, int *N, int hidden)
   *N = Nread;
   return answer;
 }
-*/
 
 static int compentries(const void *e1, const void *e2)
 {
@@ -746,24 +571,17 @@ static void goupafolder(char *dir)
 {
   char *sep;
 
-  sep = strrchr(dir, '\\');
+  sep = strrchr(dir, '/');
   if(sep && sep != dir)
     *sep = 0;
   if(sep == dir)
     sep[1] = 0;
-  if (!sep)
-	  strcpy(dir, "\\");
 }
 
 static void godownafolder(char *dir, char *sub)
 {
-	if (!strcmp(dir, "\\"))
-		strcpy(dir, sub);
-	else
-	{
-		strcat(dir, "\\");
-		strcat(dir, sub);
-	}
+  strcat(dir, "/");
+  strcat(dir, sub);
 } 
 
 static int fileexists(char *path)

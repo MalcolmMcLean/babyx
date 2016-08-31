@@ -51,7 +51,7 @@ BBX_EditBox *bbx_editbox(BABYX *bbx, BBX_Panel *parent, void (*fptr)(void *ptr, 
   return BBX_editbox(bbx, parent->win, fptr, ptr); 
 }
 
-BBX_EditBox *BBX_editbox(BABYX *bbx, HWND parent, void (*fptr)(void *ptr, char *text), void *ptr)
+BBX_EditBox *BBX_editbox(BABYX *bbx, Window parent, void (*fptr)(void *ptr, char *text), void *ptr)
 {
   EDITBOX *obj;
 
@@ -213,7 +213,6 @@ static void mousefunc(void *obj, int action, int x, int y, int buttons)
      box->sel1line = -1;
      box->sel2pos = -1;
      box->sel2line = -1;
-	 bbx_setfocus(box->bbx, box->pan);
  
      drawme(box);
     } 	
@@ -263,11 +262,9 @@ static void mousefunc(void *obj, int action, int x, int y, int buttons)
        box->sel2pos = box->cursorpos;
      }  
    
-	 drawme(box);
     }
   
 }
-
 
 static void keyfunc(void *obj, int ch)
 {
@@ -309,7 +306,7 @@ static void keyfunc(void *obj, int ch)
     break;
      
   case BBX_KEY_DELETE:
-    if(box->cursorpos < (int) strlen(line))
+    if(box->cursorpos < strlen(line))
     {
       nb = bbx_utf8_skip(line + box->cursorpos);
       memmove(line + box->cursorpos, line+box->cursorpos +nb,
@@ -354,7 +351,7 @@ static void keyfunc(void *obj, int ch)
  
     break;                           
   case BBX_KEY_RIGHT:
-    if(box->cursorpos < (int) strlen(line))
+    if(box->cursorpos < strlen(line))
       box->cursorpos+= bbx_utf8_skip(line + box->cursorpos);
     break;                        
   case BBX_KEY_DOWN:
@@ -616,18 +613,8 @@ static int addchar(EDITBOX *box, int ch)
     len += nb;
     if(len > 0 && line[len-1] == '\n')
       len--;
-	if (ch == '\n' || bbx_utf8width(box->font, line, len) > width - 30 - 1 * 2)
-	{
-		reformattext(box);
-	}
-	if (ch == '\n')
-	{
-		if (box->curline < box->Nlines - 1)
-		{
-			box->cursorpos = 0;
-			box->curline++;
-		}
-	}
+    if(ch == '\n' || bbx_utf8width(box->font, line, len) > width -30-1*2)
+      reformattext(box);
   } 
 
   return 0;  
@@ -730,7 +717,7 @@ static int reformattext(EDITBOX *box)
     len += strlen(box->lines[i]); 
   }
   settext(box, buff);
-//  free(buff);
+  free(buff);
   len = 0;
   for(i=0;i<box->Nlines;i++)
   {
@@ -746,8 +733,8 @@ static int reformattext(EDITBOX *box)
   {
     box->curline = box->Nlines -1;
     if(box->curline >= 0)
-      box->cursorpos = strlen(box->lines[box->curline]);
-  }   
+      box->cursorpos = strlen(box->lines[box->curline]); 
+  }                                                                            
   if(box->curline >= box->topline + box->Nshown)
     box->topline = box->curline - box->Nshown + 1;
   else if(box->topline + box->Nshown <= box->curline)
@@ -758,7 +745,6 @@ static int reformattext(EDITBOX *box)
     box->topline = 0;
   bbx_scrollbar_set(box->sb, box->Nlines, box->Nshown, box->topline);
 
-  free(buff);
   return 0;
 }
 
@@ -820,8 +806,7 @@ static char **texttolines(struct bitmap_font *fs, char *text, int width)
     answer = addline(answer, Nlines, text + starti, i -starti, &capacity);
     Nlines++;
   }
-  answer[Nlines] = bbx_strdup("");
-  answer[Nlines + 1] = 0;
+  answer[Nlines] = 0;
   return answer;
 } 
 
@@ -836,7 +821,7 @@ static char **addline(char **buff, int N, char *str, int len, int *capacity)
   memcpy(line, str, len);
   line[len] = 0;
   
-  if(N >= *capacity -3)
+  if(N >= *capacity -2)
   {
     temp = bbx_realloc(buff, *capacity * 2 * sizeof(char *));
     if(!temp)

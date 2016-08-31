@@ -36,7 +36,7 @@ BBX_LineEdit *bbx_lineedit(BABYX *bbx, BBX_Panel *parent, char *text, void (*fpt
   return BBX_lineedit(bbx, parent->win, text, fptr, ptr);
 }
 
-BBX_LineEdit *BBX_lineedit(BABYX *bbx, HWND parent, char *text, void (*fptr)(void *ptr, char *text), void *ptr )
+BBX_LineEdit *BBX_lineedit(BABYX *bbx, Window parent, char *text, void (*fptr)(void *ptr, char *text), void *ptr )
 {
   LINEEDIT *obj;
 
@@ -72,7 +72,6 @@ void bbx_lineedit_kill(BBX_LineEdit *le)
     edt = bbx_panel_getptr(le);
     if(edt)
     {
-	  bbx_removeticker(edt->bbx, edt->ticker);
       bbx_canvas_kill(edt->can);
       free(edt->text);
       free(edt);
@@ -118,13 +117,6 @@ void bbx_lineedit_enable(BBX_LineEdit *le)
   LINEEDIT *edt = bbx_panel_getptr(le);
   edt->disabled = 0;
   redraw(edt); 
-}
-
-void bbx_lineedit_setfont(BBX_LineEdit *le, struct bitmap_font *font)
-{
-	LINEEDIT *edt = bbx_panel_getptr(le);
-	edt->font = font;
-	redraw(edt);
 }
 
 
@@ -235,7 +227,7 @@ static void keyfunc(void *obj, int ch)
          }
 	break;
       case BBX_KEY_DELETE:
-        if(edt->cursorpos < (int) strlen(edt->text))
+        if(edt->cursorpos < strlen(edt->text))
         {
 	  nb = bbx_utf8_skip(edt->text + edt->cursorpos);
           memmove(edt->text + edt->cursorpos, edt->text+edt->cursorpos +nb,
@@ -264,7 +256,7 @@ static void keyfunc(void *obj, int ch)
      case BBX_KEY_UP:
        break;                  
      case BBX_KEY_RIGHT:
-       if(edt->cursorpos < (int) strlen(edt->text))
+       if(edt->cursorpos < strlen(edt->text))
          edt->cursorpos++;
        break;                         
      case BBX_KEY_DOWN:

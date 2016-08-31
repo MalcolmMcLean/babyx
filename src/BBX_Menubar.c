@@ -27,7 +27,7 @@ BBX_Menubar *bbx_menubar(BABYX *bbx, BBX_Panel *parent, void (*fptr)(void *ptr, 
   return BBX_menubar(bbx, parent->win, fptr, ptr);
 }
 
-BBX_Menubar *BBX_menubar(BABYX *bbx, HWND parent, void (*fptr)(void *ptr, int d), void *ptr)
+BBX_Menubar *BBX_menubar(BABYX *bbx, Window parent, void (*fptr)(void *ptr, int d), void *ptr)
 {
   MENUBAR *menu;
 

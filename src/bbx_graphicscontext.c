@@ -711,6 +711,16 @@ static float nsvg__getAverageScale(float* t)
 	return (sx + sy) * 0.5f;
 }
 
+static int nsvg__isspace(int ch)
+{
+  static char *space = " \t\n\r\b";
+  int i;
+
+  for(i=0;space[i];i++)
+    if(ch == space[i])
+      return 1;
+  return 0;
+}
 
 static unsigned int nsvg__parseColorHex(const char* str)
 {
@@ -2664,8 +2674,9 @@ typedef struct bbx_gc
 	struct bbx_gc *prevstate;
 } BBX_GC;
 
-void bbx_gc_endsubpath(BBX_GC *gc, int closed);
+static void bbx_gc_endsubpath(BBX_GC *gc, int closed);
 void bbx_gc_lineto(BBX_GC *gc, double x, double y);
+
 
 BBX_GC *bbx_graphicscontext(unsigned char *rgba, int width, int height)
 {

@@ -1,51 +1,33 @@
 #include <stdlib.h>
 #include <string.h>
+#include <X11/Xutil.h>
 
 #include "BabyX.h"
 
-#include <assert.h>
 
 extern struct bitmap_font fred_font;
 
-static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
-static void TranslateCoords(HWND hwnd, HWND other, int *x, int *y);
+static void event_handler(void *obj, XEvent *event);
 static void render(BBX_Label *lab);
-static HBITMAP MakeBitmap(unsigned char *rgba, int width, int height);
+static XImage *CreateTrueColorImage(Display *display, Visual *visual, unsigned long col, int width, int height);
 static int getNlines(char *str);
-
-ATOM BBX_RegisterLabel(HINSTANCE hInstance)
-{
-	WNDCLASSEX wcex;
-
-	wcex.cbSize = sizeof(WNDCLASSEX);
-
-	wcex.style = CS_HREDRAW | CS_VREDRAW;
-	wcex.lpfnWndProc = WndProc;
-	wcex.cbClsExtra = 0;
-	wcex.cbWndExtra = 0;
-	wcex.hInstance = hInstance;
-	wcex.hIcon = 0; //LoadIcon(hInstance, MAKEINTRESOURCE(IDI_WINHELLO4));
-	wcex.hCursor = LoadCursor(NULL, IDC_ARROW);
-	wcex.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
-	wcex.lpszMenuName = 0; //MAKEINTRESOURCE(IDC_WINHELLO4);
-	wcex.lpszClassName = "BBXLabel"; //szWindowClass;
-	wcex.hIconSm = 0; //LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
-
-	return RegisterClassEx(&wcex);
-}
 
 BBX_Label *bbx_label(BABYX *bbx, BBX_Panel *parent, char *text)
 {
   return BBX_label(bbx, parent->win, text);
 }
 
-BBX_Label *BBX_label(BABYX *bbx, HWND parent, char *text)
+BBX_Label *BBX_label(BABYX *bbx, Window parent, char *text)
 {
   BBX_Label *answer;
 
   answer = bbx_malloc(sizeof(BBX_Label));
   answer->bbx = bbx;
-  answer->event_handler = 0;
+  answer->win = XCreateSimpleWindow(bbx->dpy, parent, 0, 0, 100, 100,
+				    0, BlackPixel(bbx->dpy, 0), WhitePixel(bbx->dpy, 0));
+ XSelectInput(bbx->dpy, answer->win, ExposureMask | StructureNotifyMask);
+
+  answer->event_handler = event_handler;
   answer->message_handler = 0;
   answer->text = bbx_strdup(text);
   answer->fgcol = bbx_color("black");
@@ -54,10 +36,7 @@ BBX_Label *BBX_label(BABYX *bbx, HWND parent, char *text)
   answer->font = bbx->gui_font;
   answer->align = BBX_ALIGN_CENTER;
 
-  answer->win = CreateWindow("BBXLabel", "", WS_CHILD |WS_VISIBLE, 0, 0, 100, 30, parent, 0, bbx->hinstance, answer);
-  assert(IsWindow(answer->win));
-
-  BBX_Register(bbx, answer->win, 0, 0, answer);
+  BBX_Register(bbx, answer->win, event_handler, 0, answer);
 
   return answer;  
 }  
@@ -67,8 +46,9 @@ void bbx_label_kill(BBX_Label *obj)
   if(obj)
   {
     BBX_Deregister(obj->bbx, obj->win);
-    DestroyWindow(obj->win);
-	DeleteObject(obj->img);
+    XDestroyWindow(obj->bbx->dpy, obj->win);
+    if(obj->img)
+      XDestroyImage(obj->img);
     free(obj->text);
     free(obj);
   }
@@ -78,7 +58,7 @@ void bbx_label_settext(BBX_Label *obj, char *text)
 {
   free(obj->text);
   obj->text = bbx_strdup(text);
-  //render(obj);
+  render(obj);
   BBX_InvalidateWindow(obj->bbx, obj->win);
 }
 
@@ -87,7 +67,7 @@ void bbx_label_setalignment(BBX_Label *obj, int align)
   if(obj->align != align)
   {
     obj->align = align;
-   // render(obj);
+    render(obj);
     BBX_InvalidateWindow(obj->bbx, obj->win);
   }
 }
@@ -97,7 +77,7 @@ void bbx_label_setbackground(BBX_Label *obj, BBX_RGBA col)
   if(obj->bgcol != col)
   {
     obj->bgcol = col;
-    //render(obj);
+    render(obj);
     BBX_InvalidateWindow(obj->bbx, obj->win);
   }
 }
@@ -107,7 +87,7 @@ void bbx_label_setforeground(BBX_Label *obj, BBX_RGBA col)
   if(obj->fgcol != col)
   {
     obj->fgcol = col;
-    //render(obj);
+    render(obj);
     BBX_InvalidateWindow(obj->bbx, obj->win);
   }
 }
@@ -115,7 +95,7 @@ void bbx_label_setforeground(BBX_Label *obj, BBX_RGBA col)
 void bbx_label_setfont(BBX_Label *obj, struct bitmap_font *fs)
 {
   obj->font = fs;
-  //render(obj);
+  render(obj);
   BBX_InvalidateWindow(obj->bbx, obj->win);
 }
 
@@ -157,101 +137,35 @@ int bbx_label_getpreferredsize(BBX_Label *lab, int *width, int *height)
     return 0;
 }
  
-static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+static void event_handler(void *obj, XEvent *event)
 {
-  BBX_Label *lab;
+  BBX_Label *lab = obj;
   int width, height;
   BABYX *bbx;
-  PAINTSTRUCT ps;
-  HDC hdc;
-  HDC hdcbmp;
-  RECT rect;
-  int x, y;
  
-  lab = (BBX_Label *)GetWindowLongPtr(hwnd, GWL_USERDATA);
-  if (lab)
-	bbx = lab->bbx;
 
-  switch(msg)
+  bbx = lab->bbx;
+
+  switch(event->type)
   {
-  case WM_CREATE:
-	  lab = (BBX_Label *)((CREATESTRUCT *)lParam)->lpCreateParams;
-//	  lab->win = lab;
-	  SetWindowLongPtr(hwnd, GWL_USERDATA, (LONG)((CREATESTRUCT *)lParam)->lpCreateParams);
-	  break;
-  case WM_PAINT:
-	 render(lab);
-	 hdc = BeginPaint(hwnd, &ps);
-	 GetClientRect(hwnd, &rect);
-	 width = rect.right - rect.left;
-	 height = rect.bottom - rect.top;
-	 hdcbmp = CreateCompatibleDC(hdc);
-	 SelectObject(hdcbmp, lab->img);
-	 BitBlt(hdc, 0, 0, width, height, hdcbmp, 0, 0, SRCCOPY);
-	 DeleteDC(hdcbmp);
-	 EndPaint(hwnd, &ps);
-	 break;
+  case Expose:
+    if(!lab->img)
+      return;
+     bbx_getsize(bbx, lab, &width, &height);      
+     XPutImage(bbx->dpy, lab->win, bbx->gc, lab->img, 0, 0, 0, 0, width, height);
      break;
-  case WM_SIZE:
-	  //render(lab, LOWORD(lParam), HIWORD(lParam););
+  case ConfigureNotify:
+    if(lab->img)
+      XDestroyImage(lab->img);
+    lab->img = CreateTrueColorImage(bbx->dpy,  
+                                    DefaultVisual(bbx->dpy, bbx->screen),
+				    lab->bgcol,
+                                    event->xconfigure.width,
+                                    event->xconfigure.height);
+    render(lab);
     break;
-  case WM_LBUTTONDOWN:
-	  x = GET_X_LPARAM(lParam);
-	  y = GET_Y_LPARAM(lParam);
-	  TranslateCoords(hwnd, GetParent(hwnd), &x, &y);
-	  SendMessage(GetParent(hwnd), WM_LBUTTONDOWN, wParam, MAKELPARAM(x, y));
-	  break;
-  case WM_LBUTTONUP:
-	  x = GET_X_LPARAM(lParam);
-	  y = GET_Y_LPARAM(lParam);
-	  TranslateCoords(hwnd, GetParent(hwnd), &x, &y);
-	  SendMessage(GetParent(hwnd), WM_LBUTTONUP, wParam, MAKELPARAM(x, y));
-	  break;
-  case WM_RBUTTONDOWN:
-	  x = GET_X_LPARAM(lParam);
-	  y = GET_Y_LPARAM(lParam);
-	  TranslateCoords(hwnd, GetParent(hwnd), &x, &y);
-	  SendMessage(GetParent(hwnd), WM_RBUTTONDOWN, wParam, MAKELPARAM(x, y));
-	  break;
-  case WM_RBUTTONUP:
-	  x = GET_X_LPARAM(lParam);
-	  y = GET_Y_LPARAM(lParam);
-	  TranslateCoords(hwnd, GetParent(hwnd), &x, &y);
-	  SendMessage(GetParent(hwnd), WM_RBUTTONUP, wParam, MAKELPARAM(x, y));
-	  break;
-  case WM_MBUTTONDOWN:
-	  x = GET_X_LPARAM(lParam);
-	  y = GET_Y_LPARAM(lParam);
-	  TranslateCoords(hwnd, GetParent(hwnd), &x, &y);
-	  SendMessage(GetParent(hwnd), WM_MBUTTONDOWN, wParam, MAKELPARAM(x, y));
-	  break;
-  case WM_MBUTTONUP:
-	  x = GET_X_LPARAM(lParam);
-	  y = GET_Y_LPARAM(lParam);
-	  TranslateCoords(hwnd, GetParent(hwnd), &x, &y);
-	  SendMessage(GetParent(hwnd), WM_MBUTTONUP, wParam, MAKELPARAM(x, y));
-	  break;
-  case WM_MOUSEMOVE:
-	  x = GET_X_LPARAM(lParam);
-	  y = GET_Y_LPARAM(lParam);
-	  TranslateCoords(hwnd, GetParent(hwnd), &x, &y);
-	  SendMessage(GetParent(hwnd), WM_MOUSEMOVE, wParam, MAKELPARAM(x, y));
-	  break;
-default:
-	return DefWindowProc(hwnd, msg, wParam, lParam);
+   
   }
-  return 0;
-}
-
-static void TranslateCoords(HWND hwnd, HWND other, int *x, int *y)
-{
-	POINT pt;
-	pt.x = *x;
-	pt.y = *y;
-	ClientToScreen(hwnd, &pt);
-	ScreenToClient(other, &pt);
-	*x = pt.x;
-	*y = pt.y;
 
 }
 
@@ -260,19 +174,18 @@ static void render(BBX_Label *lab)
   unsigned char *buff;
   int font_height;
   int Nlines;
-  int i;
+  int i, j;
   char *line;
   char *end;
   int len;
   int msg_x, msg_y, msg_len;
   int width, height;
-  RECT rect;
 
-  DeleteObject(lab->img);
-  GetClientRect(lab->win, &rect);
+  if(!lab->img)
+    return;
   
-  width = rect.right - rect.left;
-  height = rect.bottom - rect.top;
+  width = lab->img->width;
+  height = lab->img->height;
 
   buff = malloc(width * height * 4);
   for(i=0;i<width*height;i++)
@@ -312,47 +225,36 @@ static void render(BBX_Label *lab)
        end = strchr(line, '\n');
      }
    }
-  lab->img = MakeBitmap(buff, width, height);
+  j = 0;
+  for(i=0;i<width * height;i++)
+  {   
+    lab->img->data[j] =  buff[j+2];
+    lab->img->data[j+1] = buff[j+1];
+    lab->img->data[j+2] = buff[j];
+    lab->img->data[j+3] = buff[j+3];
+    j+=4;
+  }
   free(buff);
  
 }
 
-static HBITMAP MakeBitmap(unsigned char *rgba, int width, int height)
+static XImage *CreateTrueColorImage(Display *display, Visual *visual, unsigned long col, int width, int height)
 {
-	VOID *pvBits;          // pointer to DIB section 
-	HBITMAP answer;
-	BITMAPINFO bmi;
-	HDC hdc;
-	int x, y;
-	int red, green, blue, alpha;
-
-	// setup bitmap info   
-	bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-	bmi.bmiHeader.biWidth = width;
-	bmi.bmiHeader.biHeight = height;
-	bmi.bmiHeader.biPlanes = 1;
-	bmi.bmiHeader.biBitCount = 32;         // four 8-bit components 
-	bmi.bmiHeader.biCompression = BI_RGB;
-	bmi.bmiHeader.biSizeImage = width * height * 4;
-
-	hdc = CreateCompatibleDC(GetDC(0));
-	answer = CreateDIBSection(hdc, &bmi, DIB_RGB_COLORS, &pvBits, NULL, 0x0);
-	for (y = 0; y < height; y++)
-	{
-		for (x = 0; x < width; x++)
-		{
-			red = rgba[(y*width + x) * 4];
-			green = rgba[(y*width + x) * 4 + 1];
-			blue = rgba[(y*width + x) * 4 + 2];
-			alpha = rgba[(y*width + x) * 4 + 3];
-			red = (red * alpha) >> 8;
-			green = (green * alpha) >> 8;
-			blue = (blue * alpha) >> 8;
-			((UINT32 *)pvBits)[(height - y - 1) * width + x] = (alpha << 24) | (red << 16) | (green << 8) | blue;
-		}
+    int i, j;
+    unsigned char *image32=(unsigned char *)bbx_malloc(width*height*4);
+    unsigned char *p=image32;
+    for(i=0; i<width; i++)
+    {
+        for(j=0; j<height; j++)
+        {
+          
+	  *p++= col & 0xFF; /* blue */
+	  *p++= (col >>8 ) & 0xFF; /* green */
+	  *p++= (col >> 16) & 0xFF; /* red */
+          p++;  
 	}
-
-	return answer;
+    }
+    return XCreateImage(display, visual, 24, ZPixmap, 0, (char *) image32, width, height, 32, 0);
 }
 
 static int getNlines(char *str)

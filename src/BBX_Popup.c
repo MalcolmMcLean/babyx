@@ -106,8 +106,8 @@ static int getPopupDimensions(BBX_Popup *pop, int *width, int *height)
 typedef struct
 {
   BABYX *bbx;
-  HWND win;
-  void (*event_handler)(void *obj);
+  Window win;
+  void (*event_handler)(void *obj, XEvent *event);
   int (*message_handler)(void *obj, int message, int a, int b, void *params);
   /* private stuff */
   BBX_Popup *data;
@@ -311,8 +311,8 @@ static void event_handler(void *obj, XEvent *event)
 typedef struct
 {
   BABYX *bbx;
-  HWND win;
-  void (*event_handler)(void *obj);
+  Window win;
+  void (*event_handler)(void *obj, XEvent *event);
   int (*message_handler)(void *obj, int message, int a, int b, void *params);
   /* private stuff */
   char **str;

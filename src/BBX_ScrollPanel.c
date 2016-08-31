@@ -7,7 +7,7 @@ typedef struct
   int y;
   int width;
   int height;
-} BBXRECT;
+} RECT;
 
 typedef struct
 {
@@ -20,7 +20,7 @@ typedef struct
   int left;
   void **bbx_children;
   int Nchildren;
-  BBXRECT *bbx_pos;
+  RECT *bbx_pos;
   BBX_Scrollbar *sbv;
   BBX_Scrollbar *sbh;
 } BBX_SP;
@@ -80,7 +80,7 @@ int bbx_scrollpanel_add(BBX_ScrollPanel *pan, void *bbxobj, int x, int y, int wi
   BBX_SP *sp;
 
   sp = bbx_panel_getptr(pan);
-  sp->bbx_pos = bbx_realloc(sp->bbx_pos, (sp->Nchildren +1) * sizeof(BBXRECT));
+  sp->bbx_pos = bbx_realloc(sp->bbx_pos, (sp->Nchildren +1) * sizeof(RECT));
   sp->bbx_children = bbx_realloc(sp->bbx_children, (sp->Nchildren +1) * sizeof(void *));
   sp->bbx_pos[sp->Nchildren].x = x;
   sp->bbx_pos[sp->Nchildren].y = y;

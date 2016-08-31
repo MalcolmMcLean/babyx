@@ -34,7 +34,7 @@ BBX_RadioBox *bbx_radiobox(BABYX *bbx, BBX_Panel *parent, char **text, int N, vo
   return BBX_radiobox(bbx, parent->win, text, N, fptr, ptr);
 }
 
-BBX_RadioBox *BBX_radiobox(BABYX *bbx, HWND parent, char **text, int N, void (*fptr)(void *ptr, int index), void *ptr )
+BBX_RadioBox *BBX_radiobox(BABYX *bbx, Window parent, char **text, int N, void (*fptr)(void *ptr, int index), void *ptr )
 {
   RADIOPANEL *rad;
   int i;
@@ -119,7 +119,7 @@ int bbx_radiobox_disable(BBX_RadioBox *obj, int index)
     RADIOPANEL *rad = bbx_panel_getptr(obj);
     if(index >= 0 && index < rad->N)
     {
-      bbx_label_setforeground(rad->lab[index], bbx_color("DimGray"));
+      bbx_label_setforeground(rad->lab[index], bbx_color("light gray"));
       rad->disabled[index] = 1;
       drawelement(rad, index);
       return 0;
