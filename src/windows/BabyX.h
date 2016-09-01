@@ -109,7 +109,6 @@ unsigned long BBX_Color(char *str);
 #include "BBX_FilePicker.h"
 
 void startbabyx(
-				HINSTANCE hInstance,
 				char *name, 
                 int width, 
                 int height,
