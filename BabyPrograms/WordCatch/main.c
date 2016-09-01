@@ -116,10 +116,7 @@ out_of_memory:
 	return 0;
 }
 
-int APIENTRY WinMain(HINSTANCE hInstance,
-	HINSTANCE hPrevInstance,
-	LPTSTR    lpCmdLine,
-	int       nCmdShow)
+int main(void)
 {
 	APP app;
 	unsigned char *tune;
@@ -128,7 +125,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 	srand((unsigned int) time(0));
 	tune = slurpb("C:\\Users\\Malcolm\\Music\\away-in-a-manger.mp3", &N);
 	playmp3(tune, N);
-	startbabyx(hInstance, "Wordcatch", 320, 480, create, layout, &app);
+	startbabyx("Wordcatch", 320, 480, create, layout, &app);
 }
 
 static void create(void *obj, BABYX *bbx, BBX_Panel *root)

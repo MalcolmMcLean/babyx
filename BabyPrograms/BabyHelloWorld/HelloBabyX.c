@@ -17,7 +17,7 @@ void ok_pressed(void *obj);
 int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstnace, LPSTR lpCommandLine, int nCmdShow)
 {
 	APP app;
-	startbabyx(hInstance, "Hello Baby X", 320, 200, createapp, layoutapp, &app);
+	startbabyx("Hello Baby X 2", 320, 200, createapp, layoutapp, &app);
 
 	return 0;
 }

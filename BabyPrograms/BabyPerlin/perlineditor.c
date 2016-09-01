@@ -89,9 +89,8 @@ void aboutdialog(BABYX *bbx);
 
 char *trim(char *str);
 
-//int main(void)
 
-int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstnace, LPSTR lpCommandLine, int nCmdShow)
+int main(void)
 {
   app.width = 200;
   app.height = 2000/16;
@@ -102,7 +101,7 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstnace, LPSTR lpComma
   app.delta_y = 0.01;
   app.delta_t = 0.005;
   app.t = 0;
-  startbabyx(hInstance, "Perlin editor", 530, 400, createapp, layoutapp, &app);  
+  startbabyx("Perlin editor", 530, 400, createapp, layoutapp, &app);  
 
   return 0;
 }

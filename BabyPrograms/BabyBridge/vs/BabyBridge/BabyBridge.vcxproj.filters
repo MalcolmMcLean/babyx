@@ -45,9 +45,6 @@
     <ClCompile Include="..\..\..\..\src\windows\audio.c">
       <Filter>Source Files\babyx</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\windows\BabyX.c">
-      <Filter>Source Files\babyx</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\src\windows\bbx.c">
       <Filter>Source Files\babyx</Filter>
     </ClCompile>
@@ -132,6 +129,9 @@
     <ClCompile Include="..\..\..\..\src\windows\verattf.c">
       <Filter>Source Files\babyx</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\src\windows\BabyX.c">
+      <Filter>Source Files\babyx</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\bridgeai.h">
@@ -148,9 +148,6 @@
     </ClInclude>
     <ClInclude Include="..\..\shuffle.h">
       <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\..\src\windows\BabyX.h">
-      <Filter>Source Files\babyx</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\src\windows\BBX_Button.h">
       <Filter>Source Files\babyx</Filter>
@@ -231,6 +228,9 @@
       <Filter>Source Files\babyx</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\src\windows\minimp3.h">
+      <Filter>Source Files\babyx</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\src\windows\BabyX.h">
       <Filter>Source Files\babyx</Filter>
     </ClInclude>
   </ItemGroup>

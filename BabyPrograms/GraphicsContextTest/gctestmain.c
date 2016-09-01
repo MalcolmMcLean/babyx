@@ -17,10 +17,10 @@ void layoutapp(void *obj, int width, int height);
 void ok_pressed(void *obj);
 void redraw(APP *app);
 
-int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstnace, LPSTR lpCommandLine, int nCmdShow)
+int main(void)
 {
 	APP app;
-	startbabyx(hInstance, "Baby X Graphics context test", 320, 200, createapp, layoutapp, &app);
+	startbabyx("Baby X Graphics context test", 320, 200, createapp, layoutapp, &app);
 
 	return 0;
 }

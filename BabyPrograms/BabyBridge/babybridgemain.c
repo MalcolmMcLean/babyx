@@ -97,17 +97,7 @@ static void getcardpos(int *xpos, int *ypos, CARD *hand, int N);
 static void bidtostr(char *str, BID *bid);
 static void sorthand(CARD *hand, int N, int trumps);
 
-#ifdef WIN32
-int _stdcall WinMain(HINSTANCE hInst, HINSTANCE hPrev, LPSTR lpCmndline, int show )
-{
-	APP *app;
-	srand((unsigned int) time(0));
-	app = malloc(sizeof(APP));
-	startbabyx(hInst, "Baby Bridge", 1000, 800, create, layout, app);
-	free(app);
-	return 0;
-}
-#else
+
 int main(void)
 {
   APP *app;
@@ -116,7 +106,7 @@ int main(void)
   free(app);
   return 0;
 }
-#endif
+
 
 void create(void *obj, BABYX *bbx, BBX_Panel *root)
 {
