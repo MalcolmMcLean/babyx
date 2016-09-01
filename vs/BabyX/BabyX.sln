@@ -13,6 +13,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BabyPerlin", "..\..\BabyPro
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BabyHelloWorld", "..\..\BabyPrograms\BabyHelloWorld\vs\BabyHelloWorld\BabyHelloWorld.vcxproj", "{73E65628-F55A-449E-A493-EE56755C412F}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GraphicsContextTest", "..\..\BabyPrograms\GraphicsContextTest\vs\GraphicsContextTest\GraphicsContextTest.vcxproj", "{CD3E1A49-90E0-4362-91AD-83A6819E53AB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -61,6 +63,14 @@ Global
 		{73E65628-F55A-449E-A493-EE56755C412F}.Release|x64.Build.0 = Release|x64
 		{73E65628-F55A-449E-A493-EE56755C412F}.Release|x86.ActiveCfg = Release|Win32
 		{73E65628-F55A-449E-A493-EE56755C412F}.Release|x86.Build.0 = Release|Win32
+		{CD3E1A49-90E0-4362-91AD-83A6819E53AB}.Debug|x64.ActiveCfg = Debug|x64
+		{CD3E1A49-90E0-4362-91AD-83A6819E53AB}.Debug|x64.Build.0 = Debug|x64
+		{CD3E1A49-90E0-4362-91AD-83A6819E53AB}.Debug|x86.ActiveCfg = Debug|Win32
+		{CD3E1A49-90E0-4362-91AD-83A6819E53AB}.Debug|x86.Build.0 = Debug|Win32
+		{CD3E1A49-90E0-4362-91AD-83A6819E53AB}.Release|x64.ActiveCfg = Release|x64
+		{CD3E1A49-90E0-4362-91AD-83A6819E53AB}.Release|x64.Build.0 = Release|x64
+		{CD3E1A49-90E0-4362-91AD-83A6819E53AB}.Release|x86.ActiveCfg = Release|Win32
+		{CD3E1A49-90E0-4362-91AD-83A6819E53AB}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
