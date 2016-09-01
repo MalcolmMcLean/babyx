@@ -552,7 +552,7 @@ static int nsvg__curveIntersectXRay(float *tret, float* curve, float x, float y)
 			ix = nsvg__evalBezier(t[i], curve[0], curve[2], curve[4], curve[6]);
 			if (ix > x)
 			{
-				tret[j++] = t[i];
+				tret[j++] = (float) t[i];
 			} 
 		}
 
@@ -604,14 +604,14 @@ static nsvg__simplearc(float *ret, double a, double r)
 	x3 = x2;
 	y3 = -y2;
 
-	ret[0] = (float)x1 * cosa - y1 * sina;
-	ret[1] = (float)x1 * sina + y1 * cosa;
-	ret[2] = (float)x2 * cosa - y2 * sina;
-	ret[3] = (float)x2 * sina + y2 * cosa;
-	ret[4] = (float)x3 * cosa - y3 * sina;
-	ret[5] = (float)x3 * sina + y3 * cosa;
-	ret[6] = (float)x4 * cosa - y4 * sina;
-	ret[7] = (float)x4 * sina + y4 * cosa;
+	ret[0] = (float)(x1 * cosa - y1 * sina);
+	ret[1] = (float)(x1 * sina + y1 * cosa);
+	ret[2] = (float)(x2 * cosa - y2 * sina);
+	ret[3] = (float)(x2 * sina + y2 * cosa);
+	ret[4] = (float)(x3 * cosa - y3 * sina);
+	ret[5] = (float)(x3 * sina + y3 * cosa);
+	ret[6] = (float)(x4 * cosa - y4 * sina);
+	ret[7] = (float)(x4 * sina + y4 * cosa);
 }
 
 static int nsvg__createarc(float *ret, float ox, float oy, float ax, float ay, float bx, float by, int dir)
@@ -622,11 +622,11 @@ static int nsvg__createarc(float *ret, float ox, float oy, float ax, float ay, f
 	int Nsegs;
 	int i;
 	float arc[8];
-	double cost, sint;
+	float cost, sint;
 
 	thetaa = atan2(ay - oy, ax - ox);
 	thetab = atan2(by - oy, bx - ox);
-	r = sqrt((ax - ox)*(ax - ox) + (ay - oy)*(ay - oy));
+	r = (float) sqrt((ax - ox)*(ax - ox) + (ay - oy)*(ay - oy));
 	ret[0] = ax;
 	ret[1] = ay;
 	if (dir == 1)
@@ -639,8 +639,8 @@ static int nsvg__createarc(float *ret, float ox, float oy, float ax, float ay, f
 
 		for (i = 0; i < Nsegs; i++)
 		{
-			cost = cos(thetaa + dtheta * i);
-			sint = sin(thetaa + dtheta * i);
+			cost = (float) cos(thetaa + dtheta * i);
+			sint = (float) sin(thetaa + dtheta * i);
 			ret[(i*3 + 1) * 2] = arc[2] * cost - arc[3] * sint + ox;
 			ret[(i*3 + 1) * 2+1] = arc[2] * sint + arc[3] * cost + oy;
 			ret[(i*3 + 2) * 2] = arc[4] * cost - arc[5] * sint + ox;
@@ -659,8 +659,8 @@ static int nsvg__createarc(float *ret, float ox, float oy, float ax, float ay, f
 
 		for (i = 0; i < Nsegs; i++)
 		{
-			cost = cos(thetaa + dtheta * i);
-			sint = sin(thetaa + dtheta * i);
+			cost = (float) cos(thetaa + dtheta * i);
+			sint = (float) sin(thetaa + dtheta * i);
 			ret[(i * 3 + 1) * 2] = arc[2] * cost - arc[3] * sint + ox;
 			ret[(i * 3 + 1) * 2 + 1] = arc[2] * sint + arc[3] * cost + oy;
 			ret[(i * 3 + 2) * 2] = arc[4] * cost - arc[5] * sint + ox;
@@ -711,6 +711,16 @@ static float nsvg__getAverageScale(float* t)
 	return (sx + sy) * 0.5f;
 }
 
+static int nsvg__isspace(int ch)
+{
+	static char *spaces = " \t\n\r\b";
+	int i;
+
+	for (i = 0; spaces[i]; i++)
+		if (ch == spaces[i])
+			return 1;
+	return 0;
+}
 
 static unsigned int nsvg__parseColorHex(const char* str)
 {
@@ -1933,8 +1943,8 @@ static void nsvg__scanlineSolid(unsigned char* dst, int count, unsigned char* co
 			sy = fy - t[1];
 			ex = fx - t[2];
 			ey = fx - t[3];
-			ds = sqrt(sx*sx + sy*sy) - t[4];
-			de = t[5] - sqrt(ex*ex + ey*ey);
+			ds = (float) sqrt(sx*sx + sy*sy) - t[4];
+			de = (float) (t[5] - sqrt(ex*ex + ey*ey));
 			gd  = ds < 0 ? 0 : de < 0 ? 1 : ds / (ds + de);
 			c = cache->colors[(int)nsvg__clampf(gd*255.0f, 0, 255.0f)];
 			cr = (c)& 0xff;
@@ -2424,7 +2434,7 @@ NSVGgradient *nsvggradient(BBX_GRADIENT *bbxg, const float* bounds, char* paintT
 	NSVGgradient *grad;
 	int nstops = bbxg->nstops;
 	double dx, dy;
-	double len;
+	float len;
 
 	grad = (NSVGgradient*)malloc(sizeof(NSVGgradient) + sizeof(NSVGgradientStop)*(nstops - 1));
     if (grad == NULL) return NULL;
@@ -2434,21 +2444,21 @@ NSVGgradient *nsvggradient(BBX_GRADIENT *bbxg, const float* bounds, char* paintT
 		float t[6];
 		dx = bbxg->x2 - bbxg->x1;
 		dy = bbxg->y2 - bbxg->y1;
-		len = sqrt(dx*dx + dy*dy);
+		len = (float) sqrt(dx*dx + dy*dy);
 		nsvg__xformIdentity(grad->xform);
-		nsvg__xformSetTranslation(t, -bbxg->x1, -bbxg->y1);
+		nsvg__xformSetTranslation(t, (float) -bbxg->x1, (float) -bbxg->y1);
 		nsvg__xformMultiply(grad->xform, t);
 		nsvg__xformSetScale(t, 1 / len, 1 / len);
 		nsvg__xformMultiply(grad->xform, t);
-		nsvg__xformSetRotation(t, atan2(dy, dx));
+		nsvg__xformSetRotation(t, (float) atan2(dy, dx));
 		nsvg__xformMultiply(grad->xform, t);
 
     }
 else {
 	// Calculate transform aligned to the circle
-	 grad->xform[0] = bbxg->x1; grad->xform[1] = bbxg->y1;
-	 grad->xform[2] = bbxg->x2; grad->xform[3] = bbxg->y2;
-	 grad->xform[4] = bbxg->r1; grad->xform[5] = bbxg->r2;
+	 grad->xform[0] = (float) bbxg->x1; grad->xform[1] = (float) bbxg->y1;
+	 grad->xform[2] = (float) bbxg->x2; grad->xform[3] = (float) bbxg->y2;
+	 grad->xform[4] = (float) bbxg->r1; grad->xform[5] = (float) bbxg->r2;
 	
 	//grad->xform[0] = bbxg->r; grad->xform[1] = 0;
 	//grad->xform[2] = 0; grad->xform[3] = bbxg->r;
@@ -2461,8 +2471,8 @@ if (0 /*data->units == NSVG_OBJECT_SPACE*/) {
 	float boundingBox[6];
 	dx = bounds[2] - bounds[0];
 	dy = bounds[3] - bounds[1];
-	boundingBox[0] = dx; boundingBox[1] = 0.0f;
-	boundingBox[2] = 0.0f; boundingBox[3] = dy;
+	boundingBox[0] = (float) dx; boundingBox[1] = 0.0f;
+	boundingBox[2] = 0.0f; boundingBox[3] = (float) dy;
 	boundingBox[4] = bounds[0]; boundingBox[5] = bounds[1];
 
 	nsvg__xformMultiply(grad->xform, boundingBox);
@@ -2576,7 +2586,7 @@ int bbx_gradient_addcolorstop(BBX_GRADIENT *g, double offset, BBX_RGBA col)
 		if (g->stops[i].offset > offset)
 			break;
 	memmove(&g->stops[i + 1], &g->stops[i], (g->nstops - i) * sizeof(NSVGgradientStop));
-	g->stops[i].offset = offset;
+	g->stops[i].offset = (float) offset;
 	g->stops[i].color = NSVG_RGB((col >> 24) & 0xFF, (col >> 16) & 0xFF, (col >> 8) & 0xFF) | 0xFF000000;
 	g->nstops++;
 	return 0;
@@ -2896,7 +2906,7 @@ void bbx_gc_setstrokecolor(BBX_GC *gc, BBX_RGBA col)
 
 void bbx_gc_setstrokewidth(BBX_GC *gc, double width)
 {
-	gc->attr.strokeWidth = width;
+	gc->attr.strokeWidth = (float) width;
 }
 
 
@@ -2965,8 +2975,8 @@ void bbx_gc_setlinecap(BBX_GC *gc, const char *capstyle)
 
 static void bbx_gc_beginsubpath(BBX_GC *gc, double x, double y)
 {
-	gc->pts[0] = x;
-	gc->pts[1] = y;
+	gc->pts[0] = (float) x;
+	gc->pts[1] = (float) y;
 	gc->npts = 1;
 }
 
@@ -3033,7 +3043,7 @@ error:
 void bbx_gc_rotate(BBX_GC *gc, double theta)
 {
 	float mtx[6];
-	nsvg__xformSetRotation(mtx, theta);
+	nsvg__xformSetRotation(mtx, (float) theta);
 	nsvg__xformMultiply(gc->mtx, mtx);
 	memcpy(gc->attr.xform, gc->mtx, 6 * sizeof(float));
 }
@@ -3041,7 +3051,7 @@ void bbx_gc_rotate(BBX_GC *gc, double theta)
 void bbx_gc_translate(BBX_GC *gc, double x, double y)
 {
 	float mtx[6];
-	nsvg__xformSetTranslation(mtx, x, y);
+	nsvg__xformSetTranslation(mtx, (float) x, (float) y);
 	nsvg__xformMultiply(gc->mtx, mtx);
 	memcpy(gc->attr.xform, gc->mtx, 6 * sizeof(float));
 }
@@ -3049,7 +3059,7 @@ void bbx_gc_translate(BBX_GC *gc, double x, double y)
 void bbx_gc_scale(BBX_GC *gc, double s)
 {
 	float mtx[6];
-	nsvg__xformSetScale(mtx, s, s);
+	nsvg__xformSetScale(mtx, (float) s, (float) s);
 	nsvg__xformMultiply(gc->mtx, mtx);
 	memcpy(gc->attr.xform, gc->mtx, 6 * sizeof(float));
 }
@@ -3057,7 +3067,7 @@ void bbx_gc_scale(BBX_GC *gc, double s)
 void bbx_gc_scalexy(BBX_GC *gc, double sx, double sy)
 {
 	float mtx[6];
-	nsvg__xformSetScale(mtx, sx, sy);
+	nsvg__xformSetScale(mtx, (float) sx, (float) sy);
 	nsvg__xformMultiply(gc->mtx, mtx);
 	memcpy(gc->attr.xform, gc->mtx, 6 * sizeof(float));
 }
@@ -3110,12 +3120,12 @@ void bbx_gc_addcubic(BBX_GC *gc, double x1, double y1, double x2, double y2, dou
 			goto error;
 		gc->cpts *= 2;
 	}
-	gc->pts[gc->npts * 2] = x1;
-	gc->pts[gc->npts * 2 + 1] = y1;
-	gc->pts[gc->npts * 2 + 2] = x2;
-	gc->pts[gc->npts * 2 + 3] = y2;
-	gc->pts[gc->npts * 2 + 4] = x3;
-	gc->pts[gc->npts * 2 + 5] = y3;
+	gc->pts[gc->npts * 2] = (float) x1;
+	gc->pts[gc->npts * 2 + 1] = (float) y1;
+	gc->pts[gc->npts * 2 + 2] = (float) x2;
+	gc->pts[gc->npts * 2 + 3] = (float) y2;
+	gc->pts[gc->npts * 2 + 4] = (float) x3;
+	gc->pts[gc->npts * 2 + 5] = (float) y3;
 	gc->npts += 3;
 error:
 	return;
@@ -3180,12 +3190,12 @@ void bbx_gc_arc(BBX_GC *gc, double cx, double cy, double r, double stheta, doubl
 	float arc[64];
 	int i;
 
-	sx = cx + cos(stheta) * r;
-	sy = cy + sin(stheta) * r;
-	ex = cx + cos(etheta) * r;
-	ey = cy + sin(etheta) * r;
+	sx = (float) (cx + cos(stheta) * r);
+	sy = (float) (cy + sin(stheta) * r);
+	ex = (float) (cx + cos(etheta) * r);
+	ey = (float) (cy + sin(etheta) * r);
 
-	npts = nsvg__createarc(arc, cx, cy, sx, sy, ex, ey, ccw ? -1 : 1);
+	npts = nsvg__createarc(arc, (float) cx, (float) cy, sx, sy, ex, ey, ccw ? -1 : 1);
 	bbx_gc_moveto(gc, sx, sy);
 	for (i = 1; i < npts; i += 3)
 	{
@@ -3210,16 +3220,16 @@ void bbx_gc_arcto(BBX_GC *gc, double tx1, double ty1, double x2, double y2, doub
 		x0 = gc->pts[(gc->npts - 1) * 2];
 		y0 = gc->pts[(gc->npts - 1) * 2 + 1];
 	}
-	dir = nsvg__side(x0, y0, tx1, ty1, x2, y2);
-	dx = tx1 - x0;
-	dy = ty1 - y0;
-	len = sqrt(dx*dx + dy*dy);
+	dir = nsvg__side(x0, y0, (float) tx1, (float) ty1, (float) x2, (float) y2);
+	dx = (float) tx1 - x0;
+	dy = (float) ty1 - y0;
+	len = (float) sqrt(dx*dx + dy*dy);
 	dx /= len;
 	dy /= len;
-	ox = x0 - dy * dir * r;
-	oy = y0 + dx * dir * r;
+	ox = (float) (x0 - dy * dir * r);
+	oy = (float) (y0 + dx * dir * r);
 
-	npts = nsvg__createarc(arc, ox, oy, x0, y0, x2, y2, dir);
+	npts = nsvg__createarc(arc, ox, oy, x0, y0, (float) x2, (float) y2, dir);
 	for (i = 1; i < npts; i += 3)
 	{
 		bbx_gc_addcubic(gc, arc[i * 2], arc[i * 2 + 1], arc[i * 2 + 2], arc[i * 2 + 3], arc[i * 2 + 4], arc[i * 2 + 5]);
@@ -3236,7 +3246,7 @@ int bbx_gc_pointinpath(BBX_GC *gc, double x, double y)
 
 	for (i = 0; i < gc->npts-3; i+= 3)
 	{
-		Ni += nsvg__curveIntersectXRay(t, gc->pts + i * 2, x, y);
+		Ni += nsvg__curveIntersectXRay(t, gc->pts + i * 2, (float) x, (float) y);
 	}
 
 	
@@ -3244,7 +3254,7 @@ int bbx_gc_pointinpath(BBX_GC *gc, double x, double y)
 	{
 		for (i = 0; i < ptr->npts-3; i += 3)
 		{
-			Ni += nsvg__curveIntersectXRay(t, ptr->pts + i * 2, x, y);
+			Ni += nsvg__curveIntersectXRay(t, ptr->pts + i * 2, (float) x, (float) y);
 		}
 	}
 
@@ -3644,7 +3654,6 @@ void bbx_gc_drawimagex(BBX_GC *gc, unsigned char *rgba, int width, int height,
 	float xlow, xhigh, ylow, yhigh;
 	float tx, ty;
 	float t1x, t1y, t2x, t2y, t3x, t3y;
-	float dtx, dty, dtxy, dtyy;
 
 	if (sx < 0 || sx >= width || swidth <= 0 ||
 		sy < 0 || sy >= height || sheight <= 0)
@@ -3668,10 +3677,10 @@ void bbx_gc_drawimagex(BBX_GC *gc, unsigned char *rgba, int width, int height,
 		memcpy(safe + ((y+1)*(swidth + 2) + 1) * 4, sptr, swidth * 4);
 	}
 
-	nsvg__xformPoint(&cx[0], &cy[0], dx-1, dy-1, gc->mtx);
-	nsvg__xformPoint(&cx[1], &cy[1], dx + dwidth, dy-1, gc->mtx);
-	nsvg__xformPoint(&cx[2], &cy[2], dx + dwidth, dy + dheight, gc->mtx);
-	nsvg__xformPoint(&cx[3], &cy[3], dx-1, dy + dheight, gc->mtx);
+	nsvg__xformPoint(&cx[0], &cy[0], dx-1.0f, dy-1.0f, gc->mtx);
+	nsvg__xformPoint(&cx[1], &cy[1], (float) (dx + dwidth), dy-1.0f, gc->mtx);
+	nsvg__xformPoint(&cx[2], &cy[2], (float) (dx + dwidth), (float) (dy + dheight), gc->mtx);
+	nsvg__xformPoint(&cx[3], &cy[3], dx-1.0f, (float) (dy + dheight), gc->mtx);
 
 	xlow = nsvg__minf(nsvg__minf(cx[0], cx[1]), nsvg__minf(cx[2], cx[3]));
 	ylow = nsvg__minf(nsvg__minf(cy[0], cy[1]), nsvg__minf(cy[2], cy[3]));
@@ -3685,17 +3694,17 @@ void bbx_gc_drawimagex(BBX_GC *gc, unsigned char *rgba, int width, int height,
 	if (ylow < 0)
 		ylow = 0;
 	if (yhigh > gc->height - 1)
-		yhigh = gc->height - 1;
+		yhigh = (float) (gc->height - 1);
 	if (xlow < 0)
 		xlow = 0;
 	if (xhigh > gc->width - 1)
-		xhigh = gc->width - 1;
+		xhigh = (float)(gc->width - 1);
 
 	for (y = (int)ylow; y <= (int)yhigh; y++)
 	{
 		for (x = (int)xlow; x <= (int)xhigh; x++)
 		{
-			nsvg__xformPoint(&tx, &ty, x, y, invmtx);
+			nsvg__xformPoint(&tx, &ty, (float) x, (float) y, invmtx);
 			tx -= dx-1;
 			ty -= dy-1;
 		
