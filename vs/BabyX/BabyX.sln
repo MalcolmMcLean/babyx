@@ -3,8 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Express 14 for Windows Desktop
 VisualStudioVersion = 14.0.23107.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BabyX", "BabyX.vcxproj", "{64830A50-5424-46BA-9883-F0C488949A8C}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BabyBridge", "..\..\BabyPrograms\BabyBridge\vs\BabyBridge\BabyBridge.vcxproj", "{62CCEF19-06DE-4D4C-9926-841C852DEE16}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "WordCatch", "..\..\BabyPrograms\WordCatch\vs\WordCatch\WordCatch.vcxproj", "{13AFFDCF-0685-4090-B5E4-EB62CFB2FEE0}"
@@ -23,14 +21,6 @@ Global
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{64830A50-5424-46BA-9883-F0C488949A8C}.Debug|x64.ActiveCfg = Debug|x64
-		{64830A50-5424-46BA-9883-F0C488949A8C}.Debug|x64.Build.0 = Debug|x64
-		{64830A50-5424-46BA-9883-F0C488949A8C}.Debug|x86.ActiveCfg = Debug|Win32
-		{64830A50-5424-46BA-9883-F0C488949A8C}.Debug|x86.Build.0 = Debug|Win32
-		{64830A50-5424-46BA-9883-F0C488949A8C}.Release|x64.ActiveCfg = Release|x64
-		{64830A50-5424-46BA-9883-F0C488949A8C}.Release|x64.Build.0 = Release|x64
-		{64830A50-5424-46BA-9883-F0C488949A8C}.Release|x86.ActiveCfg = Release|Win32
-		{64830A50-5424-46BA-9883-F0C488949A8C}.Release|x86.Build.0 = Release|Win32
 		{62CCEF19-06DE-4D4C-9926-841C852DEE16}.Debug|x64.ActiveCfg = Debug|x64
 		{62CCEF19-06DE-4D4C-9926-841C852DEE16}.Debug|x64.Build.0 = Debug|x64
 		{62CCEF19-06DE-4D4C-9926-841C852DEE16}.Debug|x86.ActiveCfg = Debug|Win32

@@ -74,11 +74,12 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>false</SDLCheck>
-      <AdditionalIncludeDirectories>C:\Users\Malcolm\Documents\Visual Studio 2015\Projects\BabyX\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\Malcolm\Documents\Visual Studio 2015\Projects\BabyX\src\windows;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -122,66 +123,67 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\..\src\BabyX.c" />
-    <ClCompile Include="..\..\..\..\src\bbx.c" />
-    <ClCompile Include="..\..\..\..\src\BBX_Button.c" />
-    <ClCompile Include="..\..\..\..\src\BBX_Canvas.c" />
-    <ClCompile Include="..\..\..\..\src\BBX_CheckBox.c" />
-    <ClCompile Include="..\..\..\..\src\BBX_Clipboard.c" />
-    <ClCompile Include="..\..\..\..\src\BBX_Colours.c" />
-    <ClCompile Include="..\..\..\..\src\BBX_DialogPanel.c" />
-    <ClCompile Include="..\..\..\..\src\BBX_EditBox.c" />
-    <ClCompile Include="..\..\..\..\src\BBX_FilePicker.c" />
-    <ClCompile Include="..\..\..\..\src\BBX_Font.c" />
-    <ClCompile Include="..\..\..\..\src\bbx_graphicssupport.c" />
-    <ClCompile Include="..\..\..\..\src\BBX_Label.c" />
-    <ClCompile Include="..\..\..\..\src\BBX_LineEdit.c" />
-    <ClCompile Include="..\..\..\..\src\BBX_ListBox.c" />
-    <ClCompile Include="..\..\..\..\src\BBX_Menubar.c" />
-    <ClCompile Include="..\..\..\..\src\BBX_MessageBox.c" />
-    <ClCompile Include="..\..\..\..\src\BBX_Panel.c" />
-    <ClCompile Include="..\..\..\..\src\BBX_Popup.c" />
-    <ClCompile Include="..\..\..\..\src\BBX_Popup2.c" />
-    <ClCompile Include="..\..\..\..\src\BBX_PopupPanel.c" />
-    <ClCompile Include="..\..\..\..\src\BBX_RadioBox.c" />
-    <ClCompile Include="..\..\..\..\src\BBX_Scrollbar.c" />
-    <ClCompile Include="..\..\..\..\src\BBX_ScrollPanel.c" />
-    <ClCompile Include="..\..\..\..\src\BBX_Spinner.c" />
-    <ClCompile Include="..\..\..\..\src\fixedfont.c">
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
-      <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\verattf.c" />
+    <ClCompile Include="..\..\..\..\src\windows\audio.c" />
+    <ClCompile Include="..\..\..\..\src\windows\BabyX.c" />
+    <ClCompile Include="..\..\..\..\src\windows\bbx.c" />
+    <ClCompile Include="..\..\..\..\src\windows\BBX_Button.c" />
+    <ClCompile Include="..\..\..\..\src\windows\BBX_Canvas.c" />
+    <ClCompile Include="..\..\..\..\src\windows\BBX_CheckBox.c" />
+    <ClCompile Include="..\..\..\..\src\windows\BBX_Clipboard.c" />
+    <ClCompile Include="..\..\..\..\src\windows\BBX_Colours.c" />
+    <ClCompile Include="..\..\..\..\src\windows\BBX_DialogPanel.c" />
+    <ClCompile Include="..\..\..\..\src\windows\BBX_EditBox.c" />
+    <ClCompile Include="..\..\..\..\src\windows\BBX_FilePicker.c" />
+    <ClCompile Include="..\..\..\..\src\windows\BBX_Font.c" />
+    <ClCompile Include="..\..\..\..\src\windows\bbx_graphicscontext.c" />
+    <ClCompile Include="..\..\..\..\src\windows\bbx_graphicssupport.c" />
+    <ClCompile Include="..\..\..\..\src\windows\BBX_Label.c" />
+    <ClCompile Include="..\..\..\..\src\windows\BBX_LineEdit.c" />
+    <ClCompile Include="..\..\..\..\src\windows\BBX_ListBox.c" />
+    <ClCompile Include="..\..\..\..\src\windows\BBX_Menubar.c" />
+    <ClCompile Include="..\..\..\..\src\windows\BBX_MessageBox.c" />
+    <ClCompile Include="..\..\..\..\src\windows\BBX_Panel.c" />
+    <ClCompile Include="..\..\..\..\src\windows\BBX_Popup.c" />
+    <ClCompile Include="..\..\..\..\src\windows\BBX_Popup2.c" />
+    <ClCompile Include="..\..\..\..\src\windows\BBX_PopupPanel.c" />
+    <ClCompile Include="..\..\..\..\src\windows\BBX_RadioBox.c" />
+    <ClCompile Include="..\..\..\..\src\windows\BBX_Scrollbar.c" />
+    <ClCompile Include="..\..\..\..\src\windows\BBX_ScrollPanel.c" />
+    <ClCompile Include="..\..\..\..\src\windows\BBX_Spinner.c" />
+    <ClCompile Include="..\..\..\..\src\windows\fixedfont.c" />
+    <ClCompile Include="..\..\..\..\src\windows\minimp3.c" />
+    <ClCompile Include="..\..\..\..\src\windows\verattf.c" />
     <ClCompile Include="..\..\HelloBabyX.c" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\..\src\BabyX.h" />
-    <ClInclude Include="..\..\..\..\src\BBX_Button.h" />
-    <ClInclude Include="..\..\..\..\src\BBX_Canvas.h" />
-    <ClInclude Include="..\..\..\..\src\BBX_CheckBox.h" />
-    <ClInclude Include="..\..\..\..\src\BBX_Clipboard.h" />
-    <ClInclude Include="..\..\..\..\src\BBX_Color.h" />
-    <ClInclude Include="..\..\..\..\src\BBX_DialogPanel.h" />
-    <ClInclude Include="..\..\..\..\src\BBX_EditBox.h" />
-    <ClInclude Include="..\..\..\..\src\BBX_FilePicker.h" />
-    <ClInclude Include="..\..\..\..\src\BBX_Font.h" />
-    <ClInclude Include="..\..\..\..\src\bbx_graphicssupport.h" />
-    <ClInclude Include="..\..\..\..\src\BBX_Label.h" />
-    <ClInclude Include="..\..\..\..\src\BBX_LineEdit.h" />
-    <ClInclude Include="..\..\..\..\src\BBX_ListBox.h" />
-    <ClInclude Include="..\..\..\..\src\BBX_Menubar.h" />
-    <ClInclude Include="..\..\..\..\src\BBX_MessageBox.h" />
-    <ClInclude Include="..\..\..\..\src\BBX_Panel.h" />
-    <ClInclude Include="..\..\..\..\src\BBX_Popup.h" />
-    <ClInclude Include="..\..\..\..\src\BBX_Popup2.h" />
-    <ClInclude Include="..\..\..\..\src\BBX_PopupPanel.h" />
-    <ClInclude Include="..\..\..\..\src\BBX_RadioBox.h" />
-    <ClInclude Include="..\..\..\..\src\BBX_Scrollbar.h" />
-    <ClInclude Include="..\..\..\..\src\BBX_ScrollPanel.h" />
-    <ClInclude Include="..\..\..\..\src\BBX_Spinner.h" />
-    <ClInclude Include="..\..\..\..\src\font.h" />
+    <ClInclude Include="..\..\..\..\src\windows\BabyX.h" />
+    <ClInclude Include="..\..\..\..\src\windows\BBX_Button.h" />
+    <ClInclude Include="..\..\..\..\src\windows\BBX_Canvas.h" />
+    <ClInclude Include="..\..\..\..\src\windows\BBX_CheckBox.h" />
+    <ClInclude Include="..\..\..\..\src\windows\BBX_Clipboard.h" />
+    <ClInclude Include="..\..\..\..\src\windows\BBX_Color.h" />
+    <ClInclude Include="..\..\..\..\src\windows\BBX_DialogPanel.h" />
+    <ClInclude Include="..\..\..\..\src\windows\BBX_EditBox.h" />
+    <ClInclude Include="..\..\..\..\src\windows\BBX_FilePicker.h" />
+    <ClInclude Include="..\..\..\..\src\windows\BBX_Font.h" />
+    <ClInclude Include="..\..\..\..\src\windows\bbx_graphicscontext.h" />
+    <ClInclude Include="..\..\..\..\src\windows\bbx_graphicssupport.h" />
+    <ClInclude Include="..\..\..\..\src\windows\BBX_Label.h" />
+    <ClInclude Include="..\..\..\..\src\windows\BBX_LineEdit.h" />
+    <ClInclude Include="..\..\..\..\src\windows\BBX_ListBox.h" />
+    <ClInclude Include="..\..\..\..\src\windows\BBX_Menubar.h" />
+    <ClInclude Include="..\..\..\..\src\windows\BBX_MessageBox.h" />
+    <ClInclude Include="..\..\..\..\src\windows\BBX_Panel.h" />
+    <ClInclude Include="..\..\..\..\src\windows\BBX_Popup.h" />
+    <ClInclude Include="..\..\..\..\src\windows\BBX_Popup2.h" />
+    <ClInclude Include="..\..\..\..\src\windows\BBX_PopupPanel.h" />
+    <ClInclude Include="..\..\..\..\src\windows\BBX_RadioBox.h" />
+    <ClInclude Include="..\..\..\..\src\windows\BBX_Scrollbar.h" />
+    <ClInclude Include="..\..\..\..\src\windows\BBX_ScrollPanel.h" />
+    <ClInclude Include="..\..\..\..\src\windows\BBX_Spinner.h" />
+    <ClInclude Include="..\..\..\..\src\windows\font.h" />
+    <ClInclude Include="..\..\..\..\src\windows\libc.h" />
+    <ClInclude Include="..\..\..\..\src\windows\minimp3.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
