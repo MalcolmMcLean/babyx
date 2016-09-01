@@ -58,7 +58,6 @@ void killbabyx(BABYX *bbx)
 }
 
 void startbabyx(
-				HINSTANCE hInstance,
 				char *name, 
                 int width, 
                 int height,
@@ -74,6 +73,9 @@ void startbabyx(
   FILETIME tock;
   BBX_TICKER *tickptr;
   int motionflagged;
+  HINSTANCE hInstance;
+   
+  hInstance = GetModuleHandle(0);
 
  //if ( (dpy = XOpenDisplay(NULL)) == NULL ) {
 	//exit(EXIT_FAILURE);
