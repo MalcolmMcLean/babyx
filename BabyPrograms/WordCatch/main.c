@@ -3,7 +3,6 @@
 #include <time.h>
 #include "BabyX.h"
 
-
 #include "simplexnoise.h"
 #include "wordmatcher.h"
 
