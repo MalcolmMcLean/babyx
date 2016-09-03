@@ -122,7 +122,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\src\common\BBX_Button.c" />
+    <ClCompile Include="..\..\..\src\common\bbx_button.c" />
     <ClCompile Include="..\..\..\src\common\BBX_CheckBox.c" />
     <ClCompile Include="..\..\..\src\common\BBX_Colours.c" />
     <ClCompile Include="..\..\..\src\common\BBX_EditBox.c" />

@@ -63,9 +63,6 @@
     <ClCompile Include="..\..\..\src\windows\minimp3.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\src\common\BBX_Button.c">
-      <Filter>Source Files\common</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\src\common\BBX_CheckBox.c">
       <Filter>Source Files\common</Filter>
     </ClCompile>
@@ -106,6 +103,9 @@
       <Filter>Source Files\common</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\src\common\verattf.c">
+      <Filter>Source Files\common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\common\bbx_button.c">
       <Filter>Source Files\common</Filter>
     </ClCompile>
   </ItemGroup>
