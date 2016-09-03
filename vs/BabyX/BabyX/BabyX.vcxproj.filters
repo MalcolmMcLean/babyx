@@ -102,6 +102,9 @@
     <ClCompile Include="..\..\..\src\windows\verattf.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\src\windows\BBX_Spinner.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\src\windows\BabyX.h">

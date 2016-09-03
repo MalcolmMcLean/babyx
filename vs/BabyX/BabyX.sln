@@ -4,10 +4,19 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 14.0.23107.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BabyBridge", "..\..\BabyPrograms\BabyBridge\vs\BabyBridge\BabyBridge.vcxproj", "{62CCEF19-06DE-4D4C-9926-841C852DEE16}"
+	ProjectSection(ProjectDependencies) = postProject
+		{92CE40F0-8459-4DCD-B75E-D688B9A16C62} = {92CE40F0-8459-4DCD-B75E-D688B9A16C62}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "WordCatch", "..\..\BabyPrograms\WordCatch\vs\WordCatch\WordCatch.vcxproj", "{13AFFDCF-0685-4090-B5E4-EB62CFB2FEE0}"
+	ProjectSection(ProjectDependencies) = postProject
+		{92CE40F0-8459-4DCD-B75E-D688B9A16C62} = {92CE40F0-8459-4DCD-B75E-D688B9A16C62}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BabyPerlin", "..\..\BabyPrograms\BabyPerlin\vs\BabyPerlin\BabyPerlin.vcxproj", "{39D92E92-1446-40FA-B484-971AC8EEE6A0}"
+	ProjectSection(ProjectDependencies) = postProject
+		{92CE40F0-8459-4DCD-B75E-D688B9A16C62} = {92CE40F0-8459-4DCD-B75E-D688B9A16C62}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BabyHelloWorld", "..\..\BabyPrograms\BabyHelloWorld\vs\BabyHelloWorld\BabyHelloWorld.vcxproj", "{73E65628-F55A-449E-A493-EE56755C412F}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -15,6 +24,9 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BabyHelloWorld", "..\..\Bab
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GraphicsContextTest", "..\..\BabyPrograms\GraphicsContextTest\vs\GraphicsContextTest\GraphicsContextTest.vcxproj", "{CD3E1A49-90E0-4362-91AD-83A6819E53AB}"
+	ProjectSection(ProjectDependencies) = postProject
+		{92CE40F0-8459-4DCD-B75E-D688B9A16C62} = {92CE40F0-8459-4DCD-B75E-D688B9A16C62}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BabyX", "BabyX\BabyX.vcxproj", "{92CE40F0-8459-4DCD-B75E-D688B9A16C62}"
 EndProject

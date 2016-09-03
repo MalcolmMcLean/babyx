@@ -31,7 +31,7 @@
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v140</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
@@ -97,6 +97,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -147,6 +148,7 @@
     <ClCompile Include="..\..\..\src\windows\BBX_RadioBox.c" />
     <ClCompile Include="..\..\..\src\windows\BBX_Scrollbar.c" />
     <ClCompile Include="..\..\..\src\windows\BBX_ScrollPanel.c" />
+    <ClCompile Include="..\..\..\src\windows\BBX_Spinner.c" />
     <ClCompile Include="..\..\..\src\windows\fixedfont.c" />
     <ClCompile Include="..\..\..\src\windows\minimp3.c" />
     <ClCompile Include="..\..\..\src\windows\verattf.c">
