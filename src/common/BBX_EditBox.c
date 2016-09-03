@@ -48,16 +48,11 @@ static int prevskip(char *utf8);
 
 BBX_EditBox *bbx_editbox(BABYX *bbx, BBX_Panel *parent, void (*fptr)(void *ptr, char *text), void *ptr)
 {
-  return BBX_editbox(bbx, parent->win, fptr, ptr); 
-}
-
-BBX_EditBox *BBX_editbox(BABYX *bbx, HWND parent, void (*fptr)(void *ptr, char *text), void *ptr)
-{
   EDITBOX *obj;
 
   obj = bbx_malloc(sizeof(EDITBOX));
   obj->bbx = bbx;
-  obj->pan = BBX_panel(bbx, parent, "editbox", layout, obj); 
+  obj->pan = bbx_panel(bbx, parent, "editbox", layout, obj); 
   obj->can = bbx_canvas(bbx, obj->pan, 100, 100, 0);
   obj->sb = bbx_scrollbar(bbx, obj->pan, BBX_SCROLLBAR_VERTICAL, scrollme, obj);
   

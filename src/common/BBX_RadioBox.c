@@ -31,11 +31,6 @@ static void drawelement(RADIOPANEL *pan, int index);
 
 BBX_RadioBox *bbx_radiobox(BABYX *bbx, BBX_Panel *parent, char **text, int N, void (*fptr)(void *ptr, int index), void *ptr )
 {
-  return BBX_radiobox(bbx, parent->win, text, N, fptr, ptr);
-}
-
-BBX_RadioBox *BBX_radiobox(BABYX *bbx, HWND parent, char **text, int N, void (*fptr)(void *ptr, int index), void *ptr )
-{
   RADIOPANEL *rad;
   int i;
 
@@ -46,7 +41,7 @@ BBX_RadioBox *BBX_radiobox(BABYX *bbx, HWND parent, char **text, int N, void (*f
   rad->el = bbx_malloc(N * sizeof(RADIOELEMENT));
   rad->disabled = bbx_malloc(N * sizeof(int));
 
-  rad->pan = BBX_panel(bbx, parent, "radiobox", layout, rad); 
+  rad->pan = bbx_panel(bbx, parent, "radiobox", layout, rad); 
   for(i=0;i<N;i++)
   {
     rad->lab[i] = bbx_label(bbx, rad->pan, text[i]);

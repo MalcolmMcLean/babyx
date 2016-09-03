@@ -1,5 +1,4 @@
 #include "BabyX.h"
-#include "bbx_graphicscontext.h"
 
 typedef struct
 {

@@ -20,16 +20,11 @@ static void redraw(CHECKBOX *chk);
 
 BBX_CheckBox *bbx_checkbox(BABYX *bbx, BBX_Panel *parent, char *text, void (*fptr)(void *ptr, int state), void *ptr)
 {
-  return BBX_checkbox(bbx, parent->win, text, fptr, ptr);
-}
-
-BBX_CheckBox *BBX_checkbox(BABYX *bbx, HWND parent, char *text, void (*fptr)(void *ptr, int state), void *ptr)
-{
   CHECKBOX *chk;
 
   chk = bbx_malloc(sizeof(CHECKBOX));
   chk->bbx = bbx;
-  chk->pan = BBX_panel(bbx, parent, "checkbox", layout, chk);
+  chk->pan = bbx_panel(bbx, parent, "checkbox", layout, chk);
   chk->lab = bbx_label(bbx, chk->pan, text);
   chk->can = bbx_canvas(bbx, chk->pan, 10, 10, 0);
   chk->checked = 0;

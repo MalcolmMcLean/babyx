@@ -33,16 +33,11 @@ static void trim(char *str);
 
 BBX_LineEdit *bbx_lineedit(BABYX *bbx, BBX_Panel *parent, char *text, void (*fptr)(void *ptr, char *text), void *ptr )
 {
-  return BBX_lineedit(bbx, parent->win, text, fptr, ptr);
-}
-
-BBX_LineEdit *BBX_lineedit(BABYX *bbx, HWND parent, char *text, void (*fptr)(void *ptr, char *text), void *ptr )
-{
   LINEEDIT *obj;
 
   obj = bbx_malloc(sizeof(LINEEDIT));
   obj->bbx = bbx;
-  obj->pan = BBX_panel(bbx, parent, "lineedit", layout, obj); 
+  obj->pan = bbx_panel(bbx, parent, "lineedit", layout, obj); 
   obj->can = bbx_canvas(bbx, obj->pan, 10, 10, 0);
   obj->changed = fptr;
   obj->ptr = ptr;

@@ -23,12 +23,6 @@ static void redraw(BUTTON *but);
 
 BBX_Button *bbx_button(BABYX *bbx, BBX_Panel *parent, char *str, void (*fptr)(void *ptr), void *ptr)
 {
-  return BBX_button(bbx, parent->win, str, fptr, ptr);
-}
-
-
-BBX_Button *BBX_button(BABYX *bbx, HWND parent, char *str, void (*fptr)(void *ptr), void *ptr)
-{
   BUTTON *but;
 
   but = bbx_malloc(sizeof(BUTTON));
@@ -39,7 +33,7 @@ BBX_Button *BBX_button(BABYX *bbx, HWND parent, char *str, void (*fptr)(void *pt
   but->ptr = ptr;
   but->font = bbx->gui_font;
   but->disabled = 0;
-  but->pan = BBX_panel(bbx, parent, "button", layout, but);
+  but->pan = bbx_panel(bbx, parent, "button", layout, but);
 
   return but->pan;
 }

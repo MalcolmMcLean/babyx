@@ -42,18 +42,13 @@ static char *trim(char *str);
 
 BBX_Spinner *bbx_spinner(BABYX *bbx, BBX_Panel *pan, double val, double minval, double maxval, double delta, void (*change)(void *ptr, double val), void *ptr)
 {
-  return BBX_spinner(bbx, pan->win, val, minval, maxval, delta, change, ptr);
-}
-
-BBX_Spinner *BBX_spinner(BABYX *bbx, HWND parent, double val, double minval, double maxval, double delta, void (*change)(void *ptr, double val), void *ptr)
-{
   BBX_SPIN *spin;
   char buff[256];
 
   sprintf(buff, "%g", val);
   spin = bbx_malloc(sizeof(BBX_SPIN));
   spin->bbx = bbx;
-  spin->pan = BBX_panel(bbx, parent, "spinner", layout, spin);
+  spin->pan = bbx_panel(bbx, pan, "spinner", layout, spin);
   spin->edt = bbx_lineedit(bbx, spin->pan, buff, doedit, spin);
   spin->can = bbx_canvas(bbx, spin->pan, 10, 20, BBX_Color("white"));
 

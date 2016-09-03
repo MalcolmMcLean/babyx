@@ -24,16 +24,11 @@ static void chosen(void *obj, int id);
 
 BBX_Menubar *bbx_menubar(BABYX *bbx, BBX_Panel *parent, void (*fptr)(void *ptr, int d), void *ptr)
 {
-  return BBX_menubar(bbx, parent->win, fptr, ptr);
-}
-
-BBX_Menubar *BBX_menubar(BABYX *bbx, HWND parent, void (*fptr)(void *ptr, int d), void *ptr)
-{
   MENUBAR *menu;
 
   menu = bbx_malloc(sizeof(MENUBAR));
   menu->bbx = bbx;
-  menu->pan = BBX_panel(bbx, parent, "menubar", layout, menu);
+  menu->pan = bbx_panel(bbx, parent, "menubar", layout, menu);
   menu->N = 0;
   menu->lab = 0;
   menu->sub = 0;

@@ -4,7 +4,6 @@
 typedef BBX_Panel BBX_EditBox;
 
 BBX_EditBox *bbx_editbox(BABYX *bbx, BBX_Panel *parent, void (*fptr)(void *ptr, char *text), void *ptr);
-BBX_EditBox *BBX_editbox(BABYX *bbx, HWND parent, void (*fptr)(void *ptr, char *text), void *ptr);
 void bbx_editbox_kill(BBX_EditBox *obj);
 void bbx_editbox_settext(BBX_EditBox *obj, char *text);
 char *bbx_editbox_gettext(BBX_EditBox *obj);
