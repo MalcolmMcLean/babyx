@@ -95,7 +95,7 @@ unsigned long BBX_Color(char *str);
 #include "BBX_PopupPanel.h"
 #include "BBX_Label.h"
 #include "BBX_Canvas.h"
-#include "../common/BBX_Button.h"
+#include "../common/bbx_button.h"
 #include "BBX_Scrollbar.h"
 #include "../common/BBX_LineEdit.h"
 #include "../common/BBX_EditBox.h"
