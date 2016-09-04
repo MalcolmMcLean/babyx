@@ -2674,7 +2674,7 @@ typedef struct bbx_gc
 	struct bbx_gc *prevstate;
 } BBX_GC;
 
-void bbx_gc_endsubpath(BBX_GC *gc, int closed);
+static void bbx_gc_endsubpath(BBX_GC *gc, int closed);
 void bbx_gc_lineto(BBX_GC *gc, double x, double y);
 
 BBX_GC *bbx_graphicscontext(unsigned char *rgba, int width, int height)
