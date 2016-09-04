@@ -1,3 +1,5 @@
+#include <stdio.h>
+#include <stdlib.h>
 #include "BabyX.h"
 
 typedef struct
@@ -140,7 +142,7 @@ BBX_Panel *bbx_rollup_getpanel(BBX_Panel *obj, char *name)
 	return 0;
 }
 
-void bbx_rollup_getstate(BBX_Panel *obj, char *name)
+int bbx_rollup_getstate(BBX_Panel *obj, char *name)
 {
 	ROLLUP *rup;
 	int i;

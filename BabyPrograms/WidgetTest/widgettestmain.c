@@ -94,7 +94,7 @@ void layoutapp(void *obj, int width, int height)
 	bbx_setpos(app->bbx, app->console_pan, 100, 100, 300, 200);
 	bbx_setpos(app->bbx, app->animation_pan, 10, 20, 64, 64);
 
-	bbx_console_printf(app->console_pan, "BBX console says hello\n");
+	//bbx_console_printf(app->console_pan, "BBX console says hello\n");
 }
 
 void ok_pressed(void *obj)

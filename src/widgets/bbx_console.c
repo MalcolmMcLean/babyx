@@ -1,5 +1,7 @@
 #include <stdarg.h>
 #include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
 #include <assert.h>
 
 #include "BabyX.h"
@@ -86,13 +88,13 @@ static void CopyToClipboard(TEXT *text);
 static char *getselection(TEXT *text);
 static void xytolinecol(TEXT *text, int x, int y, int *line, int *col);
 static void changecolour(TEXT *text, BBX_RGBA col);
-static COLORREF currentcolour(TEXT *text);
+static BBX_RGBA currentcolour(TEXT *text);
 
 static char **strwrap(char *str, int x, int width, int *N);
 static void killlist(char **list, int N);
 static void getfontmetrics(TEXT *text, struct bitmap_font *font);
 static int firstwordlen(char *str);
-static char *getline(char *str);
+static char *xgetline(char *str);
 static char *cat(char *str, char *str2);
 static int utf8_choplast(char *str);
 static char *mystrdup(char *str);
@@ -128,6 +130,7 @@ BBX_Panel *bbx_console(BABYX *bbx, BBX_Panel *parent)
 	text->bbx = bbx;
 	text->pan = bbx_panel(bbx, parent, "console", layout, text);
 	
+	text->can = bbx_canvas(bbx, text->pan, 10, 10, bbx_color("black"));
 	text->can = 0;
 	text->sb = bbx_scrollbar(bbx, text->pan, BBX_SCROLLBAR_VERTICAL, scrollme, text);
 	text->font = bbx->user_font2;
@@ -416,7 +419,7 @@ static void addwordwrap(TEXT *text, char *str)
 
 	while (*str)
 	{
-		block = getline(str);
+		block = xgetline(str);
 		lines = strwrap(block, text->cursor, text->width - 1, &N);
 		for (i = 0; i<N; i++)
 		{
@@ -874,7 +877,7 @@ static int firstwordlen(char *str)
 	return answer;
 }
 
-static char *getline(char *str)
+static char *xgetline(char *str)
 {
 	char *ptr;
 	char *answer;

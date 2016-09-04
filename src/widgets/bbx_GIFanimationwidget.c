@@ -1,5 +1,6 @@
 #include "BabyX.h"
 #include <stdio.h>
+#include <stdlib.h>
 #include "animatedgif.h"
 #include "bbx_GIFanimationwidget.h"
 

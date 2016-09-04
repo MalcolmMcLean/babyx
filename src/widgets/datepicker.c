@@ -2,6 +2,7 @@
 /*
   Baby X date picker, by Malcolm McLean
 */
+#include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
 #include "BabyX.h"
