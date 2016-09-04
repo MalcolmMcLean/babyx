@@ -222,6 +222,22 @@ int bbx_getsize(BABYX *bbx, void *obj, int *width, int *height)
   return -1;
 }
 
+int bbx_setfocus(BABYX *bbx, void *obj)
+{
+	int i;
+	Window win;
+
+	for (i = 0; i<bbx->Nchildren; i++)
+		if (bbx->child[i].ptr == obj)
+		{
+			win = bbx->child[i].window;
+			//SetFocus(win);
+			return 0;
+		}
+		
+	return -1;
+}
+
 int BBX_IsDescendant(BABYX *bbx, Window ancestor, Window descendant)
 {
   Window win;

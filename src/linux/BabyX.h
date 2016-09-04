@@ -6,7 +6,7 @@
 
 #include "font.h"
 #include "BBX_Color.h"
-#include "bbx_graphicssupport.h"
+#include "../common/bbx_graphicssupport.h"
 #include "BBX_Clipboard.h"
 
 typedef struct
@@ -83,23 +83,23 @@ unsigned long BBX_Color(char *str);
 #define BBX_MOUSE_BUTTON3 4
 
 #include "font.h"
-#include "BBX_Font.h"
+#include "../common/BBX_Font.h"
 #include "BBX_Panel.h"
 #include "BBX_DialogPanel.h"
 #include "BBX_PopupPanel.h"
 #include "BBX_Label.h"
 #include "BBX_Canvas.h"
-#include "BBX_Button.h"
+#include "../common/BBX_Button.h"
 #include "BBX_Scrollbar.h"
-#include "BBX_LineEdit.h"
-#include "BBX_EditBox.h"
+#include "../common/BBX_LineEdit.h"
+#include "../common/BBX_EditBox.h"
 #include "BBX_Popup.h"
-#include "BBX_Menubar.h"
-#include "BBX_ListBox.h"
-#include "BBX_Spinner.h"
-#include "BBX_MessageBox.h"
-#include "BBX_CheckBox.h"
-#include "BBX_RadioBox.h"
+#include "../common/BBX_Menubar.h"
+#include "../common/BBX_ListBox.h"
+#include "../common/BBX_Spinner.h"
+#include "../common/BBX_MessageBox.h"
+#include "../common/BBX_CheckBox.h"
+#include "../common/BBX_RadioBox.h"
 #include "BBX_ScrollPanel.h"
 #include "BBX_FilePicker.h"
 
