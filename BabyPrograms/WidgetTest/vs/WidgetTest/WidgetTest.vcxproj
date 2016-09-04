@@ -75,6 +75,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <AdditionalIncludeDirectories>C:\Users\Malcolm\Documents\Visual Studio 2015\Projects\BabyX\src\widgets;C:\Users\Malcolm\Documents\Visual Studio 2015\Projects\BabyX\src\windows;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -121,8 +122,21 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\..\src\widgets\animatedgif.c" />
+    <ClCompile Include="..\..\..\..\src\widgets\bbx_console.c" />
+    <ClCompile Include="..\..\..\..\src\widgets\bbx_GIFanimationwidget.c" />
     <ClCompile Include="..\..\..\..\src\widgets\colorpicker.c" />
+    <ClCompile Include="..\..\..\..\src\widgets\datepicker.c" />
+    <ClCompile Include="..\..\..\..\src\widgets\rbtree.c" />
     <ClCompile Include="..\..\widgettestmain.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\..\src\widgets\animatedgif.h" />
+    <ClInclude Include="..\..\..\..\src\widgets\bbx_console.h" />
+    <ClInclude Include="..\..\..\..\src\widgets\bbx_GIFanimationwidget.h" />
+    <ClInclude Include="..\..\..\..\src\widgets\colorpicker.h" />
+    <ClInclude Include="..\..\..\..\src\widgets\datepicker.h" />
+    <ClInclude Include="..\..\..\..\src\widgets\rbtree.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

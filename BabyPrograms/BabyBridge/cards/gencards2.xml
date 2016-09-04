@@ -1,0 +1,56 @@
+<BabyXRC>
+<image src = "10_of_clubs.png", name = "ten_of_clubs", width = "75", height = "108"> </image>
+<image src = "10_of_diamonds.png", name = "ten_of_diamonds", width = "75", height = "108"> </image>
+<image src = "10_of_hearts.png", name = "ten_of_hearts", width = "75", height = "108"></image>
+<image src = "10_of_spades.png", name = "ten_of_spades", width = "75", height = "108"></image>
+<image src = "2_of_clubs.png", name = "two_of_clubs", width = "75", height = "108"></image>
+<image src = "2_of_diamonds.png", name = "two_of_diamonds", width = "75", height = "108"></image>
+<image src = "2_of_hearts.png", name = "two_of_hearts", width = "75", height = "108"></image>
+<image src = "2_of_spades.png", name = "two_of_spades", width = "75", height = "108"></image>
+<image src = "3_of_clubs.png", name = "three_of_clubs", width = "75", height = "108"></image>
+<image src = "3_of_diamonds.png", name = "three_of_diamonds", width = "75", height = "108"></image>
+<image src = "3_of_hearts.png", name = "three_of_hearts", width = "75", height = "108"></image>
+<image src = "3_of_spades.png", name = "three_of_spades",  width = "75", height = "108"></image>
+<image src = "4_of_clubs.png", name = "four_of_clubs", width = "75", height = "108"></image>
+<image src = "4_of_diamonds.png", name = "four_of_diamonds", width = "75", height = "108"></image>
+<image src = "4_of_hearts.png", name = "four_of_hearts", width = "75", height = "108"></image>
+<image src = "4_of_spades.png", name = "four_of_spades", width = "75", height = "108"></image>
+<image src = "5_of_clubs.png", name = "five_of_clubs", width = "75", height = "108"></image>
+<image src = "5_of_diamonds.png", name = "five_of_diamonds", width = "75", height = "108"></image>
+<image src = "5_of_hearts.png", name = "five_of_hearts", width = "75", height = "108"></image>
+<image src = "5_of_spades.png", name = "five_of_spades", width = "75", height = "108"></image>
+<image src = "6_of_clubs.png", name = "six_of_clubs", width = "75", height = "108"></image>
+<image src = "6_of_diamonds.png", name = "six_of_diamonds", width = "75", height = "108"></image>
+<image src = "6_of_hearts.png", name = "six_of_hearts", width = "75", height = "108"></image>
+<image src = "6_of_spades.png", name = "six_of_spades", width = "75", height = "108"></image>
+<image src = "7_of_clubs.png", name = "seven_of_clubs", width = "75", height = "108"></image>
+<image src = "7_of_diamonds.png", name = "seven_of_diamonds", width = "75", height = "108"></image>
+<image src = "7_of_hearts.png", name = "seven_of_hearts", width = "75", height = "108"></image>
+<image src = "7_of_spades.png", name = "seven_of_spades", width = "75", height = "108"></image>
+<image src = "8_of_clubs.png", name = "eight_of_clubs", width = "75", height = "108"></image>
+<image src = "8_of_diamonds.png", name = "eight_of_diamonds", width = "75", height = "108"></image>
+<image src = "8_of_hearts.png", name ="eight_of_hearts", width = "75", height = "108"></image>
+<image src = "8_of_spades.png", name = "eight_of_spades", width = "75", height = "108"></image>
+<image src = "9_of_clubs.png", name = "nine_of_clubs", width = "75", height = "108"></image>
+<image src = "9_of_diamonds.png", name = "nine_of_diamonds", width = "75", height = "108"></image>
+<image src = "9_of_hearts.png", name = "nine_of_hearts", width = "75", height = "108"></image>
+<image src = "9_of_spades.png", name = "nine_of_spades", width = "75", height = "108"></image>
+<image src = "ace_of_clubs.png", width = "75", height = "108"></image>
+<image src = "ace_of_diamonds.png", width = "75", height = "108"></image>
+<image src = "ace_of_hearts.png", width = "75", height = "108"></image>
+<image src = "ace_of_spades.png", width = "75", height = "108"></image>
+<image src = "black_joker.png", width = "75", height = "108"></image>
+<image src = "jack_of_clubs2.png", name = "jack_of_clubs", width = "75", height = "108"></image>
+<image src = "jack_of_diamonds2.png", name = "jack_of_diamonds", width = "75", height = "108"></image>
+<image src = "jack_of_hearts2.png", name = "jack_of_hearts", width = "75", height = "108"></image>
+<image src = "jack_of_spades2.png", name = "jack_of_spades", width = "75", height = "108"></image>
+<image src = "king_of_clubs2.png", name = "king_of_clubs", width = "75", height = "108"></image>
+<image src = "king_of_diamonds2.png", name = "king_of_diamonds", width = "75", height = "108"></image>
+<image src = "king_of_hearts2.png", name = "king_of_hearts", width = "75", height = "108"></image>
+<image src = "king_of_spades2.png", name = "king_of_spades", width = "75", height = "108"></image>
+<image src = "queen_of_clubs2.png", name = "queen_of_clubs", width = "75", height = "108"></image>
+<image src = "queen_of_diamonds2.png", name = "queen_of_diamonds", width = "75", height = "108"></image>
+<image src = "queen_of_hearts2.png", name = "queen_of_hearts", width = "75", height = "108"></image>
+<image src = "queen_of_spades2.png", name = "queen_of_spades", width = "75", height = "108"></image>
+<image src = "red_joker.png", width = "75", height = "108"></image>
+</BabyXRC>
