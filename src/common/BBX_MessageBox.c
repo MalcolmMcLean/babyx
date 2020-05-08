@@ -39,7 +39,7 @@ int bbx_messagebox(BABYX *bbx, int type, char *title, char *msg, ...)
   mb.pan = bbx_dialogpanel(bbx, title, 100, 100, layout, &mb);
   bbx_dialogpanel_setclosefunc(mb.pan, pressok, &mb);
   mb.msg_lab = bbx_label(bbx, mb.pan, buffer);
-  bbx_label_setbackground(mb.msg_lab, bbx_color("white"));
+  bbx_label_setbackground(mb.msg_lab, bbx_color("gray"));
   mb.ok_but = 0;
   mb.cancel_but = 0;
   mb.yes_but = 0;
@@ -62,7 +62,7 @@ int bbx_messagebox(BABYX *bbx, int type, char *title, char *msg, ...)
     break;
   }
   bbx_label_getpreferredsize(mb.msg_lab, &pwidth, &pheight);
-  width = pwidth+10;
+  width = pwidth+30;
   if(width < 200)
     width = 200;
   if(width > 600)
