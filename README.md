@@ -3,9 +3,9 @@
 The mini GUI toolkit that lets you port programs between Windows
 and Linux.
  
-Check out our [webpages] (https://malcolmmclean.github.io/babyx/)
+Check out our (https://malcolmmclean.github.io/babyx/ "webpages")
 
-We're now using CMake. [Link] (https://cmake.org/) To build with CMake, create a directory
+We're now using CMake. (https://cmake.org/ "Link"). To build with CMake, create a directory
 called "build" under the repository. Then type
 
 ```
