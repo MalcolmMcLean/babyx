@@ -532,22 +532,22 @@ static unsigned long bilerp(unsigned char *rgba, int width, int height, float x,
    } 
   else if(y < 0 && x >= 0 && x < width -1)
   {
-    index = ((int)y * width + (int) x + width) * 4;
+    index = ((int)0 * width + (int) x ) * 4;
     r[0] = rgba[index];
     g[0] = rgba[index+1];
     b[0] = rgba[index+2];
     a[0] = 0;
-    index = ((int)y * width + (int) x + width + 1) * 4;
+    index = ((int)0 * width + (int) x  + 1) * 4;
     r[1] = rgba[index];
     g[1] = rgba[index+1];
     b[1] = rgba[index+2];
     a[1] = 0;
-     index = ((int)y * width + (int) x + width) * 4; 
+     index = ((int)0 * width + (int) x ) * 4; 
     r[2] = rgba[index];
     g[2] = rgba[index+1];
     b[2] = rgba[index+2];
     a[2] = rgba[index+3];
-     index = ((int)y * width + (int) x + width + 1) * 4;
+     index = ((int)0 * width + (int) x + 1) * 4;
     r[3] = rgba[index];
     g[3] = rgba[index+1];
     b[3] = rgba[index+2];
@@ -556,23 +556,23 @@ static unsigned long bilerp(unsigned char *rgba, int width, int height, float x,
   }
   else if(y >= height -1 && x >= 0 && x < width -1)
   {
-    index = ((int)y * width + (int) x - width) * 4;
+    index = ((int)height * width + (int) x - width) * 4;
     r[0] = rgba[index];
     g[0] = rgba[index+1];
     b[0] = rgba[index+2];
     a[0] = rgba[index+3];
-    index = ((int)y * width + (int) x + 1 - width) * 4;
+    index = ((int)height * width + (int) x + 1 - width) * 4;
     r[1] = rgba[index];
     g[1] = rgba[index+1];
     b[1] = rgba[index+2];
     a[1] = rgba[index+3];
-    index = ((int)y * width + (int) x - width) * 4;
+    index = ((int)height * width + (int) x - width) * 4;
     r[2] = rgba[index];
     g[2] = rgba[index+1];
     b[2] = rgba[index+2];
     a[2] = 0;
 
-    index = ((int)y * width + (int) x + 1 - width) * 4;
+    index = ((int)height * width + (int) x + 1 - width) * 4;
     r[3] = rgba[index];
     g[3] = rgba[index+1];
     b[3] = rgba[index+2];
@@ -580,22 +580,22 @@ static unsigned long bilerp(unsigned char *rgba, int width, int height, float x,
   }
   else if(x < 0 && y >= 0 && y < height -1)
   {
-    index = ((int)y * width + (int) x + 1) * 4;
+    index = ((int)y * width + (int) 0) * 4;
     r[0] = rgba[index];
     g[0] = rgba[index+1];
     b[0] = rgba[index+2];
     a[0] = 0;
-    index = ((int)y * width + (int) x + 1) * 4 ;
+    index = ((int)y * width + (int) 0 ) * 4 ;
     r[1] = rgba[index];
     g[1] = rgba[index+1];
     b[1] = rgba[index+2];
     a[1] = rgba[index+3];
-    index = ((int)y * width + (int) x + width + 1) * 4;
+    index = ((int)y * width + (int) 0 + width ) * 4;
     r[2] = rgba[index];
     g[2] = rgba[index+1];
     b[2] = rgba[index+2];
     a[2] = 0;
-    index = ((int)y * width + (int) x + width + 1) * 4;
+    index = ((int)y * width + (int) 0 + width ) * 4;
     r[3] = rgba[index];
     g[3] = rgba[index+1];
     b[3] = rgba[index+2];
@@ -604,22 +604,22 @@ static unsigned long bilerp(unsigned char *rgba, int width, int height, float x,
   }
   else if(x >= width-1 && y >= 0 && y < height -1)
   {
-    index = ((int)y * width + (int) x -1) * 4;
+    index = ((int)y * width + (int) width -1) * 4;
     r[0] = rgba[index];
     g[0] = rgba[index+1];
     b[0] = rgba[index+2];
     a[0] = rgba[index+3];
-    index = ((int)y * width + (int) x -1) * 4;
+    index = ((int)y * width + (int) width -1) * 4;
     r[1] = rgba[index];
     g[1] = rgba[index+1];
     b[1] = rgba[index+2];
     a[1] = 0;
-    index = ((int)y * width + (int) x + width -1) * 4;
+    index = ((int)y * width + (int) width + width -1) * 4;
     r[2] = rgba[index];
     g[2] = rgba[index+1];
     b[2] = rgba[index+2];
     a[2] = rgba[index+3];
-    index = ((int)y * width + (int) x + width -1) * 4;
+    index = ((int)y * width + (int) width + width -1) * 4;
     r[3] = rgba[index];
     g[3] = rgba[index+1];
     b[3] = rgba[index+2];
@@ -627,7 +627,7 @@ static unsigned long bilerp(unsigned char *rgba, int width, int height, float x,
     }
   else if(x < 0 && y < 0)
   {
-    index = ((int)y * width + (int) x + width + 1) * 4;
+    index = 0; //  ((int)y * width + (int)x + width + 1) * 4;
     r[0] = rgba[index];
     g[0] = rgba[index+1];
     b[0] = rgba[index+2];
