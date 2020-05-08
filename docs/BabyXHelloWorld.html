@@ -1,0 +1,156 @@
+<HTML>
+<HEAD>
+<script src = "microlight.js" > </script>
+
+<style>
+.microlight {
+    font-family : monospace;
+    white-space : pre;
+    background-color : white;
+}
+
+P {
+   width : 500px;
+}
+</style>
+
+</HEAD>
+<BODY bgcolor=#c0c0ff>
+<H1> Baby X Hello World </H1>
+
+<P> It's very simple to get up and running  with Baby X </P>
+
+<div class=microlight>
+#include "BabyX.h"
+</div>
+<P> Baby X programs always include BabyX.h. That gives you the whole of
+the core library, though not the widgets.
+</P>
+<div class=microlight>
+typedef struct
+{
+	BABYX *bbx;
+	BBX_Panel *root;
+	BBX_Label *message_lab;
+	BBX_Button *ok_but;
+
+} APP;
+</div>
+<P> You need to declare a top level structure, conventionally called
+"APP" to hold the Baby X variables. It contains the connection to the
+Baby X server, the root panel, and the direct children of the root.
+It's also useful to put non-Baby X application globals in this structure. 
+</P>
+<div class=microlight>
+void createapp(void *obj, BABYX *bbx, BBX_Panel *root);
+void killapp(void *obj);
+void layoutapp(void *obj, int width, int height);
+void ok_pressed(void *obj);
+</div>
+<P>
+We ony declare four functions, the creation callback, the application
+destructor, the layout callback, and one application specific function
+to respond to a button press.
+</P>
+<div class=microlight>
+int main(void)
+{
+	APP app;
+	startbabyx("Hello Baby X 2", 320, 200, createapp, layoutapp, &app);
+
+	return 0;
+}
+</div>
+<P>
+Baby X programs start with main. This is to avoid Baby X taking the
+program entry point and to make it easier to integrate Baby X with
+other libraries. Normally main just calls startbabyx, and exits.
+startbabyx() takes the title of the program, with width and height
+of the window requested (which may not be the size you obtain). You
+then pass in the two callback functions, createapp and layoutapp. The
+first is called once and you should respond by creating the 
+application's children. The second may be called several times
+and is a request to arrange the child windows in the root window.
+The final parameter is a user pointer which is passed back to us.
+</P>
+<div class=microlight>
+void createapp(void *obj, BABYX *bbx, BBX_Panel *root)
+{
+	APP *app = obj;
+	app->bbx = bbx;
+	app->root = root;
+	app->message_lab = bbx_label(bbx, root, "Hello World");
+	app->ok_but = bbx_button(bbx, root, "OK", ok_pressed, app);
+}
+</div>
+<P>
+This is the creation callback. We get back the APP object we
+passed to startbabyx, and we now populate it. The second parameter
+is the connection to the Baby X server, which we need to hang on to.
+The final parameter is the root window, which is a BBX_Panel (a
+window designed to hold other windows).
+</P>
+<P>
+We now create the children of the root panel. These consist of
+one label, and one button. The label takes the connection to the
+Baby X server, its parent, and the text. The button takes the
+connection to the Baby X server, the parent, the text, and the
+"action" callback, together with a user pointer to pass back, 
+which here is the entire application state.
+</P>
+<div class=microlight>
+void killapp(void *obj)
+{
+	APP *app = obj;
+
+	bbx_label_kill(app->message_lab);
+	bbx_button_kill(app->ok_but);
+}
+</div>
+<P>
+This is the app destructor. In order to shut down a Baby X application
+gracefully you need to destroy all the children, recursively. Every
+Baby X object has an associated "kill" function to call.
+</P>
+
+<div class=microlight>
+void layoutapp(void *obj, int width, int height)
+{
+	APP *app = obj;
+	int labwidth, labheight;
+
+	bbx_label_getpreferredsize(app->message_lab, &labwidth, &labheight);
+	bbx_setpos(app->bbx, app->message_lab, width/2 - labwidth/2, 50, labwidth, labheight);
+	bbx_setpos(app->bbx, app->ok_but, width / 2 - 25, height - 50, 50, 25);
+}
+</div>
+<P>
+This is the layout callback. We are passed the user pointer, and the
+actual width and height of our window, but not the Baby X conection.
+So we need to keep hold of it somehow, in this case, it is with the
+APP object. Use of the layout function allows us to lay out the
+children using a simple algorithm, and the preferred size of the
+message label.
+</P>
+<div class=microlight>
+void ok_pressed(void *obj)
+{
+	APP *app = obj;
+
+	killapp(app);
+	stopbabyx(app->bbx);
+}
+</div>
+<P>
+This is finally our one action. When the user presses OK, we destroy
+the application and stop Baby X.
+</P>
+<H3> Conclusion </H3>
+<P>
+You've seen a very simple Baby X application. It's not the simplest
+"Hello World" for a GUI toolkit, but no-one uses GUIs to write
+"Hello World". The framework is easily extensible to more functional
+programs.
+</P> 
+</BODY>
+</HTML>

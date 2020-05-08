@@ -1,0 +1,103 @@
+<HTML>
+<HEAD>
+<script src="microlight.js"> </script>
+<style>
+.microlight {
+  font-family : monospace;
+    white-space : pre;
+    background-color : white;
+}
+
+P{
+   width : 500px;
+}
+</style>
+</HEAD>
+<BODY bgcolor=#c0c0ff>
+<H1> The Baby X Panel object </H1>
+<P>
+A panel in Baby X is a window designed to hold other windows.
+</P>
+<P>
+You create a Baby X panel like this:
+</P>
+<div class=microlight>
+BBX_Panel *bbx_panel(BABYX *bbx, BBX_Panel *parent, char *tag, void (*changesize)(void *ptr, int width, int height), void *ptr);
+</div>
+<P>
+You can then create child elements off it. It takes a callback for when it changes size, or is initially mapped.
+You should lay out child elements in response to this callback. As usual,
+it passes back a context pointer. The tag isn't strictly necessary, but is useful
+for when the panel is a widget. It allows higher level code to check that
+the panel has indeed been created with the correct higher level
+function.
+</P>
+<div class=microlight>
+void bbx_panel_kill(BBX_Panel *pan);
+char *bbx_panel_gettag(BBX_Panel *pan);
+void bbx_panel_setbackground(BBX_Panel *obj, BBX_RGBA col);
+void *bbx_panel_getptr(BBX_Panel *pan);
+</div>
+<P>
+The panel has a destructor - you should destroy the children
+before calling this destructor -and an access function to the
+tag. You shouldn't use this to modify the returned pointer. There
+is also a function to set the background which works as expected,
+excapt that panels with alpha are not supported. There is also an
+access function for the context pointer. You can and sometimes
+should use this to change internals.
+</P>
+<div class=microlight>
+void bbx_panel_setmousefunc(BBX_Panel *pan, void (*mousefunc)(void *ptr, int action, int x, int y, int buttons), void *ptr);
+void bbx_panel_setkeyfunc(BBX_Panel *pan, void (*keyfunc)(void *ptr, int ch), void *ptr);
+int bbx_panel_gotmouse(BBX_Panel *pan, int *x, int *y);
+</div>
+<P>
+What makes the Baby X panel special are its mouse and key callbacks. These
+take context pointers for consistency with the rest of the Baby X interface,
+but there is only one context pointer per panel. So all the context pointers 
+passed to panel functions should be the same.
+</P>
+<P>
+The mouse function passes back the action (BBX_MOUSE_CLICK, BBX_MOUSE_MOVE, BBX_MOUSE_RELEASE)
+together with the x, y (in panel co-ordinates) and the button states, a logical
+OR of BBX_MOUSE_BUTTON1, BBX_MOUSE_BUTTON2, BBX_MOUSE_BUTTON3. Button 1 is
+usually the left mouse button, button 2 the right, and button 3 the middle. 
+You can detect dragging because a button is set. There is also a function
+to check if the mouse cursor is within the boundaries of the panel. It doesn't
+check for a captured mouse.
+</P>
+<P>
+The key callback passes back the ASCII or Unicode value of the 
+character entered at the keyboard. We also pass back some special
+keys, which have all negative codes.
+</P>
+<div class=microlight>
+#define BBX_KEY_BACKSPACE -100
+#define BBX_KEY_DELETE -101
+#define BBX_KEY_ESCAPE -102
+#define BBX_KEY_HOME -103
+#define BBX_KEY_LEFT -104
+#define BBX_KEY_UP -105              
+#define BBX_KEY_RIGHT -106       
+#define BBX_KEY_DOWN -107             
+#define BBX_KEY_END -108
+</div>
+<P>
+An unrecognised key is filtered out.
+</P>
+<H3> Using panels to create your own widgets </H3>
+<P>
+Most Baby X widgets are panels internally. You construct a widget out
+of a panel and, usually, a canvas. You might have other elements as well,
+depending on how complicated your widget is going to be. You then set the 
+panel tag to the widget type, and typedef a BBX_Panel to your widget type.
+</P>
+<P>
+An example is the BBX_Button type. It consists of a panel,
+and a BBX_Canvas that covers the whole area of the panel. It then attaches
+an internal "BUTTON" structure to the panel which stores its string,
+its callback, and so on, plus the canvas child element.  
+</P>
+</BODY>
+</HTML>

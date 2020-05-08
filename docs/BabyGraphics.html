@@ -1,0 +1,88 @@
+<HTML>
+<HEAD>
+<script src="microlight.js"> </script>
+<style>
+.microlight {
+    font-family : monospace;
+    white-space : pre;
+    background-color : white;
+}
+
+P {
+   width : 500px;
+}
+
+</style>
+</HEAD>
+<BODY bgcolor=#c0c0ff>
+<H1> Baby X Graphics </H1>
+<P>
+Baby X graphics are based on the BBX_Canvas element. Essentially a
+canvas is a blank space on which to draw graphics.
+</P>
+You create a BBX_Canvas with:
+
+</P>
+<div class=microlight>
+BABYX *bbx; /* Connection to the Baby X sever */
+BBX_Panel *parent; /* Parent window of canvas */
+int width = 256;
+int height = 100; 
+
+BBX_Canvas *can = bbx_canvas(bbx, parent, width, height, bbx_color("white"));
+</div>
+<P>
+You then have to lay it out in the parent's "layout" callback
+</P>
+<div class=microlight>
+void layout(void *obj, int width, int height)
+{
+  APP *app =  obj;
+  BABYX *bbx = app->bbx;
+  int x = 0;
+  int y = 0;
+  int width = 256;
+  int height = 100;
+
+  bbx_setpos(bbx, app->can, x, y, width, height); 
+}
+</div>
+<P>
+Now we are ready to draw. We can do this in response to ammouse click,
+or from the tail of our "layout" function.  
+</P>
+<div class=microlight>
+BBX_Canvas *can; /* the canvas we created */
+int width, height;
+unsigned char *rgba = bbx_canvas_rgba(can, &width, &height);
+/* drawing code goes here */
+
+bbx_canvas_flush(can);
+</div>
+<P>
+We obtain the rgba buffer to the canvas, draw on it by direct
+memory addressing, and then flush it to the canvas object. We
+shouldn't use the rgba bufffer after calling bbx_canvas_flush().
+There is no need to wait on a "draw" event or to regenerate the
+canvas on demand, and you can draw on it in response to any
+Baby X event.
+</P>
+<P>
+This system means that Baby X programs can use any graphical system,
+as long as it can draw to rgba buffers. The rgba buffer is always
+32 bit rgba, in that order in memory, and it is always aligned so 
+it can alias to a 32 bit type.
+</P>
+<H3> Provided Graphics </H3>
+<P>
+Baby X comes with two graphics systems, the basic system designed for
+drawing simple graphics, and the graphics context system designed
+for drawing quality 2D graphics. The simple graphics system is
+a list of functions that operate on rgba buffers. The graphics
+context system requires you to create a graphics context on the buffer,
+issue drawing commands to it, then destroy it. Finally you flush
+the buffer to the canvas. The functions can also be used for off-screen
+drawing to memory buffers, of course.
+</P>
+
+</HTML>
