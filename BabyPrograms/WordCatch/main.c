@@ -124,7 +124,8 @@ int main(void)
 
 	srand((unsigned int) time(0));
 	tune = slurpb("C:\\Users\\Malcolm\\Music\\away-in-a-manger.mp3", &N);
-	playmp3(tune, N);
+	if (tune )
+	  playmp3(tune, N);
 	startbabyx("Wordcatch", 320, 480, create, layout, &app);
 }
 
