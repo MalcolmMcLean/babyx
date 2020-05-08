@@ -12,6 +12,9 @@ static int subfiletime(FILETIME *t1, FILETIME *t2);
 BABYX *BabyX(HINSTANCE hinstance)
 {
   BABYX *answer;
+  HWND hwnd = GetConsoleWindow();
+  ShowWindow(hwnd, 0);
+
 
   answer = malloc(sizeof(BABYX));
   answer->hinstance = hinstance;
@@ -41,6 +44,8 @@ BABYX *BabyX(HINSTANCE hinstance)
   BBX_RegisterLabel(answer->hinstance);
   BBX_RegisterScrollbar(answer->hinstance);
   answer->clipboard = 0;
+
+
   return answer;
 }
 
