@@ -1,0 +1,226 @@
+<HTML>
+<HEAD>
+<script src="microlight.js"> </script>
+<style>
+.microlight {
+    font-family : monospace;
+    white-space : pre;
+    background-color : white;
+}
+
+P {
+   width : 500px;
+}
+</style>
+</HEAD>
+<BODY bgcolor=#c0c0ff>
+<H1> The Baby X core widgets </H1>
+<P>
+The core widgets are the simple building blocks of Baby X, providing
+facilites for data display and interactive data entry.
+</P> 
+<H3> BBX_Button </H3>
+<P> 
+A button is perhaps the most basic widget of all. It displays
+a text message, and calls a callback when the user presses it. 
+</P>
+<div class=microlight>
+BBX_Button *bbx_button(BABYX *bbx, BBX_Panel *parent, char *text, void (*fptr)(void *ptr), void *ptr );
+void bbx_button_kill(BBX_Button *obj);
+void bbx_button_settext(BBX_Button *obj, char *str);
+void bbx_button_disable(BBX_Button *obj);
+void bbx_button_enable(BBX_Button *obj);
+</div>
+<P>
+A BBX_Button is constructed off a panel. It has a display text and a callback.
+It is possible to rest the text. It can be enabled or disabled. There
+currenly isn't a way of setting the button's font - it uses the default gui font.
+</P>
+<H3> BBX_Canvas </H3>
+<P>
+The canvas is one of the most fundamental elements of Baby X, and most
+of the other widgets are constructed using canvases.
+</P>
+<div class=microlight>
+BBX_Canvas *bbx_canvas(BABYX *bbx, BBX_Panel *parent, int width, int height, BBX_RGBA bg);
+void bbx_canvas_kill(BBX_Canvas *can);
+void bbx_canvas_setimage(BBX_Canvas *can, unsigned char *rgba, int width, int height);
+unsigned char *bbx_canvas_rgba(BBX_Canvas *can, int *width, int *height);
+void bbx_canvas_flush(BBX_Canvas *can);
+void bbx_canvas_setmousefunc(BBX_Canvas *can, void (*mousefunc)(void *ptr, int action, int x, int y, int buttons), void *ptr);
+</div>
+<P>
+See <A href="BabyGraphics.html">Baby Graphics</A> for a description of how
+to draw on canvases. The canvas is constructed with known width and
+height (this may change) and background colour. bbx_canvas_rgba()
+obtains the canvas' rgba buffer, you write to it, then call bbx_canvas_flush()
+to draw the results on screen. The buffer is currently persistent. 
+bbx_canvas_setimage() is a realtively high-level function which resizes
+the simage if it is not the same size as the canvas. You can also set
+a mouse function.
+</P>
+<H3> BBX_CheckBox </H3>
+<P> The Baby X checkbox is an element that allows for entry of a boolean
+value. It also dispaly a lable next to the checkbox.
+<div class=microlight>
+BBX_CheckBox *bbx_checkbox(BABYX *bbx, BBX_Panel *parent, char *text, void (*fptr)(void *ptr, int state), void *ptr );
+void bbx_checkbox_kill(BBX_CheckBox *obj);
+int bbx_checkbox_getstate(BBX_CheckBox *obj);
+int bbx_checkbox_setstate(BBX_CheckBox *obj, int checked);
+void bbx_checkbox_enable(BBX_CheckBox *obj);
+void bbx_checkbox_disable(BBX_CheckBox *obj);
+</div>
+<P>
+The checkbox is constructed off a panel passing in the text and callback.
+You can set or query the state and enable or disable it.
+</P>
+<H3> BBX_EditBox </H3>
+<P> 
+The Baby X edit box is a multi-line edit control used for entering
+large amounts of text.
+</P>
+<div class=microlight>
+BBX_EditBox *bbx_editbox(BABYX *bbx, BBX_Panel *parent, void (*fptr)(void *ptr, char *text), void *ptr);
+void bbx_editbox_kill(BBX_EditBox *obj);
+void bbx_editbox_settext(BBX_EditBox *obj, char *text);
+char *bbx_editbox_gettext(BBX_EditBox *obj);
+void bbx_editbox_disable(BBX_EditBox *obj);
+void bbx_editbox_enable(BBX_EditBox *obj);
+void bbx_editbox_setfont(BBX_EditBox *obj, struct bitmap_font *font);
+</div>
+<P>
+The edit box is constructed off a panel, as usual. The function callback
+is currently inoperative. You can set or get the text, and set the
+font.
+</P>
+<H3> BBX_Label </H3>
+A label is another fundamental widget. It displays some text.
+<div class=microlight>
+BBX_Label *bbx_label(BABYX *bbx, BBX_Panel *parent, char *text);
+void bbx_label_kill(BBX_Label *obj);
+void bbx_label_settext(BBX_Label *obj, char *text);
+void bbx_label_setalignment(BBX_Label *obj, int align);
+void bbx_label_setbackground(BBX_Label *obj, BBX_RGBA col);
+void bbx_label_setforeground(BBX_Label *obj, BBX_RGBA col);
+int bbx_label_getpreferredsize(BBX_Label *lab, int *width, int *height);
+void bbx_label_setfont(BBX_Label *obj, struct bitmap_font *font);
+</div>
+<P>
+A label is constructed off a panel. It has no callback. Text can
+be set, as can the alignment (BBX_ALIGN_CENTER, BBX_ALIGN_LEFT or BBX_ALIGN_RIGHT).
+Foreground and background colours can be set. There is also a function
+bbx_label_getpreferredsize() which is important when laying out objects
+in response to a layout callback. You can also set the font.
+</P>
+<H3> BBX_LineEdit </H3>
+<P>
+A line edit is an edit box which is constrained to entering one line
+of text.
+</P>
+<div class=microlight>
+BBX_LineEdit *bbx_lineedit(BABYX *bbx, BBX_Panel *parent, char *text, void (*fptr)(void *ptr, char *text), void *ptr );
+void bbx_lineedit_kill(BBX_LineEdit *edt);
+char *bbx_lineedit_gettext(BBX_LineEdit *edt);
+void bbx_lineedit_settext(BBX_LineEdit *edt, char *text);
+void bbx_lineedit_disable(BBX_LineEdit *edt);
+void bbx_lineedit_enable(BBX_LineEdit *edt);
+void bbx_lineedit_setfont(BBX_LineEdit *le, struct bitmap_font *font);
+</div>
+<P>
+The line edit is constructed off a panel, and takes intial text plus
+a callback. The callback is generated whenthe user presses "enter". 
+You can get or set the text, enable or disable it, and set the font.
+</P>
+<H3> BBX_ListBox </H3>
+<P> 
+The list box shows a list of text options, which the user can choose.
+</P>
+<div class=microlight>
+BBX_ListBox *bbx_listbox(BABYX *bbx, BBX_Panel *parent, void (*fptr)(void *ptr, int selected), void *ptr);
+void bbx_listbox_kill(BBX_ListBox *obj); 
+int bbx_listbox_addstring(BBX_ListBox *obj, char *str);
+void bbx_listbox_clear(BBX_ListBox *obj);
+int bbx_listbox_getselected(BBX_ListBox *box);
+int bbx_listbox_setselected(BBX_ListBox *box, int idx);
+</div>
+<P>
+The list box is constructed off a parent. The callback is triggered
+when the user clicks on an entry. Strings are added sequentially
+with bbx_listbox_addstring(). The entire state is cleared with
+bbx_listbox_clear(). You can query and set the selected item.
+</P>
+<H3> BBX_RadioBox </H3>
+<P>
+A radio box shows a list of mutually exclusive options, with one selected,
+together with text labels.
+</P>
+<div class=microlight>
+BBX_RadioBox *bbx_radiobox(BABYX *bbx, BBX_Panel *parent, char **text, int N, void (*fptr)(void *ptr, int index), void *ptr );
+void bbx_radiobox_kill(BBX_RadioBox *obj);
+int bbx_radiobox_getselected(BBX_RadioBox *obj);
+void bbx_radiobox_setselected(BBX_RadioBox *obj, int index);
+int bbx_radiobox_disable(BBX_RadioBox *obj, int index);
+int bbx_radiobox_enable(BBX_RadioBox *obj, int index);
+</div>
+<P>
+The radio box is constructed off a panel, passing in the text labels and the number
+of entries. The callback will be triggered each time the user selects
+an entry. You can also query and set the state. Individual items can
+be enabled or disabled.
+</P>
+<H3> BBX_Scrollbar </H3>
+<P>
+A scrollbar is designed to be attahced to another widget to provide
+interactive scrolling.
+</P>
+<div class=microlight>
+BBX_Scrollbar *bbx_scrollbar(BABYX *bbx, BBX_Panel *parent, int direction, void (*fptr)(void *ptr, int pos), void *ptr);
+void bbx_scrollbar_kill(BBX_Scrollbar *obj);
+int bbx_scrollbar_set(BBX_Scrollbar *obj, int range, int visible, int pos);
+int bbx_scrollbar_getpos(BBX_Scrollbar *obj);
+void bbx_scrollbar_setpos(BBX_Scrollbar *obj, int pos);
+</div>
+<P>
+A scrollbar is constructed off a panel. it takes a direction (BBX_SCROLLBAR_VERTICAL
+or BBX_SCROLLBAR_HORIZONTAL) and a callback which passes back the scroll
+position. it is necessary to set the scrollbar's range and visible portion.
+The visible portion reflects the size of the scrollbar thumb, and also
+the maximum value that will be passed back. You can also query the scrollbar
+psotion directly, or set it programatically.
+</P>
+<H3> BBX_Spinner </H3>
+<P>
+The spinner is designed for easy entry of numerical values. It shows
+an edit box, together with little "up" and "down" arrows. As user clicks
+the arrows, the value changes.
+</P>
+<div class=microlight>
+BBX_Spinner *bbx_spinner(BABYX *bbx, BBX_Panel *pan, double val, double minval, double maxval, double delta, void (*change)(void *ptr, double val), void *ptr);
+void bbx_spinner_kill(BBX_Spinner *sp);
+double bbx_spinner_getvalue(BBX_Spinner *sp);
+void bbx_spinner_setvalue(BBX_Spinner *sp, double val);
+void bbx_spinner_setparams(BBX_Spinner *sp, double val, double minval, double maxval, double delta);
+int bbx_spinner_setmode(BBX_Spinner *sp, int mode);
+void bbx_spinner_setformat(BBX_Spinner *sp, char *fmt);
+int bbx_spinner_spinning(BBX_Spinner *sp);
+void bbx_spinner_enable(BBX_Spinner *sp);
+void bbx_spinner_disable(BBX_Spinner *sp);
+</div>
+<P>
+The spinner is constructed off a panel. It take the intial value, the minimum
+and maxmimum, and also delta, which is the amount incremented or
+decremented at each step. Note that whilst it takes doubles, in fact
+the spinner will often be used for integers. You can get or set the value
+and set the mimumum / maximum ranges. The mode is a logical OR
+of BBX_SPINNER_REAL, BBX_SPINNER_LOGARITHMIC and BBX_SPINNER_INTERACTIVE.
+If BBX_SPINNER_REAL is set, the value isn't constrained to be exactly
+a multiple of delta. If BBX_SPINNER_LOGARITMIC is set, the spinner
+responds by increasing delta at high values. If BBX_SPINNER_INTERACTIVE
+is set, you get the callback as the user spins. But defualt all these flags are off.
+You can also set the format, which is a printf() style format string that
+should accept a double. This allows you to add units or set precision.
+bbx_spinner_spinning() returns true if the spinner is currently spinning,
+and the control can be enabled or disabled. 
+</P>
+</BODY>
+</HTML>

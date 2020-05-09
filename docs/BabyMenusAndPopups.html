@@ -1,0 +1,230 @@
+<HTML>
+<HEAD>
+<script src="microlight.js"> </script>
+<style>
+.microlight {
+    font-family : monospace;
+    white-space : pre;
+    background-color : white;
+}
+
+P {
+   width : 500px;
+}
+</style>
+</HEAD>
+<BODY bgcolor=#c0c0ff>
+<H1> Baby X Menus and Pop Ups </H1>
+<P>
+A pop-up window is a window which appears transiently, usually to allow
+user to make a choice or enter some data. Baby X provides serveral
+functions for dealing with popups.
+</P>
+<H3> BBX_Menubar </H3>
+<P>
+A manubar is not a popup. It is a strip of clickable labels which
+usually sits on the top edge of a window. As user clicks on the 
+labels, he pulls down then menus. The menus themselves however 
+are popups.
+</P>
+<div class=microlight>
+BBX_Menubar *bbx_menubar(BABYX *bbx, BBX_Panel *parent, void (*fptr)(void *ptr, int id), void *ptr);
+void bbx_menubar_kill(BBX_Menubar *mb);
+void bbx_menubar_addmenu(BBX_Menubar *mb, char *name, BBX_Popup *sub);
+void bbx_menubar_disable(BBX_Menubar *mb, int id);
+void bbx_menubar_enable(BBX_Menubar *mb, int id);
+</div> 
+<P>
+A menubar is constructed off a parent panel. It needs to be placed in
+response to the layout callback, like any other child widget, though
+almost always it will be positioned at the top edge. The callback
+is triggered when the user selects an item from the sub-menus,
+and passes back the id. Thus every sub-menu should have a unique
+id for all its members. Individual items can be enabled or disabled
+by id.
+</P>
+<div class=microlight>
+  BBX_Popup *filemenu;
+  BBX_Popup *palettemenu;
+  BBX_Popup *helpmenu;
+  BBX_Popup *custompalettesmenu;
+  
+  app->menubar = bbx_menubar(bbx, root, menuhandler, app);
+
+  custompalettesmenu = bbx_popup(bbx);
+  bbx_popup_append(custompalettesmenu, 101, "Jet", "", 0);
+  bbx_popup_append(custompalettesmenu, 102, "Gray", "", 0);
+  bbx_popup_append(custompalettesmenu, 103, "Red Green", "", 0);
+  bbx_popup_append(custompalettesmenu, 104, "Blue Yellow", "", 0);
+  bbx_popup_append(custompalettesmenu, 105, "Flame", "", 0);
+  bbx_popup_append(custompalettesmenu, 106, "Rainbow", "", 0);
+  bbx_popup_append(custompalettesmenu, 107, "Land Sea", "", 0);
+  bbx_popup_append(custompalettesmenu, 108, "Relief", "", 0);
+  bbx_popup_append(custompalettesmenu, 109, "Zebra", "", 0);
+  bbx_popup_append(custompalettesmenu, 111, "Union Jack", "", 0);
+  bbx_popup_append(custompalettesmenu, 112, "Ocean", "", 0);
+  bbx_popup_append(custompalettesmenu, 113, "No Green", "", 0);
+
+  filemenu = bbx_popup(bbx);
+  bbx_popup_append(filemenu, 1, "Save as GIF", "...", 0);
+  bbx_popup_append(filemenu, 2, "Exit", "", 0);
+
+  palettemenu = bbx_popup(bbx);
+  bbx_popup_append(palettemenu, 4, "Edit palette", "...", 0);
+  bbx_popup_append(palettemenu, 5, "Custom palette", "", custompalettesmenu);
+  bbx_popup_append(palettemenu, 6, "Load palette from gif", "...", 0);
+
+  helpmenu = bbx_popup(bbx);
+  bbx_popup_append(helpmenu, 3, "About", "", 0);
+
+  bbx_menubar_addmenu(app->menubar, "File", filemenu);
+  bbx_menubar_addmenu(app->menubar, "Palette", palettemenu);
+  bbx_menubar_addmenu(app->menubar, "Help", helpmenu);
+</div>
+<P>
+ Here's an example of how to build a menu. it needs to be constructed
+from the bottom up, with low-level sub-menus constructed before high-
+level ones.
+</P>
+<H3> BBX_Popup </H3>
+<P>
+This is the first popup widget.
+</P>
+<div class=microlight>
+BBX_Popup *bbx_popup(BABYX *bbx);
+void bbx_popup_kill(BBX_Popup *pop);
+int bbx_popup_append(BBX_Popup *pop, int id, char *left, char *right, BBX_Popup *sub);
+void bbx_popup_disable(BBX_Popup *pop, int id);
+void bbx_popup_enable(BBX_Popup *pop, int id);
+</div>
+<P>
+You don't interact with theis widget directly. it is constructed off
+the bbx connection rather than a parent panel. You append entries
+with an id, left and right text entries, and an optional sub-menu
+which popus up when the popup is chosen (can be null). You shouldn't
+call the enable / disable fucntions directly. 
+</P>
+<H3> BBX_Popup2 </H3>
+<P>
+BBX_popup2 is a pop-up that you can interact with.
+</P>
+<div class=microlight>
+BBX_PopUp2 *bbx_popup2(BABYX *bbx, BBX_Panel *parent, int x, int y, BBX_Popup *pop, void (*chosen)(void *ptr, int id), void *ptr);
+void bbx_popup2_kill(BBX_PopUp2 *pop);
+void bbx_popup2_makemodal(BBX_PopUp2 *pop);
+void bbx_popup2_dropmodal(BBX_PopUp2 *pop);
+void bbx_popup2_doptr(BBX_PopUp2 *pop);
+</div>
+<P>
+It is constructed off a panel, and takes a popup object that you have constructed.
+It takes the familiar callback function. To pop it up, call bbx_popup2_makemodal(),
+then drop modal, usually in response to the callback. bbx_popup2_doptr is
+internal and used to handle the mouse capture. 
+
+</P>
+<div class=microlight>
+int bbx_quickpopup(BABYX *bbx, BBX_Panel *parent, int x, int y, char **str, it N);
+</div>
+<P>
+There's a convenience function to pop up a quick modal menu with a list
+of choices.
+</P>
+<H3> baby X popup panel </H3>
+<P>
+This is mainly for internal use, but is exposed.
+</P>
+<div class=microlight>
+BBX_Panel *bbx_popuppanel(BABYX *bbx, BBX_Panel *parent, char *tag, void (*changesize)(void *ptr, int width, int height), void *ptr, int x, int y);
+void bbx_popuppanel_makemodal(BBX_DialogPanel *pan);
+void bbx_popuppanel_dropmodal(BBX_DialogPanel *pan);
+</div>
+<P>
+This function returns a BBX_Panel instead of a special object. You can add
+children to it in the usual way. To pop it up, call bbx_popuppanel_makemodal(),
+and bbx_popuppanel_dropmodal() to release the modal lock. Then 
+</P>
+<H3> BBX_DialogPanel </H3>
+<P>
+Use this object to create a modal dialog.
+</P>
+<div class=microlight>
+BBX_DialogPanel *bbx_dialogpanel(BABYX *bbx, char *name, int width, int height, void (*changesize)(void *ptr, int width, int height), void *ptr);
+void bbx_dialogpanel_kill(BBX_DialogPanel *pan);
+void bbx_dialogpanel_makemodal(BBX_DialogPanel *pan);
+void bbx_dialogpanel_dropmodal(BBX_DialogPanel *pan);
+void bbx_dialogpanel_setclosefunc(BBX_DialogPanel *pan, void (*closefunc)(void *ptr), void *ptr);
+</div>
+<P>
+Dialog panels are children of the screen in the underlying window system,
+so don't take a parent panel. BBX_DialogPanel is simply a typedef for
+BBX_Panel, so you can construct children off the created panel.
+They won't be visible until you make the panel modal. Then you need
+to drop the modal values. Top-level children usually have a
+close box given by the system, so you need to set the close function
+to handle this. At a minimum, this will drop the modal lock. It might
+also need to set the dialog's return value.
+</P>
+<div class=microlight>
+typedef struct
+{
+   BABYX *bbx;
+   BBX_DialogPanel *pan;
+   BBX_Button *ok_but;
+} DIALOG;
+
+void layout(void *obj, int width, int height);
+void okpressed(void *obj);
+void closedialog(void *obj);
+
+void domodaldialog(BABYX *bbx)
+{
+   DIALOG dlg;
+   dlg.bbx = bbx;
+   dlg.pan = bbx_dialog_panel(bbbx, "Test dialog", 256, 256, layout, &dlg);
+   /* layout not yet called */
+   dlg.ok_but = BBX_Button(bbx, "OK", okpressed, &dlg);
+   bbx_dialogpanel_setclosefunction(dlg.pan, closedialog, &dlg);
+   bbx_dialogpanel_makemodal(dlg.pan);
+   /* only get to here when modal lock released */
+   /* destroy children from bottom up */
+   bbx_button_kill(dlg.ok_but);
+   
+   bbx_dialogpanel_kill(dlg.pan);
+}
+
+void layout(void *obj, int width, int height)
+{
+   DIALOG *dlg = obj;
+   bbx_setpos(dlg->bbx, dlg->ok_but, 10, 10, 50, 25);
+}
+
+void okpressed(void *obj)
+{
+   DIALOG *dlg = obj;
+   bbx_dialogpanel_dropmodal(dlg->pan);
+}
+
+void closedialog(void *obj)
+{
+   DIALOG *dlg = obj;
+   /* we need to tell Baby X to drop us as modal */
+   /* Note we have internal guards so we don't need to worry
+      about dropping the modal state twice. */
+   bbx_dialogpanel_dropmodal(dlg->pan);
+}
+
+</div>
+<H3> bbx_messagebox </H3>
+<P>
+There's also a convenience function to pop up a message dialog.
+</P>
+<div class=microlight>
+int bbx_messagebox(BABYX *bbx, int type, char *title, char *msgfmt, ...);
+</div>
+<P>
+ For type, you pass one of BBX_MB_OK, BBX_MB_OK_CANCEL, BBX_MB_YES_NO_CANCEL.
+ The message is a printf() style format string. The return value is one of
+ BBX_MB_CANCEL, BBX_MB_OK, BBX_MB_YES, or BBX_MB_NO.
+</P>
+</BODY>
+</HTML>

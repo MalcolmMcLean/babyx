@@ -1,0 +1,123 @@
+<HTML>
+<HEAD>
+<script src="microlight.js"> </script>
+<style>
+.microlight {
+    font-family : monospace;
+    white-space : pre;
+    background-color : white;
+}
+
+P {
+   width : 500px;
+}
+</style>
+</HEAD>
+<BODY bgcolor=#c0c0ff>
+<H1> The Baby X Object </H1>
+<P>
+When you start Baby X, it returns an opaque object of type "BABYX"
+which represents the connection to the Baby X server. The connection
+is needed for creating new Baby X objects and for destroying them,
+also for a few object-level functions.
+</P>
+
+<div class=microlight>
+void startbabyx(
+	        char *name, 
+                int width, 
+                int height,
+		void (*create)(void *ptr, BABYX *bbx, BBX_Panel *root),
+                void (*layout)(void *ptr, int width, int height),
+                void *ptr);
+void stopbabyx(BABYX *bbx);
+</div>
+<P>
+These are the functions for launching and stopping the Baby X server.
+startbabyx() never returns until stopbabyx() is called. It takes
+the name of the program, to be displayed in the title bar, the width
+and height of the top level window requested, the create and layout
+callbacks, and the context pointer which is passed back to these functions.
+When stopbabyx() is called, it closes the root window, and destroys
+the BABYX object.
+</P>
+<P>
+The callbacks create and layout represent the only entry points of
+Baby X into the user program. You will get one create call, to which
+you should respond by creating top level children off the root panel,
+and possibly more than one layout call, to which you should respond
+by rearranging the child objects, and possibly redrawing. Note that
+you are not guaranteed the same width and height on layout as you 
+requested from startbabyx().
+</P>
+<div class=microlight>
+int bbx_setpos(BABYX *bbx, void *obj, int x, int y, int width, int height);
+int bbx_setsize(BABYX *bbx, void *obj, int width, int height);
+int bbx_getsize(BABYX *bbx, void *obj, int *width, int *height);
+int bbx_setfocus(BABYX *bbx, void *obj);
+</div>
+<P>
+These functions take any basic widget created with Baby X, and
+access the common header internally. You can set the position
+relative to the parent, set the size, get the size, or set
+the keyboard focus.
+</P>
+<div class=microlight>
+void *bbx_addticker(BABYX *bbx, int ms_interval, void (*fptr)(void *ptr), void *ptr);
+void bbx_removeticker(BABYX *bbx, void *ticker); 
+</div>
+<P>
+Some programs, such as games or animations, are driven by clcok ticks
+rather than by user input events. So yu can add a ticker. Baby X
+call the tick function with it context pointer, approximately
+every tick interval. It's not accurate enought to use for high
+resolution timing. When you have done with a ticker, you remove it.
+The return value is an opaque void * whose only purpose is to 
+be passed back to removeticker().
+</P>
+<div class=microlight>
+void bbx_copytexttoclipboard(BABYX *bbx, char *text);
+char *bbx_gettextfromclipboard(BABYX *bbx);
+</div>
+<P>
+Baby X offers a simple interface to the clipboard. Currently 
+only text is supported. The string returned from bbx_gettextfromclipboard
+should be freed by caller when it is finished with.
+</P>
+<div class=microlight>
+void *bbx_malloc(int size);
+void *bbx_realloc(void *ptr, int size);
+char *bbx_strdup(const char *str);
+</div>
+<P>
+Bbay X wraps malloc() and realloc() so that these functions never return
+null. Currently it exits the program on allocation failure, so only
+call for allocations where this is the only sensible response. There's
+also a convenience function for duplicating a string.
+</P>
+<div class=microlight>
+int bbx_kbhit(BABYX *bbx, int code);
+</div>
+<P>
+Baby X implements a kbhit. The code is the Baby X key code, which is either
+an alphanumeric character, or one of the special keys.
+</P>
+<div class=microlight>
+             BBX_KEY_BACKSPACE
+	     BBX_KEY_DELETE
+	     BBX_KEY_ESCAPE
+	     BBX_KEY_HOME
+	     BBX_KEY_LEFT
+	     BBX_KEY_UP
+	     BBX_KEY_RIGHT
+	     BBX_KEY_DOWN 
+	     BBX_KEY_END
+</div>
+<P>
+bbx_kbhit() return true if the key is depressed, false if it is not.
+It doesn't black waiting for keyboard input. It is used for games or
+to control naviagtion via arrow keys.
+</P>
+
+</BODY>
+</HTML>

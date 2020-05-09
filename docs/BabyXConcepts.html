@@ -1,0 +1,128 @@
+<HTML>
+<HEAD>
+<style>
+ P {
+  width: 500px;
+}
+</style>
+</HEAD>
+<BODY bgcolor=#c0c0ff>
+<H1> Baby X Concepts </H3>
+<P>
+Baby X is an open source, portable GUI toolkit aimed at smaller
+programs. 
+</P>
+<P>
+The idea is that Baby X programs will run on any major operating
+system, just by linking the correct version of the Baby X library.
+Currently we only support Linux (X Windows) and Microsoft Windows,
+but the aim is that Baby X programs should be easily portable to 
+any environment, simply by rewriting the OS-specific portions oof
+the library.
+</P>
+<P>
+The code is separated into several sections. At the lowest level, 
+is the operating system specific layer. These are in the directories
+"windows" and "linux". Then at the next level is the core library,
+in the directory "common". This contains all of the simple widgets 
+that can be written portably, plus the portable utility code.
+Then there is the widgets library, containing complicated widgets
+that are built on top of the other Baby X widgets. Finally we
+have the user programs. Some example programs are packaged with
+the Baby X distribution to provide a reference code base and to test
+how the library stand up to real life.
+</P>
+<H3> Coding style </H3>
+<P>
+The code is all written in portable ANSI C, except for the operating
+system specific parts. We don't use derived types, most of the variables
+are simple ints, doubles, unsigned char, or char *s. We don't use
+const because it is not always obvious whether a Baby X function should
+make a chnage in an object or not. The structures are mostly opaque,
+created on the heap, and passed around by pointer. 
+</P>
+<P>
+The Baby X namespace is BBX_ for structures and internal functions,
+and bbx_ for user-callable functions, with a few exceptions such 
+as the BABYX connection itself. Every fucntion prefixed BBX_ is
+operating system-specific and should not be called by user code.
+There is one header for all of the core library, which is "BabyX.h".
+This includes windows.h or X11/Xlib.h, so user programs should be
+careful not to use sysmbols which clash. 
+</P>
+<P>
+Baby X relies heavily on callback functions. Virtually all the
+widgets accept callbacks. Often these can be null because the
+sae information can be got by querying the widget. For example,
+a BBX_CheckBox can call a callback when it changes state, but
+it will usually be easier simply to query its tick state on
+dialog close, or if data is required. The callback always passes
+back a context pointer, which can be null, but means that
+there is no need for globals. Most of the widgets are BBX_Panels,
+and hnag widget-specific data off the panels' context pointer.
+</P>
+<P>
+Destruction needs to be explicit and it reverse order of window
+hierarchy.
+</P>
+<H3> Graphics </H3>
+<P>
+There is a simple graphicssupport library which is used internally
+by the core widgets to draw themselves. There is also a complicated
+graphicscontext which user programs can use to draw vector-style
+graphics. However because all graphics are implemented by drawing
+to rgba buffers, any graphics system can work alongside Baby X. 
+The graphics context can also be taken and used in non-Baby X
+programs.
+</P>
+<H3> Text and Fonts </H3>
+<P>
+Text is handled as UTF-8. There is no support for right to left
+language such as Hebrew or Arabic, or for composite glyphs. 
+Fonts are pre-rasterised, by the Baby X resource compiler.
+</P>
+<P>
+There are two fonts currently packaged with the Baby X core
+library, the default gui font and the user font. the user font
+is monospaced.
+</P>
+<H3> Widget design </H3>
+<P>
+Baby X is a "baby" toolkit. So currently there is no way to
+customise the appearance of most of the controls. Everything
+is grey, with light coming from the upper left. More customisation
+will be added as the library develops. However the goal is
+to keep it simple, and consistent.
+</P>
+<H3> The Baby X Resource Compiler </H3>
+<P>
+The Baby X recource compiler, babyxrc, is designed to be used
+with Baby X programs. It packages assets as C source files
+for inclusion in Baby X programs. It's also a treasury of
+protable ANSI C code for parsing file formats that can be used
+in other projects. Plus the resource compiler is not only
+useful for Baby X, you might want it for your embedded
+project.
+</P>
+<H3> User programs </H3>
+<P>
+There are three "real" user programs, BabyBridge - a contract bridge
+game, BabyPerlin, a Perlin noise texture generator, and WordCatch,
+a game in which you try to spell words by catching falling letters.
+WordCatch shows off the simplicity of Baby X's graphics. It simply
+creates a full canvas covering the window, then draws rgba objects
+to it. 
+</P>   
+<H3> Directions </H3>
+<P>
+Current priorities are to get the documentation ready, and to improve
+the appearance of the Baby X widgets. The next thing is to get the
+audio system working. As a longer term goal, it should also be ported
+to Apple. We're always glad to receive help, feedback,
+suggestions, or Baby X programs that users have written. 
+</P>
+<P>
+Enjoy Baby X.
+</P>
+</BODY>
+</HTML>

@@ -1,0 +1,58 @@
+<HTML>
+<HEAD>
+<script src="microlight.js"> </script>
+<style>
+.microlight {
+    font-family : monospace;
+    white-space : pre;
+    background-color : white;
+}
+
+P {
+   width : 500px;
+}
+</style>
+</HEAD>
+<BODY bgcolor=#c0c0ff>
+<H1> Baby X Colours </H1>
+<P>
+Baby X uses 32 bit rgba colours throughout. The basic graphics
+functions supprt alpha blending.
+</P>
+<H3> Baby X colour basics </H3>
+<P>
+A colour is passed about as a BBX_RGBA. THi sis typedefed to an
+unsigned long.  
+</P>
+<P>
+Use these macros for creating and accessing the BBX_RGBA type.
+</P>
+<div class=microlight>
+#define bbx_rgba(r,g,b,a) ((BBX_RGBA) ( ((r) << 24) | ((g) << 16) | ((b) << 8) | (a) ))
+#define bbx_rgb(r, g, b) bbx_rgba(r,g,b, 255)
+#define bbx_red(col) ((col >> 24) & 0xFF)
+#define bbx_green(col) ((col >> 16) & 0xFF)
+#define bbx_blue(col) ((col >> 8) & 0xFF)
+#define bbx_alpha(col) (col & 0xFF)
+</div>
+<P>
+Note that a Baby X rgba buffer is an array of unsigned chars, with the
+channels in the order r, g, b, a. So an rgba buffer cannot necessarily
+
+be cast to ana rray or BBX_RGBAs.
+<H3> Baby X name colours </H3>
+<P>
+Baby X also contains a massive list of named colours. To obtain a named
+colour, call
+</P>
+<div class-microlight>
+BBX_RGBA bbx_color(char *str);
+</div>
+<P>
+There is a huge list of allowed colour names. The colour is looked up
+by binary search so should be reasonably fast, but don't call for
+every pixel.
+</P>
+</P>
+</BODY>
+</HTML>
