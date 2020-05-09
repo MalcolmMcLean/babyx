@@ -264,12 +264,12 @@ void createapp(void *obj, BABYX *bbx, BBX_Panel *root)
 
   bbx_label_setbackground(app->width_lab, bbx_color("LightGray"));
   bbx_label_setbackground(app->height_lab, bbx_color("LightGray"));
-  bbx_label_setbackground(app->octaves_lab, BBX_Color("LightGray"));
-  bbx_label_setbackground(app->persistence_lab, BBX_Color("LightGray"));
-  bbx_label_setbackground(app->scale_lab, BBX_Color("LightGray"));
-  bbx_label_setbackground(app->deltax_lab, BBX_Color("LightGray"));
-  bbx_label_setbackground(app->deltay_lab, BBX_Color("LightGray"));
-  bbx_label_setbackground(app->deltat_lab, BBX_Color("LightGray"));
+  bbx_label_setbackground(app->octaves_lab, bbx_color("LightGray"));
+  bbx_label_setbackground(app->persistence_lab, bbx_color("LightGray"));
+  bbx_label_setbackground(app->scale_lab, bbx_color("LightGray"));
+  bbx_label_setbackground(app->deltax_lab, bbx_color("LightGray"));
+  bbx_label_setbackground(app->deltay_lab, bbx_color("LightGray"));
+  bbx_label_setbackground(app->deltat_lab, bbx_color("LightGray"));
 
   bbx_spinner_setmode(app->persistence_spn, BBX_SPINNER_REAL | BBX_SPINNER_INTERACTIVE | BBX_SPINNER_LOGARITHMIC);
   bbx_spinner_setformat(app->persistence_spn, "%.2g");

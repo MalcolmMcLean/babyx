@@ -318,18 +318,18 @@ static void drawupdown(BBX_SPIN *spin)
   bbx_line(rgba, width, height, 0, height/2+1, width-1, height/2+1, higrey);  
  
   upx[0] = width/2.0;
-  upx[1] = 1.5;
-  upx[2] = width-1;
-  upy[0] = 1.0;
-  upy[1] = height/2.0 - 1.5;
-  upy[2] = height/2.0 - 1.5;
+  upx[1] = 2.5;
+  upx[2] = width-2.5;
+  upy[0] = 2.5;
+  upy[1] = height/2.0 - 2.5;
+  upy[2] = height/2.0 - 2.5;
 
   downx[0] = width/2.0;
-  downx[1] = 1;
-  downx[2] = width-1;
-  downy[0] = height-1.5;
-  downy[1] = height/2.0 + 1.5;
-  downy[2] = height/2.0 + 1;
+  downx[1] = 2.5;
+  downx[2] = width-2.5;
+  downy[0] = height-2.5;
+  downy[1] = height/2.0 + 2.5;
+  downy[2] = height/2.0 + 2.5;
 
   if(spin->disabled)
   {
