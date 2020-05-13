@@ -109,7 +109,7 @@ static Window BBX_DialogWindow(BABYX *bbx, char *title, int width, int height)
     win = XCreateSimpleWindow(bbx->dpy, RootWindow(bbx->dpy, bbx->screen),
 			      x, y, width, height, border_width,
 			      BlackPixel(bbx->dpy, bbx->screen),
-			      BBX_Color("Gray") );
+			      BBX_RgbaToX( bbx_color("gray")) );
 
 
     XStoreName(bbx->dpy, win, title);
