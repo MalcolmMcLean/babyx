@@ -1,0 +1,104 @@
+<HTML>
+<HEAD>
+<script src="microlight.js"> </script>
+<style>
+.microlight {
+    font-family : monospace;
+    white-space : pre;
+    background-color : white;
+}
+
+P {
+   width : 500px;
+}
+</style>
+</HEAD>
+<BODY bgcolor=#c0c0ff>
+<H1> The Graphics Support routines </H1>
+<P>
+The graphics support routines are simple basic graphics routines
+for operating on 32 bit rgba buffers. The core widgets use them
+internally to draw themselves.
+</P>
+
+<pre class=microlight>
+int bbx_line(unsigned char *rgba, int width, int height, double x1, double y1, double x2, double y2, BBX_RGBA col);
+int bbx_lineaa(unsigned char *rgba, int width, int height, double x1, double y1, double x2, double y2, double lwidth, BBX_RGBA col);
+int bbx_rectangle(unsigned char *rgba, int width, int height, double x1, double y1, double x2, double y2, BBX_RGBA col);
+int bbx_circle(unsigned char *rgba, int width, int height, double x, double y, double r, BBX_RGBA col);
+int bbx_polygon(unsigned char *rgba, int width, int height, double *x, double *y, int N, BBX_RGBA col);
+int bbx_polygonaa(unsigned char *rgba, int width, int height, double *x, double *y, int N, BBX_RGBA col);
+
+void bbx_paste(unsigned char *rgba, int width, int height, unsigned char *sub, int swidth, int sheight, int x, int y);
+void bbx_pasterot(unsigned char *rgba, int width, int height, unsigned char *sub, int swidth, int sheight, int x, int y, double theta);
+int bbx_rotatebyshear(unsigned char *rgba, int width, int height, double cx, double cy, double theta, unsigned char *out);
+unsigned char *bbx_rot90(unsigned char *rgba, int width, int height);
+unsigned char *bbx_rot270(unsigned char *rgba, int width, int height);
+</pre>
+<P>
+For the color arguments, see <A href="BabyColours.html">Baby Colours</A>
+</P>
+<P>
+Most of the routines are alpha-aware. So you can construct quite complex
+dynamic images using alpha-blending and pasting. Get the original artwork
+into the program with the aid of the <A href="https://github.com/MalcolmMcLean/babyxrc">Baby X resource compiler</A>.
+They all take  an a rgba buffer plus width and height as the first three 
+arguments. Co-ordinate arguments are mostly real.
+</P>
+<pre class=microlight>
+unsigned char *rgba;
+int width,height;
+BBX_Canvas *can; /* created earlier */
+rgba = bbx_canvas_rgba(can, &width, &height);
+bbx_rectangle(rgba, width, height, 0, 0, width-1, height-1, bbx_color("white"));
+/* more drawing commands here */
+bbx_canvas_flush(can);
+</pre>
+<P>
+This is a simple example of usage. You need to obtain the rgba buffer for
+the canvas before drawing, then flush the canvas once you are done with
+it. You can of course also use the routines for constructing images
+in your own rgba buffers.
+</P>
+<P>
+bbx_line is a simple line. It is not anti-aliased so you will get
+staircased effected for diagonal lines. However it is faster for drawing
+axis-aligned lines.
+<P>
+bbx_lineaa is for drawing anti-aliased lines.
+</P>
+<P>
+bbx_rectangle draws a rectangle. Currently the edges are not
+anti-aliased. 
+</P>
+<P>
+bbx_circle draws a filled circle. Not anti-aliased. You need to use
+the graphic context if you want a good circle.
+</P>
+<P>
+bbx_polygon draws a simple polygon, with "jaggies". x and y arguments
+are held in separate buffers.
+</P>
+<P>
+bbx_polygonaa is the anti-aliased polygon.
+</P>
+<P>
+bbx_paste and bbx_pasterot are the two routines that you will really use
+to construct images. bbx_paste is designed for fast pasting of axis-aligned 
+images, and takes integer arguments. bbx_pasterot rotates, resamples,
+and does anti=aliasing.
+</P>
+<P>
+bbx_rotatebyshear allows you to construct a rotated image in memory.
+Unlike the other routines, it reads from the rgba buffer and ouputs to a buffer
+of the same size passed as "out". bbx_pasterot uses a rotation matrix combined 
+with bilinear interpolation to produce the output image. bbx_rotatebyshear 
+shifts whole pixels to produce a rotation. Thus you don't get degradation 
+of the image, at the price of less accurate angles of rotation.
+</P>
+<P>
+bbx_rot90 and bbx_rot270 are convenience functions to rotate an image by
+exactly 90 degrees.
+</P>
+</BODY>
+</HTML>
