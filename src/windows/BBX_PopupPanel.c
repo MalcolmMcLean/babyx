@@ -37,10 +37,11 @@ BBX_Panel *BBX_popuppanel(BABYX *bbx, HWND parent, char *tag, void (*changesize)
 {
   BBX_Panel *answer;
   POINT pt;
+  BBX_RGBA grey;
 
   answer = bbx_malloc(sizeof(BBX_Panel));
   answer->bbx = bbx;
-  //grey = BBX_Color("gray");
+  grey = bbx_color("gray");
   //dimgrey = BBX_Color("dim gray");
   //answer->win = XCreateSimpleWindow(bbx->dpy, parent, 0, 0, 100, 100,
 //				    1, dimgrey, grey);
@@ -60,6 +61,8 @@ BBX_Panel *BBX_popuppanel(BABYX *bbx, HWND parent, char *tag, void (*changesize)
   answer->mousefunc = 0;
   answer->keyfunc = 0;
   answer->closefunc = 0;
+  answer->modal = 0;
+  answer->hbrush = CreateSolidBrush(RGB(bbx_red(grey), bbx_green(grey), bbx_blue(grey)));
 
   pt.x = x;
   pt.y = y;
@@ -88,6 +91,8 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
 {
   BBX_Panel *pan;
   int button;
+  HDC hdc;
+  RECT rect;
   int x, y;
 
   pan = (BBX_Panel *)GetWindowLong(hwnd, GWL_USERDATA);
@@ -111,6 +116,13 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
     }
 	*/
     break;
+  case WM_ERASEBKGND:
+	  hdc = (HDC)wParam;
+	  GetClientRect(hwnd, &rect);
+	  SelectObject(hdc, pan->hbrush);
+	  Rectangle(hdc, rect.left - 1, rect.top - 1, rect.right + 1, rect.bottom + 1);
+	  return 0;
+	  break;
   case WM_LBUTTONDOWN:
 	  x = GET_X_LPARAM(lParam);
 	  y = GET_Y_LPARAM(lParam);

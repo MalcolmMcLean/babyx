@@ -3,6 +3,7 @@
 #include <time.h>
 #include <assert.h>
 
+extern struct bitmap_font lato_regular_font;
 extern struct bitmap_font vera12_font;
 extern struct bitmap_font fixed_font;
 #include "BabyX.h"
@@ -23,7 +24,7 @@ BABYX *BabyX(HINSTANCE hinstance)
   answer->childCapacity = 0;
   //answer->screen = DefaultScreen(dpy);
   //answer->gc = XCreateGC(dpy, RootWindow(dpy, 0), 0, 0);
-  answer->gui_font = &vera12_font;
+  answer->gui_font = &lato_regular_font; //&vera12_font;
   answer->user_font2 = &fixed_font;
   // answer->gui_font  = XLoadQueryFont(dpy, "-*-clean-bold-r-*-*-14-*-*-*-*-*-*-*");
   //answer->gui_font  = XLoadQueryFont(dpy, "-sun-open look glyph-----14-140-75-75-p-128-sunolglyph-1");

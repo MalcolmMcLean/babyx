@@ -221,7 +221,7 @@ static POPUP *popup(BBX_Popup *pop, HWND parent, int x, int y)
   pp->answer = -1;
 
   bbx_panel_setmousefunc(pp->pan, ppmousefunc, pp); 
-  bbx_setsize(pp->bbx, pp->pan, maxleft + maxright, maxheight * pop->N);
+  bbx_setsize(pp->bbx, pp->pan, maxleft + maxright + 10, maxheight * pop->N + 5);
 
   return pp;
 } 
@@ -250,8 +250,8 @@ static void pplayout(void *obj, int width, int height)
 
   for(i=0;i<pp->N;i++)
   {
-    bbx_setpos(pp->bbx, pp->lab[i*2], 0, i * pp->labheight, pp->maxleft, pp->labheight);
-    bbx_setpos(pp->bbx, pp->lab[i*2+1], pp->maxleft, i * pp->labheight, pp->maxright, pp->labheight);  
+    bbx_setpos(pp->bbx, pp->lab[i*2], 5, i * pp->labheight, pp->maxleft +5, pp->labheight);
+    bbx_setpos(pp->bbx, pp->lab[i*2+1], pp->maxleft + 5, i * pp->labheight, pp->maxright, pp->labheight);  
   }
 
 }

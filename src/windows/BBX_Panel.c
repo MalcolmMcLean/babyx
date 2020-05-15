@@ -84,8 +84,14 @@ char *bbx_panel_gettag(BBX_Panel *pan)
 
 void bbx_panel_setbackground(BBX_Panel *obj, BBX_RGBA col)
 {
+	//HDC hdc;
+	//PAINTSTRUCT ps;
 	DeleteObject(obj->hbrush);
 	obj->hbrush = CreateSolidBrush(RGB(bbx_red(col), bbx_green(col), bbx_blue(col)));
+	//hdc = BeginPaint(obj->win, &ps);
+	//SendMessage(obj->win, WM_ERASEBKGND, (WPARAM) hdc, 0);
+	//EndPaint(obj->win, &hdc);
+	InvalidateRect(obj->win, 0, TRUE);
   
 }
 
@@ -206,6 +212,8 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
   case WM_LBUTTONDOWN:
 	  x = GET_X_LPARAM(lParam);
 	  y = GET_Y_LPARAM(lParam);
+	  if (pan->keyfunc)
+		  SetFocus(hwnd);
 	  if (pan->mousefunc)
 		  (*pan->mousefunc)(pan->ptr, BBX_MOUSE_CLICK, x, y, BBX_MOUSE_BUTTON1);
 	  else
@@ -213,8 +221,6 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
 		  TranslateCoords(hwnd, GetParent(hwnd), &x, &y);
 		  SendMessage(GetParent(hwnd), WM_LBUTTONDOWN, wParam, MAKELPARAM(x, y));
 	  }
-	  if (pan->keyfunc)
-		  SetFocus(hwnd);
 	  break;
   case WM_LBUTTONUP:
 	  x = GET_X_LPARAM(lParam);
