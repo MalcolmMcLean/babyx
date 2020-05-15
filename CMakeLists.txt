@@ -50,7 +50,13 @@ list(APPEND bbx_sources ${BBX_WIDGETSH})
 list(APPEND bbx_includes "src/widgets")
 
 add_library( bbx ${bbx_sources} )
-target_include_directories(bbx SYSTEM PRIVATE src/common src/windows)
+target_include_directories(bbx SYSTEM PRIVATE ${bbx_includes})
+
+set(libs bbx)
+if(CMAKE_SYSTEM_NAME MATCHES Linux)
+	list(APPEND libs X11)
+        list(APPEND libs m)
+endif()
 
 # Baby Bridge example program
 
@@ -60,7 +66,7 @@ file( GLOB BRIDGE_HEADERS BabyPrograms/BabyBridge/*.h )
 
 add_executable( "BabyBridge" ${BRIDGE_SOURCES} ${BRIDGE_HEADERS} )
 target_include_directories("BabyBridge" SYSTEM PRIVATE ${bbx_includes})
-target_link_libraries("BabyBridge" bbx )
+target_link_libraries("BabyBridge" ${libs} )
 
 # Baby Hello World example program
 
@@ -70,7 +76,7 @@ file( GLOB HELLOWORLD_HEADERS BabyPrograms/BabyHelloWorld/*.h )
 
 add_executable( "BabyHelloWorld" ${HELLOWORLD_SOURCES} ${HELLOWORLD_HEADERS} )
 target_include_directories("BabyHelloWorld" SYSTEM PRIVATE ${bbx_includes})
-target_link_libraries("BabyHelloWorld" bbx )
+target_link_libraries("BabyHelloWorld" ${libs} )
 
 # Baby Perlin example program
 
@@ -80,7 +86,7 @@ file( GLOB PERLIN_HEADERS BabyPrograms/BabyPerlin/*.h )
 
 add_executable( "BabyPerlin" ${PERLIN_SOURCES} ${PERLIN_HEADERS} )
 target_include_directories("BabyPerlin" SYSTEM PRIVATE ${bbx_includes})
-target_link_libraries("BabyPerlin" bbx )
+target_link_libraries("BabyPerlin" ${libs} )
 
 # Graphics Context Test example program
 
@@ -90,7 +96,7 @@ file( GLOB GCTEST_HEADERS BabyPrograms/GraphicsContextTest/*.h )
 
 add_executable( "GraphicsContextTest" ${GCTEST_SOURCES} ${GCTEST_HEADERS} )
 target_include_directories("GraphicsContextTest" SYSTEM PRIVATE ${bbx_includes})
-target_link_libraries("GraphicsContextTest" bbx )
+target_link_libraries("GraphicsContextTest" bbx ${libs})
 
 # Widget Test example program
 
@@ -100,7 +106,7 @@ file( GLOB WIDGETTEST_HEADERS BabyPrograms/WidgetTest/*.h )
 
 add_executable( "WidgetTest" ${WIDGETTEST_SOURCES} ${WIDGETTEST_HEADERS} )
 target_include_directories("WidgetTest" SYSTEM PRIVATE ${bbx_includes})
-target_link_libraries("WidgetTest" bbx )
+target_link_libraries("WidgetTest" ${libs} )
 
 # WordCatch example program
 

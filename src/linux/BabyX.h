@@ -7,6 +7,7 @@
 #include "font.h"
 #include "BBX_Color.h"
 #include "../common/bbx_graphicssupport.h"
+#include "../common/bbx_graphicscontext.h"
 #include "BBX_Clipboard.h"
 
 typedef struct

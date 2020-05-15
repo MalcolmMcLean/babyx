@@ -171,10 +171,10 @@ static void event_handler(void *obj, XEvent *event)
       button = BBX_MOUSE_BUTTON3;
     x = event->xmotion.x;
     y = event->xmotion.y;
-    if(pan->mousefunc)
-      (*pan->mousefunc)(pan->ptr, BBX_MOUSE_CLICK, x, y, button);
     if(pan->keyfunc)
-       XSetInputFocus(pan->bbx->dpy, pan->win, RevertToParent, CurrentTime); 
+       XSetInputFocus(pan->bbx->dpy, pan->win, RevertToParent, CurrentTime);
+    if(pan->mousefunc)
+      (*pan->mousefunc)(pan->ptr, BBX_MOUSE_CLICK, x, y, button); 
     break;
   case ButtonRelease:
     button = 0;
