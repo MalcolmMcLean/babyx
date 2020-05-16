@@ -1,0 +1,330 @@
+<HTML>
+<HEAD>
+<script src="microlight.js"> </script>
+<style>
+.microlight {
+    font-family : monospace;
+    white-space : pre;
+    background-color : white;
+}
+
+P {
+   width : 500px;
+}
+</style>
+</HEAD>
+<BODY bgcolor=#c0c0ff>
+<H1> The Baby X Graphics Context </H1>
+<P>
+The graphics context is used for more complicated 2D graphics.
+A graphics context is essentially a store of state. This has
+two purposes, to reduce the number of parameters passed to a
+graphics drawing function, and to allow code to be reused
+by calling it in different contexts. For example, if you have
+code to stamp a tree, you could call it with different transform
+matrices to create a forest of trees.
+</P>
+<P>
+The basic use of the graphics context is as follows
+</P>
+<pre class=microlight>
+unsigned char *rgba;
+int width, height;
+BBX_Canvas *can; /* create this elsewhere */
+BBX_GC *gc; /* the graphics context */
+
+rgba = bbx_canvas_rgba(can, &width, &height);
+gc = bbx_graphicscontext(rgba, width, height);
+bbx_gc_setfillcolor(gc, bbx_color("white"));
+bbx_gc_fillrect(gc, 0, 0, width, height);
+bbx_gc_setfillcolor(gc, bbx_color("red"));
+bbx_gc_fillcircle(gc, width/2.0, height/2.0 width/2.0 - 5.0);
+bbx_graphicscontext_kill(gc);
+bbx)canvas_flush(can);
+</pre>
+<P>
+Note that we need to obtain the rgba buffer from the canvas, creare
+the graphics context off it, draw, then destroy the graphics context.
+This writes out any remaining graphics commands to the buffer. Then
+we have to flush the buffer to the canvas. The graphics context and
+the rest of Baby X are thus looselyy coupled. You can take the graphics
+context code as is and use it in non-Baby X projects if you desire.
+</P>
+<pre class=microlight>
+BBX_GC *bbx_graphicscontext(unsigned char *rgba, int width, int height);
+void bbx_graphicscontext_kill(BBX_GC *gc);
+</pre>
+<P>
+This is the graphics context constructor and destructor. The constructor
+takes an rgba buffer which is managed by caller. You shouldn't
+attempt to free it whilst the graphics context is live. The 
+destructor is important as it does not just free memory, it also 
+writes the cached commands out to the rgba buffer.
+</P>
+<H3> Basic usage </H3>
+<P>
+The graphics context is based on the concept of lines or curves,
+having strokes and fills. You begin drawing a shape with bbx_gc_beginpath(),
+you use bbx_gc_moveto() to move the draw position to a new point, 
+and bbx_gc_lineto() or one of the curve-drawing functions to add
+geometry to the path. You then use bbx_gc_closepath() to terminate the shape.
+The shape can conatin several bbx_gc_moveto() commands, it doesn't
+have to be a single contiguous line. However these commands don't actually
+draw anything. To draw something, you need to set the stroke or the fill,
+using bbx_gc_setfillcolor() as the simplest coma nd in this set. Then finally
+yu need to stroke or fill it with bbx_gc_stroke() or bbx_gc_fill(), which
+actually causes a drawing command to be issued. 
+</P>
+<P>
+A typical series of commands will looke something like this.
+</P>
+<pre class=microlight>
+BBX_GC *gc;
+
+bbx_gc_beginpath(gc);
+/* draw a triangle */
+bbx_gc_moveto(gc, 100, 100);
+bbx_gc_lineto(gc, 110, 100);
+bbx_gc_lineto(gc, 105, 110);
+bbx_gc_lineto(gc, 100, 100);
+bbx_gc_closepath(gc);
+
+/* set up our strokes and fills */
+bbx_gc_setstrokecolor(gc, bbx_color("black"));
+bbx_gc_setstrokewidth(gc, 2.0);
+bbx_gc_setlinejoin(gc, "miter");
+bbx_gc_setfillcolor(gc, bbx_color("yellow"));
+/* now fill first, stroke over the fill */
+bbx_gc_fill();
+bbx_gc_stroke();
+
+/* we've drawn our triangle, now discard it and move on to our next shape */
+bbx_gc_beginpath();
+</pre>
+<P>
+The graphics context caches our path as state for us, and we build it up in small
+segments.
+</P>
+<H3> Path construction commands </H3>
+<pre class=microlight>
+void bbx_gc_addcubic(BBX_GC *gc, double x1, double y1, double x2, double y2, double x3, double y3);
+void bbx_gc_addquadratic(BBX_GC *gc, double x1, double y1, double x2, double y2);
+void bbx_gc_lineto(BBX_GC *gc, double x, double y);
+void bbx_gc_beginpath(BBX_GC *gc);
+void bbx_gc_moveto(BBX_GC *gc, double x, double y);
+void bbx_gc_closepath(BBX_GC *gc);
+
+void bbx_gc_arc(BBX_GC *gc, double cx, double cy, double r, double stheta, double etheta, int ccw);
+void bbx_gc_arcto(BBX_GC *gc, double tx1, double ty1, double x2, double y2, double r);
+</pre>
+<P>
+These are the fundamental path-construction functions. Each path is
+started with a call to gc_beginpath(). However there can be several
+or no calls to bbx_gc_closepath(). The path is terminated by the next
+call to bbx_gc_beginpath(), bbx_gc_closepath() simply turns the subpath
+we are on into a closed curve that can take a fill, and has co-incident
+start points and end points.  
+</P>
+<P>
+bbx_gc_moveto() effectively starts a new sub-path. bbx_gc_lineto is
+the simplest of the geometry cnstruction routines, and simply adds
+a straight line from the current point to the destination point.
+bbx_gc_addcubic() adds a cubic Bezier curve. The first Bezier point
+is given by the current point, the last Bezier point is the last two 
+arguments, and the middle four arguments are the two control points.
+bbx_gc_addquadratic() does the same for a quadratic Bezier. Most
+commercial vector graphics programs are inf act built from cubic
+Beziers, though quadratic Beziers are used in fonts.
+</P>
+<P>
+bbx_gc_arc() and bbx_gc_arcto() are designed to make hand construction
+of courved object a bit easier. bbx_gc_arc draws an arc centred at
+cx, cy. Internally it issues a bbx_gc_moveto() the starting point.
+bbx_gc_arcto() takes the terminating position, the radius, and a point
+on the arc that the arc should pass through. 
+</P>
+<H3> Path appearance commands </H3>
+<pre class=microlight>
+void bbx_gc_setstrokecolor(BBX_GC *gc, BBX_RGBA col);
+void bbx_gc_setstrokewidth(BBX_GC *gc, double width);
+void bbx_gc_setfillcolor(BBX_GC *gc, BBX_RGBA col);
+void bbx_gc_setfillgradient(BBX_GC *gc, BBX_GRADIENT *g);
+void bbx_gc_setfillpattern(BBX_GC *gc, BBX_PATTERN *p);
+void bbx_gc_setstrokegradient(BBX_GC *gc, BBX_GRADIENT *g);
+void bbx_gc_setstrokepattern(BBX_GC *gc, BBX_PATTERN *p);
+void bbx_gc_setlinejoin(BBX_GC *gc, const char *jointype);
+void bbx_gc_setlinecap(BBX_GC *gc, const char *capstyle);
+</pre>
+<P>
+A path consists of a stroke and a fill. The stroke is drawn along
+the path, the fill is drawn in the area it encloses. It is possible
+and not uncommon to use either only stroke or only fill. It is also
+possible, though less common, to have more than one stroke or
+more than one fill on a path. As well as simple coloured strokes
+and fills, Baby X also supports patterns and gradients. 
+</P>
+<P>
+You set the stroke color wth bbx_gc_setstrokecolor() and set the
+line width with bbx_gc_setlinewidth(). Line width doesn't have to be
+a whole number, strokes will be anti-aliased. You can also set the
+line joining type ("miter", "round" or "bevel") and you can set the
+cap type ("butt", "round", or "square"). You can also set a gradient
+on a stroke with a BBX_GRADIENT object constructed via  a call to 
+bbx_createlineargradient() or bbx_createradialgradient().
+Note that none of these commands actually draw anything, until you
+issue a bbx_gc_stroke() command. 
+</P>
+<P>
+You can also set the fill colour, the fill gradient, or you can set
+a bitmap to be used as a fill pattern, via a call to bbx_createpattern().
+it is not currently possible to set a pattern on a stroke. Again,
+none of these commands actually drawe anything, until bbx_gc_fill() 
+is called.
+</P>
+<H3> Patterns and gradients </H3>
+<P>
+Patterns and gradients are independent Baby X objects. They are not created 
+off the graphics context. So you can cache them for use between contexts.
+The graphics context makes a local copy of them when it uses them,
+so you can destroy a BBX_PATTERN or a BBX_GRADIENT any time you have
+finished with it.
+</P>
+<pre class=microlight>
+BBX_GRADIENT *bbx_createlineargradient(double x1, double y1, double x2, double y2);
+BBX_GRADIENT *bbx_createradialgradient(double x1, double y1, double r1, double x2, double y2, double r2);
+BBX_GRADIENT *bbx_gradient_clone(BBX_GRADIENT *grad);
+void bbx_gradient_kill(BBX_GRADIENT *g);
+int bbx_gradient_addcolorstop(BBX_GRADIENT *g, double offset, BBX_RGBA col);
+</pre>
+<P>
+A colour gradient is a smoothly-varying area of colour, with the values
+defined by colourstops. The linear gradient pases in a pair of x, y
+co-ordiantes, by absolute values. The colur of the object then varies
+accord to its perpendicular distance along the gradient. A radial
+gradient is similar, but the colour vaies according to distance from
+two circles. Normally x1, y1 and x2, y2 are the samewith a radial
+gradient and only the radii differ. A gradient is useless unless you add 
+at least two color stops, of which normally one will be at the
+gradient start (0.0) and one at the gradient end (1.0). You need to
+destroy a BBX_GRADIENT after you have finished with it.
+</P>
+<pre class=microlight>
+BBX_PATTERN *bbx_createpattern(unsigned char *rgba, int width, int height, int filltype);
+BBX_PATTERN *bbx_pattern_clone(BBX_PATTERN *pat);
+void bbx_pattern_kill(BBX_PATTERN *p);
+</pre>
+<P>
+A pattern is an image, usually of a small repetitive piece of art, which
+is used to fill shapes. Patterns can only be applied to fills, not to
+strokes. Though the interface is quite simple, patterns are probably
+the most powerful operation in the graphics context. Filltype is currently
+unimplemented, all patterns just repeat. Patterns can contain alpha, 
+however. Patterns with alpha are also a case where you might want more than
+one fill on a path, one to set the background, one to stamp the image.
+</P>
+<H3> Matrix operations </H3>
+The graphics context comes with a full set of matrix operations.
+<pre class=microlight>
+void bbx_gc_rotate(BBX_GC *gc, double theta);
+void bbx_gc_translate(BBX_GC *gc, double x, double y);
+void bbx_gc_scale(BBX_GC *gc, double s);
+void bbx_gc_scalexy(BBX_GC *gc, double sx, double sy);
+void bbx_gc_transform(BBX_GC *gc, double a, double b, double c, double d, double e, double f);
+void bbx_gc_settransfrom(BBX_GC *gc, double a, double b, double c, double d, double e, double f);
+</pre>
+<P>
+Matrices allow you to use pre-generated path co-ordinates in the graphics
+context. Generally, the pre-generated co-orinates center an object on 0,0. 
+The matrix operations are then called to translate, rotate, and scale
+it to the desired position. Then the path construction functions are
+called. You will often want to use matrix operations in conjunction
+with bbx_gc_save() and bbx_gc_restore() to implement a transform stack.
+</P>
+<P>
+Generally the three operations of rotation, translation, and scale
+are sufficient. However internaly these are implemented by a 3 x 2 
+two dimensional transform matrix. bbx_gc_transform lets you apply
+another matrix to the existing matrix. e and f are the translation 
+component, and a, b, c, d are the rotation and scaling. the matrix
+is 3 x 2 instead of 3 x 3 because the last row is hard-coded to 0, 0, 1,
+and the extra value to add to x, y is hard-coded to one. This allows
+us to implement translation via a matrix multiply operation. 
+bbx_gc_settransform() overwrites the existing matrix instead
+of multiplying it.
+</P>
+<P>
+If you are unfamiliar with grahics matrices, you can ignore the
+matrix fucntions and the graphics context will work as expected. if you
+are familiar with them, you wil probably already understand what
+these functions do.
+</P>
+<H3> Drawing </H3>
+<P>
+There are two functions that actually draw and one that affects drawing.
+</P>
+<pre class=microlight>
+void bbx_gc_fill(BBX_GC *gc);
+void bbx_gc_stroke(BBX_GC *gc);
+int bbx_gc_clip(BBX_GC *gc);
+</pre>
+<P>
+None of the graphics commands so far actually draw anything. All they do is
+set the state of the graphics context, by loading it up with paths,
+transform matrices, and fill and stroke characteristics. bbx_gc_fill()
+draws a fill with the curent path, bbx_gc_stroke() draws a stroke. If
+you need two fills or two strokes on a path, set different fill or
+stroke parameters,a nd call twice. bbx_gc_clip() tells the graphics
+cntext to use the current path as a clip mask. 
+</P>
+<H3> Convenience functions </H3>
+<P>
+These functions don't work in the same way as the other graphics
+context function, and are provided for efficiency and convenience.
+</P>
+<pre class=microlight>
+void bbx_gc_rect(BBX_GC *gc, double x, double y, double width, double height);
+void bbx_gc_fillrect(BBX_GC *gc, double x, double y, double width, double height);
+void bbx_gc_strokerect(BBX_GC *gc, double x, double y, double width, double height);
+int bbx_gc_clearrect(BBX_GC *gc, double x, double y, double width, double height);
+void bbx_gc_circle(BBX_GC *gc, double cx, double cy, double r);
+void bbx_gc_fillcircle(BBX_GC *gc, double cx, double cy, double r);
+</pre>
+<P>
+The plain functions bbx_gc_rect() and bbx_gc_circle() are path construction
+functions. You need to set the stroke and/or fill colour, then call
+bbx_gc_stroke() or bbx_gc_fill(). bbx_gc_strokerect(), bbx_gc_fillrect(),
+and bbx_gc_fillcircle() also wrap these calls. However you still need to
+set the fill color or the stroke color.  
+</P>
+<pre class=microlight>
+void bbx_gc_drawimage(BBX_GC *gc, unsigned char *rgba, int width, int height, int x, int y);
+void bbx_gc_drawimagex(BBX_GC *gc, unsigned char *rgba, int width, int height,
+	int sx, int sy, int swidth, int sheight, int dx, int dy, int dwidth, int dheight);
+</pre>
+<P>
+These functions are for drawing images directly into the graphics context.
+The first is for the common situation where you want to draw an axis-aligned, 
+pixel-aligned image, ignoring any matrix transforms. The second is where you
+want to be matrix-aware,and possibly draw a sub-image. So as well as the
+image width and height, we take sx, sy, source top left co-ordinates, swidth, sheight,
+source sub-image width and height, and dx, dy, destination top left, and dwidth, dheight,
+the width and height of the destination image.
+</P>
+<H3>Graphics Context State</H3>
+<P>
+A graphics context is a state machine. So sometimes it is desireable to
+run it as a stack, pushing and popping the state. This is particularly
+the case if you use complex sequences of matrix transforms.
+</P>
+<pre class=microlight>
+int bbx_gc_save(BBX_GC *gc);
+int bbx_gc_restore(BBX_GC *gc);
+</pre>
+<P>
+This saves the state and restores the state, in a stack-like manner.
+If you want to make graphics context fucntions re-usable, you should 
+probably save the state at function entry and restore it at function
+exit. The functions return 0 on success or -1 on error.
+</P> 
+</BODY>
+</HTML>

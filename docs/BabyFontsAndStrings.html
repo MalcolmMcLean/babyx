@@ -1,0 +1,128 @@
+<HTML>
+<HEAD>
+<script src="microlight.js"> </script>
+<style>
+.microlight {
+    font-family : monospace;
+    white-space : pre;
+    background-color : white;
+}
+
+P {
+   width : 500px;
+}
+</style>
+</HEAD>
+<BODY bgcolor=#c0c0ff>
+<H1> Baby X Fonts and Strings </H1>
+<P>
+Baby X strings are treated as UTF-8. For those in
+a purely English-speaking environment, that's identical to ASCII. For
+those using non-English characters, UTF-8 provides multi-byte encoding,
+by exploiting the fact that the top bit of an ASCII value is always clear.
+it is important to understand the difference between UTF-8 and the "Unicode
+value". Unicode values are are 32-bit set of values, each one of which maps
+to a glyph in a human language. UTF-8 is  away of encoding those values
+in a string of C chars.
+</P>
+<P> 
+Baby X prints strings internally. That is to say, it renders its own
+text, without using the native string drawing applications. Normally
+you will not draw rext directly, however. You will use the <A href="BabyXCoreWidgets.html#BBX_Label">
+BBX_Label</A> class. 
+</P>
+<P>
+To do this efficiently, Baby X relies on fonts being pre-rasterised. A
+few fonts are built into Baby X - the defualt GUI font and the user font.
+The default GUI font is used for drawing UI elements, the user font for
+when the user enters text. You can however use your own fonts. You get
+these fonts into the program with the help of the <A href="https://github.com/MalcolmMcLean/babyxrc">
+Baby X resource compiler</A>. 
+</P>
+<pre class=microlight>
+<xmp>
+<BabyXRC>
+<font src = "Lato-Regular.ttf", name = "lato_regular", points = "12"> </font>
+</BabyXRC>
+</xmp>
+</pre>
+<P>
+Here's an example of an input script file to the Baby X resource compiler 
+that creates a font. All fonts are pre-rasterised, so you have to specify
+the point size. If you want two sizes of the same font, you need to
+create two font entries. The font is written out as a bitmap_font
+structure with the name lato_regular_font. (Lato is an open source
+font, relesed under the <A href="OFL.txt">STL licence</A>).
+</P>
+<pre class=microlight>
+/* bitmap font structure */
+struct bitmap_font {
+  unsigned char width;         /* max. character width */
+  unsigned char height;        /* character height */
+  int ascent;                  /* font ascent */
+  int descent;                 /* font descent */
+  unsigned short Nchars;       /* number of characters in font */
+  unsigned char *widths;       /* width of each character */
+  unsigned short *index;       /* encoding to character index */
+  unsigned char *bitmap;       /* bitmap of all characters */
+};
+</pre>
+<P>
+Here is the font structure. Most of it is pretty self-explanatory,
+the font is held in a bitmap, which is 8-bit alpha only. 
+The index member gives a sorted list of the Unicode characters corresponding 
+to each entry. So you can convert a Unicode value to a font index value by 
+a binary search.
+</P>
+<H3> Drawing fonts directly </H3>
+<P>
+Normally you will use a font by passing it to one of the core widgets
+as its setfont() argument. You mustn't release fonts until you
+have destroyed all widgets that use them, for efficiency reasons
+copies are not cached. However you can also draw fonts directly into
+an rgba buffer, usually obtained via a call to bbx_canvas_getrgba().
+</P>
+<pre class=microlight>
+int bbx_textwidth(struct bitmap_font *font, char *str, int N);
+void bbx_drawstring(unsigned char *rgba, int width, int height, int x, int y, char *str, int N, struct bitmap_font *font, BBX_RGBA col);
+int bbx_utf8width(struct bitmap_font *font, char *utf8, int N);
+void bbx_drawutf8(unsigned char *rgba, int width, int height, int x, int y, char *utf8, int N, struct bitmap_font *font, BBX_RGBA col);
+int bbx_font_getchar(unsigned char *out, struct bitmap_font *font, int ch);
+</pre>
+<P>
+The two functions you are most likely to want are bbx_utf8width(), which gets
+the width of a UTF-8 string in pixels, and bbx_drawutf8(), which draws a
+UTF-8 string at the requested location. bbx_textwidth() and bbx_drawstring()
+take ASCII, and are left in for backwards compatibility. However bbx_drawutf8
+cannot handle right-left languages like Hebrew or Arabic. If you want 
+access to the character directly, look it up with bbx_font_getchar(), which
+takes a Unicode value and returns an index.
+</P>
+<H3> UTF-8 strings </H3>
+<P>
+Baby X provides basic operations for operating on UTF-8 strings. You are
+unlikely to need these often, since the point of UTF-8 is that it is
+mostly transparent to user level code. Strings are just human-readable
+portions of text. However you might wantto parse or construct a UTF-8 string
+on the fly.
+</P>
+<pre class=microlight>
+int bbx_isutf8z(const char *str);
+int bbx_utf8_skip(const char *utf8);
+int bbx_utf8_getch(const char *utf8);
+int bbx_utf8_putch(char *out, int ch);
+int bbx_utf8_Nchars(const char *utf8);
+int bbx_utf8_charwidth(int ch);
+</pre>
+<P>
+bbx_isutf8z() checks if a string is a valid, nul terminated, UTF-8 string.
+bbx_utf8_skip() gets the number of bytes used to encode the first character
+in the string. bbx_uft8_getch() converts the first character in a UTF-8
+string to its Unicode value. To write strings, set upa  buffer, and
+call bbx_utf8_putch(). This writes a UTF-8 sequence to the buffer, and
+returns the number of bytes written. bbx_utf8_Nchars() returns the number
+of Unicode values conatined ina UTF-8 string. bbx_utf8_charwidth() returns
+the number of UTF-8 bytes needed to encode a Unicode value.
+</P>
+</BODY>
+</HTML>
