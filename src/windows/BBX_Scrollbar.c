@@ -395,7 +395,7 @@ static LRESULT CALLBACK ThumbWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
 				int newx = oldx - thumb->lastx + x;
 				if (newx >= 0 && newx <= thumb->maxx)
 				{
-					MoveWindow(thumb->win, newx, 0, thumb->width, thumb->height, FALSE);
+					MoveWindow(thumb->win, newx, 0, thumb->width, thumb->height, TRUE);
 					(*thumb->fptr)(thumb->ptr, newx);
 				}
 			}
