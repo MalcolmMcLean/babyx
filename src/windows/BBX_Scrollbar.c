@@ -150,12 +150,12 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
 {
 	BBX_Scrollbar *sb;
 
-	sb = (BBX_Scrollbar *)GetWindowLongPtr(hwnd, GWL_USERDATA);
+	sb = (BBX_Scrollbar *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
 	switch (msg)
 	{
 	case WM_CREATE:
 		sb = (BBX_Scrollbar *)((CREATESTRUCT *)lParam)->lpCreateParams;
-		SetWindowLongPtr(hwnd, GWL_USERDATA, (LONG)((CREATESTRUCT *)lParam)->lpCreateParams);
+		SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG)((CREATESTRUCT *)lParam)->lpCreateParams);
 		sb->win = hwnd;
 		break;
 	case WM_PAINT:
@@ -349,12 +349,12 @@ static LRESULT CALLBACK ThumbWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
 	BBX_ScrollThumb *thumb;
 	int x, y;
 
-	thumb = (BBX_ScrollThumb *)GetWindowLongPtr(hwnd, GWL_USERDATA);
+	thumb = (BBX_ScrollThumb *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
 	switch (msg)
 	{
 	case WM_CREATE:
 		thumb = (BBX_ScrollThumb *)((CREATESTRUCT *)lParam)->lpCreateParams;
-		SetWindowLongPtr(hwnd, GWL_USERDATA, (LONG)((CREATESTRUCT *)lParam)->lpCreateParams);
+		SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG)((CREATESTRUCT *)lParam)->lpCreateParams);
 		thumb->win = hwnd;
 		break;
 	case WM_PAINT:

@@ -53,10 +53,10 @@
 #define FRAC_RND(a) (((a) + (FRAC_ONE/2)) >> FRAC_BITS)
 #define FIXHR(a) ((int)((a) * (1LL<<32) + 0.5))
 
-#ifndef _MSC_VER
+//#ifndef _MSC_VER
     #define MULL(a,b) (((int64_t)(a) * (int64_t)(b)) >> FRAC_BITS)
     #define MULH(a,b) (((int64_t)(a) * (int64_t)(b)) >> 32)
-#else
+/*#else
     static INLINE int MULL(int a, int b) {
         int res;
         __asm {
@@ -79,6 +79,8 @@
         return res;
     }
 #endif
+*/
+
 #define MULS(ra, rb) ((ra) * (rb))
 
 #define ISQRT2 FIXR(0.70710678118654752440)

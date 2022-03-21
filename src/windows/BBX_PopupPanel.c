@@ -95,13 +95,13 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
   RECT rect;
   int x, y;
 
-  pan = (BBX_Panel *)GetWindowLong(hwnd, GWL_USERDATA);
+  pan = (BBX_Panel *)GetWindowLong(hwnd, GWLP_USERDATA);
   switch(msg)
   {
   case WM_CREATE:
 	  pan = (BBX_Panel *)((CREATESTRUCT *)lParam)->lpCreateParams;
 	  pan->win = hwnd;
-	  SetWindowLongPtr(hwnd, GWL_USERDATA, (LONG)((CREATESTRUCT *)lParam)->lpCreateParams);
+	  SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG)((CREATESTRUCT *)lParam)->lpCreateParams);
 	  break;
   case WM_SIZE:
 	  /*
