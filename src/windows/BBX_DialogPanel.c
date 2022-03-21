@@ -106,7 +106,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
   {
   case WM_CREATE:
 	  pan = (BBX_Panel *)((CREATESTRUCT *)lParam)->lpCreateParams;
-	  SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG) ((CREATESTRUCT *)lParam)->lpCreateParams);
+	  SetWindowLongPtr(hwnd, GWLP_USERDATA, ((CREATESTRUCT *)lParam)->lpCreateParams);
 	  pan->win = hwnd;
 	  BBX_Register(pan->bbx, hwnd, 0, 0, pan);
 	  break;

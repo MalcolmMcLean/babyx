@@ -155,7 +155,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
 	{
 	case WM_CREATE:
 		sb = (BBX_Scrollbar *)((CREATESTRUCT *)lParam)->lpCreateParams;
-		SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG)((CREATESTRUCT *)lParam)->lpCreateParams);
+		SetWindowLongPtr(hwnd, GWLP_USERDATA, ((CREATESTRUCT *)lParam)->lpCreateParams);
 		sb->win = hwnd;
 		break;
 	case WM_PAINT:
@@ -354,7 +354,7 @@ static LRESULT CALLBACK ThumbWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
 	{
 	case WM_CREATE:
 		thumb = (BBX_ScrollThumb *)((CREATESTRUCT *)lParam)->lpCreateParams;
-		SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG)((CREATESTRUCT *)lParam)->lpCreateParams);
+		SetWindowLongPtr(hwnd, GWLP_USERDATA, ((CREATESTRUCT *)lParam)->lpCreateParams);
 		thumb->win = hwnd;
 		break;
 	case WM_PAINT:

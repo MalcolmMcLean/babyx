@@ -188,7 +188,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
 	case WM_CREATE:
 		can = (BBX_Canvas *)((CREATESTRUCT *)lParam)->lpCreateParams;
 		can->win = hwnd;
-		SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG)((CREATESTRUCT *)lParam)->lpCreateParams);
+		SetWindowLongPtr(hwnd, GWLP_USERDATA, ((CREATESTRUCT *)lParam)->lpCreateParams);
 		break;
 	case WM_PAINT:
 		hdc = BeginPaint(hwnd, &ps);
