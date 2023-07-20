@@ -16,6 +16,10 @@ int bbx_rotatebyshear(unsigned char *rgba, int width, int height, double cx, dou
 unsigned char *bbx_rot90(unsigned char *rgba, int width, int height);
 unsigned char *bbx_rot270(unsigned char *rgba, int width, int height);
 
+#define BBX_AA_CIRCLE_FILL 0
+#define BBX_AA_CIRCLE_HOLE 1
+void bbx_aacircle(unsigned char *rgba, int width, int height, int cx, int   
+cy, int radius, int hole, BBX_RGBA col);
 
 #endif
 

@@ -1196,3 +1196,250 @@ void sprshrink(unsigned char *dest, int dwidth, int dheight, unsigned char *src,
 
 }
 
+typedef struct
+{
+    int R; // circle radius
+    int x_center, y_center; // circle center
+    int I; //Intesity (255 - alpha)
+    int Z; //sub-pixel resolution
+    int y, y_hat; // exact and predicted values of f(l);
+    int delta_y, delta2_y; // first and second order differences of y
+    int f2; // the value of f(l) * f(l)
+    int delta_f2, delta2_f2; // first and second order difference of f2
+    unsigned char *rgba;
+    int width;
+    int height;
+    BBX_RGBA colour;
+    int mode; // AA_CIRCLE_FILL or AA_CIRCLE_HOLE
+} CircleSettings;
+
+static void caa_initialize(CircleSettings *p);
+static void caa_predict(CircleSettings *p);
+static void caa_minimize(CircleSettings *p);
+static void caa_correct(CircleSettings *p);
+static void caa_eight_pixel(CircleSettings *p, int x, int y, int c);
+static void caa_fill(CircleSettings *p, int x, int ymax, int ymin, int c);
+static void caa_pixel(CircleSettings *p, int x, int y, int c);
+
+/*
+  Portable C routine to draw an anti-aliased filled circle
+  Params: cx, cy - circle centre
+          radius - circle radius
+          hole - pass BBX_AACIRCLE_FILL or BBX_AA_CIRCLE_HOLE
+          writepixel - routine to write a pixel with given alpha
+          setalpha - routine to set the alpha value (used for punching hole)
+          ptr - conext pointer to pass back to pixel routines
+ Note: to draw a donut, draw a circle with AACIRCLE_FILL< then a hole with AACIRCLE_HOLE.
+    It's not possible to draw a donut in situ over other artwork. So draw to a temporary
+    image and then composit.
+ 
+ Ref: Algorithms for Drawing Anti-aliased Circles and Ellipses
+ Dan Field, 1984
+ */
+void bbx_aacircle(unsigned char *rgba, int width, int height, int cx, int 
+cy, int radius, int hole, BBX_RGBA col)
+{
+    int c;
+    int i, q;  // Current pixel address;
+    int v = 0;  /// v/Z = percentage of pixel intersected by circle
+    int v_old = 0;
+    CircleSettings p;
+    
+    p.x_center = cx;
+    p.y_center = cy;
+    p.width = width;
+    p.height = height;
+    p.rgba = rgba;
+    p.colour = col;
+    
+    p.mode = hole;
+    
+    p.R = radius;
+    p.I = 255;
+    
+    caa_initialize(&p);
+    
+    q = p.R;
+    i = 0;
+    while (i < q)
+    {
+        caa_predict(&p);
+        caa_minimize(&p);
+        caa_correct(&p);
+        v_old = v;
+        v = v + p.delta_y;
+        
+        if (v >= 0) // Single pixel on perimeter
+        {
+            caa_eight_pixel(&p, i, q, (v + v_old)>> 1);
+            caa_fill(&p, i, q - 1, -q, p.I);
+            caa_fill(&p, -i-1, q- 1, -q, p.I);
+        }
+        else // two pixels on perimeter
+        {
+            v = v + p.Z;
+         //   eight_pixel(i, q, v_old >> 1);
+            caa_eight_pixel(&p, i, q, v_old >> 1);
+            q = q - 1;
+            caa_fill(&p, i, q-1, -q, p.I);
+            caa_fill(&p, -i-1, q-1, -q, p.I);
+            if (i < q)
+            {
+                caa_eight_pixel(&p, i, q, (v + p.Z) >> 1);
+                caa_fill(&p, q, i-1, -i, p.I);
+                caa_fill(&p, -q-1, i-1, -i, p.I);
+            }
+            else // went below diagonal, fix v for final pixels
+                v = v + p.Z;
+        }
+        i = i + 1;
+    }
+    // Fill in 4 remaining pixels
+    c = v >> 1;
+    caa_pixel(&p, q, q, c);
+    caa_pixel(&p, -q-1, q, c);
+    caa_pixel(&p, -q-1, -q-1, c);
+    caa_pixel(&p, q, -q-1, c);
+    
+}
+
+static void caa_initialize(CircleSettings *p)
+{
+    p->Z = p->I;
+    
+    p->delta2_y = 0;
+    p->delta_y = 0;
+    p->y = p->Z * p->R;
+    
+    p->delta_f2 = p->Z * p->Z;
+    p->delta2_f2 = -p->delta_f2 - p->delta_f2;
+    p->f2 = p->y * p->y;
+}
+
+static void caa_predict(CircleSettings *p)
+{
+    p->delta_y = p->delta_y + p->delta2_y;
+    p->y_hat = p->y + p->delta_y; // y_hat is predicted value of f(i)
+}
+
+static void caa_minimize(CircleSettings *p)
+{
+    int e, e_old, d;
+    
+    // Innitialize the minimzation
+    p->delta_f2 = p->delta_f2 + p->delta2_f2;
+    p->f2 = p->f2 + p->delta_f2;
+    
+    e = p->y_hat * p->y_hat - p->f2;
+    d = 1;
+    p->y = p->y_hat;
+    
+    // Force e negative
+    if (e > 0)
+    {
+        e = -e;
+        d = -1;
+    }
+    
+    // Minimize
+    while (e < 0)
+    {
+        p->y = p->y + d;
+        e_old = e;
+        e = e + p->y + p->y - d;
+    }
+    
+    // e or e_old is minimum squared error
+    if (e + e_old > 0)
+        p->y = p->y - d;
+    
+}
+
+static void caa_correct(CircleSettings *p)
+{
+    int error;
+    
+    error = p->y - p->y_hat;
+    p->delta2_y = p->delta2_y + error;
+    p->delta_y = p->delta_y + error;
+}
+
+static void caa_eight_pixel(CircleSettings *p, int x, int y, int c)
+{
+    caa_pixel(p, x, y, c);
+    caa_pixel(p, x, -y-1, c);
+    caa_pixel(p, -x-1, -y-1, c);
+    caa_pixel(p, -x-1, y, c);
+    caa_pixel(p, y, x, c);
+    caa_pixel(p, y, -x-1, c);
+    caa_pixel(p, -y-1, -x-1, c);
+    caa_pixel(p, -y-1, x, c);
+}
+
+static void caa_fill(CircleSettings *p, int x, int ymax, int ymin, int c)
+{
+    while (ymin <= ymax)
+    {
+        caa_pixel(p, x, ymin, c);
+        ymin = ymin + 1;
+    }
+}
+
+
+static void caa_pixel(CircleSettings *p, int x, int y, int c)
+{
+    int red, green, blue, alpha;
+    int ix, iy;
+    int index;
+    
+    ix = x + p->x_center;
+    iy = y + p->y_center;
+    
+    if (ix < 0 || ix >= p->width || iy < 0 || iy >= p->height)
+        return;
+    
+    index = iy * p->width + ix;
+
+    red = bbx_red(p->colour);
+    green = bbx_green(p->colour);
+    blue = bbx_blue(p->colour);
+    alpha = (bbx_alpha(p->colour) * c)/255;
+    
+    if (p->mode == BBX_AA_CIRCLE_HOLE)
+    {
+        p->rgba[index * 4 +3] = 255 - c;
+    }
+    else
+    {
+        BBX_RGBA fg = bbx_rgba(red, green, blue, alpha);
+        BBX_RGBA bg = bbx_rgba(p->rgba[index*4], p->rgba[index*4+1],
+          p->rgba[index*4+2], p->rgba[index*4+3]);
+        BBX_RGBA result = bbx_alphablend(fg, bg);
+        p->rgba[index * 4] = bbx_red(result);
+        p->rgba[index * 4 +1] = bbx_green(result);
+        p->rgba[index * 4 +2] = bbx_blue(result);
+        p->rgba[index * 4 +3] = bbx_alpha(result);
+    }
+}
+
+/*
+BBX_RGBA bbx_alphablend(BBX_RGBA fg, BBX_RGBA bg)
+{
+    unsigned int a2  = bbx_alpha(fg);  
+    unsigned int alpha = a2;  
+    if (alpha == 0) return bg;  
+    if (alpha == 255) return fg;  
+    unsigned int a1  = bbx_alpha(bg);  
+    unsigned int nalpha = 0x100 - alpha;  
+    unsigned int rb1 = (nalpha * ((bg >> 8) & 0xFF00FF)) >> 8;  
+    unsigned int rb2 = (alpha * ((fg >> 8) & 0xFF00FF)) >> 8;  
+    unsigned int g1  = (nalpha * ((bg >> 8) & 0x00FF00)) >> 8;  
+    unsigned int g2  = (alpha * ((fg >> 8) & 0x00FF00)) >> 8;  
+    unsigned int anew = a1 + a2;  
+    if (anew > 255) {anew = 255;}  
+    return ((((rb1 + rb2) & 0xFF00FF) + ((g1 + g2) & 0x00FF00)) << 8) + 
+anew;
+}  
+
+*/
+
