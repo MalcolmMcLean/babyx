@@ -1325,6 +1325,8 @@ static void caa_predict(CircleSettings *p)
 static void caa_minimize(CircleSettings *p)
 {
     int e, e_old, d;
+
+    e_old = 0;
     
     // Innitialize the minimzation
     p->delta_f2 = p->delta_f2 + p->delta2_f2;
