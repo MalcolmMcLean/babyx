@@ -1,0 +1,46 @@
+<HTML>
+<HEAD>
+<script src="microlight.js"> </script>
+<style>
+.microlight {
+    font-family : monospace;
+    white-space : pre;
+    background-color : white;
+}
+
+P {
+   width : 500px;
+}
+
+</style>
+</HEAD>
+<BODY bgcolor=#c0c0ff>
+<H1> Baby X Audio </H1>
+<P>
+Audio is new in Baby X. There are currently two interfaces, 
+one for playing MP3 data, and one for playing raw PCM samples.
+Currently it only works on Windows and hasn't been integrated
+into Baby X properly. The code is in the file audio.c under
+the "Windows" directory. The Windows sound playing routine 
+doesn't seem to like anything except 44100MHz stereo samples.
+</P>
+<P>
+You will need the BabyX resource compiler to get the data
+into memory. This simply writes out the PCM samples given a
+.wav or .aiff file. If you pass a .mp3 file to an 
+&quot;&lt;audio&gt;&quot; tag, it will decompress it to raw pcm
+data. This is probably not what you want for Baby X as BabyX
+will support playing of mp3 data directly. It's provided mainly
+for other users of the rsource compiler. You probably want to
+package .mp3 data with the &lt;binary&gt; tag.
+</P>
+<P>
+Experiments with my own computer have shown that playing anything
+other than 44100 MHz stereo is difficult. So you will need to use
+the BabyX resource compiler's samplerate setting if your original
+data is in another format.This restriction might be removed if 
+we can coax Windows into being more accommodating. 
+</P>
+</BODY>
+</HTML>
+ 
