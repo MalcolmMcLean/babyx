@@ -1,5 +1,6 @@
 #include "libc.h"
 #include "minimp3.h"
+#include <assert.h>
 
 #define BUFFER_COUNT 8
 
@@ -49,15 +50,14 @@ static void ShowTag(char *tag, char *data, int N)
 
 static void out(char *str)
 {
-
 }
 
 void CALLBACK AudioCallback(
 	HWAVEOUT hwo,
 	UINT uMsg,
 	DWORD_PTR dwInstance,
-	DWORD dwParam1,
-	DWORD dwParam2
+	DWORD_PTR dwParam1,
+	DWORD_PTR dwParam2
 	) 
     {
 	
@@ -74,10 +74,21 @@ void CALLBACK AudioCallback(
 	}
 	else
 	{
-
+		waveOutClose(hwo);
 	}
-	stream->byte_count = mp3_decode(stream->mp3, stream->stream_pos, 
-		stream->bytes_left, (signed short *)wh->lpData, &stream->info);
+	if (stream->mp3)
+	{
+		stream->byte_count = mp3_decode(stream->mp3, stream->stream_pos,
+			stream->bytes_left, (signed short*)wh->lpData, &stream->info);
+	}
+	else
+	{
+		int byte_count = wh->dwBufferLength;
+		if (byte_count > stream->bytes_left)
+			byte_count = stream->bytes_left;
+		memcpy((signed short*)wh->lpData, stream->stream_pos, byte_count);
+		stream->byte_count = byte_count;
+	}
 
 }
 
@@ -136,10 +147,59 @@ void *playmp3(unsigned char *mp3_stream, int stream_size)
 		stream->wh[i] = wh_template;
 		stream->wh[i].lpData = inptr;
 		stream->wh[i].dwBufferLength = stream->info.audio_bytes;
-		AudioCallback(hwo, 0, stream, (DWORD)&stream->wh[i], 0);
+		AudioCallback(hwo, 0, stream, (DWORD_PTR)&stream->wh[i], 0);
 		inptr += MP3_MAX_SAMPLES_PER_FRAME * 2;
 	}
 
 	return stream;
 }
+
+void *playpcm(short* pcm, long samplerate, int Nchannels, long Nsamples)
+{
+	int i;
+	BBX_SOUNDSTREAM* stream;
+	unsigned char* inptr;
+	unsigned char* stream_pos;
+	HWAVEOUT hwo;
+
+	/* Windows doesn't seem to support audio in facy formats */
+	assert(samplerate == 44100);
+	assert(Nchannels == 2);
+
+	stream = malloc(sizeof(BBX_SOUNDSTREAM));
+	stream_pos = pcm;
+	stream->bytes_left = Nsamples * Nchannels * sizeof(short);
+	stream->mp3 = 0;
+	stream->stream_pos = stream_pos;
+	stream->byte_count = MP3_MAX_SAMPLES_PER_FRAME * sizeof(short);
+	if (!stream->byte_count > Nsamples * Nchannels * sizeof(short))
+	{
+		stream->byte_count = Nsamples * Nchannels * sizeof(short);
+	}
+	memcpy(stream->sample_buffer, stream->stream_pos, stream->byte_count);
+
+	// set up wave output
+	wf.nSamplesPerSec = 44100; // samplerate;
+	wf.nChannels = 2;// Nchannels;
+	if (waveOutOpen(&hwo, WAVE_MAPPER, &wf, (INT_PTR)AudioCallback, (INT_PTR)stream, CALLBACK_FUNCTION)
+		!= MMSYSERR_NOERROR)
+	{
+		return 0;
+	}
+
+	// allocate buffers
+	//out("\n\nPress Ctrl+C or close the console window to stop playback.\n");
+	inptr = (char*)stream->sample_buffer;
+	for (i = 0; i < BUFFER_COUNT; ++i)
+	{
+		stream->wh[i] = wh_template;
+		stream->wh[i].lpData = inptr;
+		stream->wh[i].dwBufferLength = MP3_MAX_SAMPLES_PER_FRAME * 2;
+		AudioCallback(hwo, 0, stream, (DWORD_PTR)&stream->wh[i], 0);
+		inptr += MP3_MAX_SAMPLES_PER_FRAME * 2;
+	}
+
+	return stream;
+}
+
 
