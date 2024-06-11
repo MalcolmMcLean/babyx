@@ -2,39 +2,184 @@
 <HEAD>
 <style>
 P {
-    width : 500px;
+    width : 50em;
 }
-</style>
-</HEAD>
-<BODY bgcolor=#c0c0ff>
-<H1> Baby X </H1>
-  Still building, but nearly there now.
-  <P>
-    Baby X is the brand new GUI toolkit on the block. It's a cut down, "Baby" toolkit designed for small programs.
+body {
+    margin-left: 120px;
+    background-color: #C0C0FF;
+}
+
+P {
+    width: 50em;
+}
+
+pre{
+    width : 50em;
+    background-color: #FFFFFF;
+}
+    .nav {
+    width:10em;
+    }
+    .cell{
+        width:38em;
+    }
+    .xcell{
+        all: initial; /* Set default CSS */
+    }
     
-  </P>
-<P>
-  Why not dive straight in, and explore <A href="BabyXHelloWorld.html"> Baby X Hello World</A>?
-  Or take a look at how Baby X does <A href="BabyGraphics.html">graphics</A>?
-  Or start exploring the Baby X internals, with <A href="BabyPanels.html">Baby X Panels </A>?
+    #navlist
+    {
+        vertical-align:top;
+    }
+    #navlist li {
+        margin:0
+    }
+    
+    /* Add a black background color to the top navigation */
+    .topnav {
+      background-color: #c0c0ff;
+      overflow: hidden;
+    }
+
+    /* Style the links inside the navigation bar */
+    .topnav a {
+      float: left;
+      color: #c0c0ff;
+      text-align: center;
+      padding: 14px 4px;
+      text-decoration: none;
+      font-size: 17px;
+    }
+
+    /* Change the color of links on hover */
+    .topnav a:hover {
+      background-color: #d0d0ff;
+      color: black;
+    }
+
+    /* Add a color to the active/current link */
+    .topnav a.active {
+      background-color: #04AA6D;
+      color: white;
+    }
+    
+    .center {
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
+      width: 50%;
+    }
+</style>
+
+</HEAD>
+
+
+    
+    <BODY>
+        <div class="topnav">
+            <A href="https://github.com/MalcolmMcLean"><IMG src="BabyXLogos/Cartoon_Owl_clip_art.svg" alt="Cartoon Owl" height="32"></A>
+            <A href="https://github.com/MalcolmMcLean/babyx"><IMG src="BabyXLogos/baby-x-logo.svg" alt="BabyXRC logo" height="32"></A>
+            <A href="https://github.com/MalcolmMcLean/babyx"><IMG src="BabyXLogos/babyx-banner.svg" alt="BabyX banner" height="32"></A>
+            <A href="https://github.com/MalcolmMcLean/babyxrc"><IMG src="BabyXLogos/babyxrc-banner.svg" alt="BabyXRC banner" height="32"></A>
+            <A href="https://github.com/MalcolmMcLean/babyxrc/BabyXFS.html"><IMG src="BabyXLogos/babyxfs-banner.svg" alt="BabyXFS banner" height="32"></A>
+            <A href="https://github.com/MalcolmMcLean/minixml"><IMG src="BabyXLogos/MiniXML_logo.png" alt="MiniXML logo" height="32"></A>
+            <A href="https://malcolmmclean.github.io/minibasic"><IMG src="BabyXLogos/MiniBasicLogo.svg" alt = "MiniBasic logo" height="32"></A>
+        </div>
+    <BR>
+    <IMG src = "BabyXLogos/babyx-banner.svg" alt="BabyX banner" height="50" class="center">
+    <TABLE>
+        <TR>
+            <TD class="nav" style="background-color:white;text-align:left;vertical-align:0">
+                <!-- <nav style="margin:2px"> -->
+            <BR>
+            <ul id="navlist" style="list-style-type:none;margin:0">
+             <LI><A href="BabyAudio.html">BabyAudio</A></LI>
+             <LI><A href="BabyColours.html">BabyColours</A></LI>
+             <LI><A href="BabyFontsAndStrings.html">BabyFontsAndStrings</A></LI>
+             <LI><A href="BabyGraphics.html">BabyGraphics</A></LI>
+             <LI><A href="BabyGraphicsContext.html">BabyGraphicsContext</A></LI>
+             <LI><A href="BabyGraphicsSupport.html">BabyGraphicsSupport</A></LI>
+             <LI><A href="BabyMenusAndPopups.html">BabyMenusAndPopups</A></LI>
+             <LI><A href="BabyPanels.html">BabyPanels</A></LI>
+             <LI><A href="BabyXConcepts.html">BabyXConcepts</A></LI>
+             <LI><A href="BabyXCoreWidgets.html">BabyXCorewidgets</A></LI>
+             <LI><A href="BabyXHelloWorld.html">BabyXHelloWorld</A></LI>
+             <LI><A href="BabyXObject.html">BabyXObject</A></LI>
+             <LI><A href="index.html">index</A></LI>
+           </ul>
+                <!-- </nav>  -->
+            </TD>
+            <TD>
+                <P style="width:2em">
+                </P>
+            </TD>
+    <TD>
+    <div style="width:38em">
+        <TABLE>
+            <TR>
+                <TD>
+            <div style="float:left;width:20em">
+    The <A href="https://github.com/MalcolmMcLean/babyx">Baby X</A> is a simple
+    cut sown "Baby" GUI toolkit for the X Window system designed for smaller prgorams. And it has also
+    been ported to Windows. Abnd the Baby X concept is buily around baby programs, small
+    and simple programs with s few dependencies as possible, which are clean and highly portable.
+    And Baby X is intened to meet the needs of hobby programmers.<BR>
+    And all of Baby X is free to anyone for any use, except for components not authored by me,
+    where you must respect the attached licene terms.
+        </div>
+            </TD>
+                <TD>
+                    <div style="width:18em">
+                        <div style="width:8em;float:right;top:2px;background-color:white">
+                <IMG src="BabyXLogos/baby-x-logo.svg" alt="BabyXRC logo" width="120" height="120">
+                    </div>
+                    </div>
+            </TD>
+            </TR>
+            </TABLE>
+        
+      <P class="cell">
+        Why not dive straight in, and explore <A href="BabyXHelloWorld.html"> Baby X Hello World</A>?
+        Or take a look at how Baby X does <A href="BabyGraphics.html">graphics</A>?
+        Or start exploring the Baby X internals, with <A href="BabyPanels.html">Baby X Panels </A>?
+      </P>
+      <P class="cell">
+        For those a bit more interested, look at the root <A href="BabyXObject.html">
+        Baby X Object</A>. Or if you are ready to start coding, you'll need a list
+      of the <A href="BabyXCoreWidgets.html"> Baby X core widgets</A>. For something
+      a bit more complicated, look at <A href="BabyMenusAndPopups.html"> menus and
+       popups</A>. Or try Baby X's <A href="BabyFontsAndStrings.html">fonts and strings</A>
+      Then Baby X wouldn't be Baby X without the <A href="BabyColours.html"> baby colours </A>.
+      </P>
+      <class="cell">
+         Audio is coming to Baby X. To check it out, see <A href="BabyAudio.html">Baby X Audio</A>.
+      </P>
+      <P class="cell">
+       Then for those more philosphically inclined, read about <A href="BabyXConcepts.html">
+      Baby X concepts </A>.
+      </P>
+      <P class="cell">
+        Lots more coming up shortly.
+      </P>
+     
+     <P class="cell">
+   
+     <P class  = "cell">
+     For a developer-oriented documentation of the Baby X resource compiler source,
+     see the <A href="sourcefiles.html"> Baby X resource compiler source overview</A>.
+     </P>
+     </div>
+     </TD>
+     </TR>
+     </TABLE>
+    
+    
+    
+    
+<H1> Baby X </H1>
+<P class="cell">
+Still building, but nearly there now.
 </P>
-<P>
-  For those a bit more interested, look at the root <A href="BabyXObject.html">
-  Baby X Object</A>. Or if you are ready to start coding, you'll need a list
-of the <A href="BabyXCoreWidgets.html"> Baby X core widgets</A>. For something
-a bit more complicated, look at <A href="BabyMenusAndPopups.html"> menus and
- popups</A>. Or try Baby X's <A href="BabyFontsAndStrings.html">fonts and strings</A>
-Then Baby X wouldn't be Baby X without the <A href="BabyColours.html"> baby colours </A>. 
-</P>
-<P>
-   Audio is coming to Baby X. To check it out, see <A href="BabyAudio.html">Baby X Audio</A>.
-</P>
-<P>
- Then for those more philosphically inclined, read about <A href="BabyXConcepts.html"> 
-Baby X concepts </A>.
-</P>
-<P>
-  Lots more coming up shortly.
-</P>  
+
 </BODY>
 </HTML>
