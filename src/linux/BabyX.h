@@ -53,6 +53,7 @@ void bbx_removeticker(BABYX *bbx, void *ticker);
 int bbx_setpos(BABYX *bbx, void *obj, int x, int y, int width, int height);
 int bbx_setsize(BABYX *bbx, void *obj, int width, int height);
 int bbx_getsize(BABYX *bbx, void *obj, int *width, int *height);
+int bbx_setfocus(BABYX *bbx, void *obj);
 
 void *bbx_malloc(int size);
 void *bbx_realloc(void *ptr, int size);
