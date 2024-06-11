@@ -45,6 +45,13 @@ if(CMAKE_SYSTEM_NAME MATCHES Linux)
         list(APPEND bbx_includes "src/linux")
 endif()
 
+if(CMAKE_SYSTEM_NAME MATCHES Darwin)
+    list(APPEND bbx_sources ${BBX_LINUX})
+    list(APPEND bbx_sources ${BBX_LINUXH})
+    list(APPEND bbx_includes "src/linux")
+    list(APPEND bbx_includes "/usr/X11/include")
+endif()
+
 list(APPEND bbx_sources ${BBX_WIDGETS})
 list(APPEND bbx_sources ${BBX_WIDGETSH})
 list(APPEND bbx_includes "src/widgets")
@@ -57,6 +64,12 @@ if(CMAKE_SYSTEM_NAME MATCHES Linux)
 	list(APPEND libs X11)
         list(APPEND libs m)
 endif()
+if(CMAKE_SYSTEM_NAME MATCHES Darwin)
+    find_package("X11")
+    list(APPEND libs ${X11_LIBRARIES})
+        list(APPEND libs m)
+endif()
+
 
 # Baby Bridge example program
 
