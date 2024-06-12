@@ -21,3 +21,4 @@ cmake -G "Unix Makefiles" ..
 You can still take Baby X sources and drop them into your own
 projects if you find that more convenient.
 
+Check out the /topic branches for more Baby programs, currently there is BabyLife and BabyImageViewer.
