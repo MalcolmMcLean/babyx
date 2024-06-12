@@ -35,7 +35,7 @@ int main(int argc, char**argv)
     else
         exit(EXIT_FAILURE);
     
-	startbabyx("Baby X Image Viewer", 20 + app.width, 80 + app.height, createapp, layoutapp, &app);
+	startbabyx("Baby X Image Editor", 20 + app.width, 80 + app.height, createapp, layoutapp, &app);
     free(app.image);
 
 	return 0;
