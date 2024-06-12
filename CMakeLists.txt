@@ -134,3 +134,14 @@ if( CMAKE_SYSTEM_NAME MATCHES Windows )
 
 	target_link_libraries("WordCatch" bbx Winmm )
 endif()
+
+# Baby Life pogram
+
+file( GLOB BABYLIFE_SOURCES BabyPrograms/BabyLife/*.c )
+file( GLOB BABYLIFE_HEADERS BabyPrograms/BabyLife/*.h )
+
+
+add_executable( "BabyLife" ${BABYLIFE_SOURCES} ${BABYLIFE_HEADERS} )
+target_include_directories("BabyLife" SYSTEM PRIVATE ${bbx_includes})
+target_link_libraries("BabyLife" ${libs} )
+
