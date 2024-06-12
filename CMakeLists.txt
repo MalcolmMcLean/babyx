@@ -135,12 +135,12 @@ if( CMAKE_SYSTEM_NAME MATCHES Windows )
 	target_link_libraries("WordCatch" bbx Winmm )
 endif()
 
-# BabyImageViewer example program
+# BabyImageEditor example program
 
-file( GLOB BABYIMAGEVIEWER_SOURCES BabyPrograms/BabyImageViewer/*.c )
-file( GLOB BABYIMAGEVIEWER_HEADERS BabyPrograms/BabyImageViewer/*.h )
+file( GLOB BABYIMAGEEDITOR_SOURCES BabyPrograms/BabyImageEditor/*.c )
+file( GLOB BABYIMAGEEDITOR_HEADERS BabyPrograms/BabyImageEditor/*.h )
 
 
-add_executable( "BabyImageViewer" ${BABYIMAGEVIEWER_SOURCES} ${BABYIMAGEVIEWER_HEADERS} )
-target_include_directories("BabyImageViewer" SYSTEM PRIVATE ${bbx_includes})
-target_link_libraries("BabyImageViewer" ${libs} )
+add_executable( "BabyImageEditor" ${BABYIMAGEEDITOR_SOURCES} ${BABYIMAGEEDITOR_HEADERS} )
+target_include_directories("BabyImageEditor" SYSTEM PRIVATE ${bbx_includes})
+target_link_libraries("BabyImageEditor" ${libs} )
