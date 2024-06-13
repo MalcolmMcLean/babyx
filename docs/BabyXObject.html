@@ -1,19 +1,36 @@
-<HTML>
+<!DOCTYPE = html>
+<HTML lang="en">
 <HEAD>
+    <title> The Baby X Object </title>
+    <meta charset="UTF-8">
+        
+    <link href="prism.css" rel="stylesheet" />
 <script src="microlight.js"> </script>
+<script src="prism.js"> </script>
 <style>
 .microlight {
     font-family : monospace;
     white-space : pre;
     background-color : white;
 }
+    
+BODY {
+    width:50em;
+    margin-left:5em;
+    background-color:#c0c0ff;
+}
 
 P {
-   width : 500px;
+   width : 50em;
+}
+
+pre {
+   background-color:white;
 }
 </style>
 </HEAD>
-<BODY bgcolor=#c0c0ff>
+<BODY>
+<A href="index.html"><IMG src="BabyXLogos/baby-x-logo.svg" alt="Baby X logo" width=50></A>
 <H1> The Baby X Object </H1>
 <P>
 When you start Baby X, it returns an opaque object of type "BABYX"
@@ -22,16 +39,18 @@ is needed for creating new Baby X objects and for destroying them,
 also for a few object-level functions.
 </P>
 
-<div class=microlight>
-void startbabyx(
-	        char *name, 
-                int width, 
-                int height,
-		void (*create)(void *ptr, BABYX *bbx, BBX_Panel *root),
-                void (*layout)(void *ptr, int width, int height),
-                void *ptr);
-void stopbabyx(BABYX *bbx);
-</div>
+<P>
+<pre><code class="language-c">
+    void startbabyx(
+    char *name,
+    int width,
+    int height,
+    void (*create)(void *ptr, BABYX *bbx, BBX_Panel *root),
+    void (*layout)(void *ptr, int width, int height),
+    void *ptr);
+    void stopbabyx(BABYX *bbx);
+</code></pre>
+</P>
 <P>
 These are the functions for launching and stopping the Baby X server.
 startbabyx() never returns until stopbabyx() is called. It takes
@@ -50,22 +69,22 @@ by rearranging the child objects, and possibly redrawing. Note that
 you are not guaranteed the same width and height on layout as you 
 requested from startbabyx().
 </P>
-<div class=microlight>
+<pre><code class="language-c">
 int bbx_setpos(BABYX *bbx, void *obj, int x, int y, int width, int height);
 int bbx_setsize(BABYX *bbx, void *obj, int width, int height);
 int bbx_getsize(BABYX *bbx, void *obj, int *width, int *height);
 int bbx_setfocus(BABYX *bbx, void *obj);
-</div>
+</code></pre>
 <P>
 These functions take any basic widget created with Baby X, and
 access the common header internally. You can set the position
 relative to the parent, set the size, get the size, or set
 the keyboard focus.
 </P>
-<div class=microlight>
+<pre><code class="language-c">
 void *bbx_addticker(BABYX *bbx, int ms_interval, void (*fptr)(void *ptr), void *ptr);
 void bbx_removeticker(BABYX *bbx, void *ticker); 
-</div>
+</code></pre>
 <P>
 Some programs, such as games or animations, are driven by clcok ticks
 rather than by user input events. So yu can add a ticker. Baby X
@@ -75,35 +94,35 @@ resolution timing. When you have done with a ticker, you remove it.
 The return value is an opaque void * whose only purpose is to 
 be passed back to removeticker().
 </P>
-<div class=microlight>
+<pre><code class="language-c">
 void bbx_copytexttoclipboard(BABYX *bbx, char *text);
 char *bbx_gettextfromclipboard(BABYX *bbx);
-</div>
+</code></pre>
 <P>
 Baby X offers a simple interface to the clipboard. Currently 
 only text is supported. The string returned from bbx_gettextfromclipboard
 should be freed by caller when it is finished with.
 </P>
-<div class=microlight>
+<pre><code class="language-c">
 void *bbx_malloc(int size);
 void *bbx_realloc(void *ptr, int size);
 char *bbx_strdup(const char *str);
-</div>
+</code></pre>
 <P>
 Bbay X wraps malloc() and realloc() so that these functions never return
 null. Currently it exits the program on allocation failure, so only
 call for allocations where this is the only sensible response. There's
 also a convenience function for duplicating a string.
 </P>
-<div class=microlight>
+<pre><code class="language-c">
 int bbx_kbhit(BABYX *bbx, int code);
-</div>
+</code></pre>
 <P>
 Baby X implements a kbhit. The code is the Baby X key code, which is either
 an alphanumeric character, or one of the special keys.
 </P>
-<div class=microlight>
-             BBX_KEY_BACKSPACE
+<pre><code class="language-c">
+         BBX_KEY_BACKSPACE
 	     BBX_KEY_DELETE
 	     BBX_KEY_ESCAPE
 	     BBX_KEY_HOME
@@ -112,7 +131,7 @@ an alphanumeric character, or one of the special keys.
 	     BBX_KEY_RIGHT
 	     BBX_KEY_DOWN 
 	     BBX_KEY_END
-</div>
+</code></pre>
 <P>
 bbx_kbhit() return true if the key is depressed, false if it is not.
 It doesn't black waiting for keyboard input. It is used for games or
