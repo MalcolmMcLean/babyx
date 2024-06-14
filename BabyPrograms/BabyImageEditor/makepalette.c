@@ -5,8 +5,12 @@
 //  Created by Malcolm McLean on 13/06/2024.
 //
 #include <stdlib.h>
+#include <string.h>
 
 #include "makepalette.h"
+#include "anneal.h"
+
+int sortpalette(unsigned char *pal, int Npal);
 
 unsigned char *kmeans(unsigned char *rgba, int N, int Nmeans);
 
@@ -33,6 +37,7 @@ int makepalette(unsigned char *pal, int Npal, unsigned char *rgba, int width, in
                 }
             }
         }
+        sortpalette(pal, Npal);
         return  0;
         
     }
@@ -200,4 +205,94 @@ unsigned char *kmeans(unsigned char *rgba, int N, int Nmeans)
     
 }
 
+typedef struct
+{
+    unsigned char *rgb;
+    int N;
+} PALETTE;
 
+void *clone(void *obj, void *ptr)
+{
+    void *answer;
+    
+    answer = malloc(sizeof(PALETTE));
+    if (answer)
+        memcpy(answer, obj, sizeof(PALETTE));
+    
+    return answer;
+}
+
+void  kill(void *obj, void *ptr)
+{
+    free (obj);
+}
+
+int  copy(void *dest, void *src, void *ptr)
+{
+    memcpy(dest, src, sizeof(PALETTE));
+}
+
+double score(void *obj, void *ptr)
+{
+    PALETTE *pal = obj;
+    double answer = 0;
+    int d;
+    int i;
+    
+    for (i = 0; i <pal->N -1; i++)
+    {
+        d = abs(pal->rgb[i*3] - pal->rgb[(i+1)*3]) +
+        abs(pal->rgb[i*3+1] - pal->rgb[(i+1)*3+1]) +
+        abs(pal->rgb[i*3+2] - pal->rgb[(i+1)*3+2]);
+        
+        answer += d;
+    }
+    
+    return answer;
+}
+
+void mutate(void *obj, void *ptr)
+{
+    PALETTE *pal = obj;
+    int indexa;
+    int indexb;
+    int i;
+    unsigned char temp;
+    
+    indexa = rand() % pal->N;
+    indexb = rand() % pal->N;
+    for (i = 0; i < 3; i++)
+    {
+        temp = pal->rgb[indexa*3+i];
+        pal->rgb[indexa*3+i] = pal->rgb[indexb *3+ i];
+        pal->rgb[indexb*3+i] = temp;
+    }
+}
+
+
+void rgb2hsv(unsigned long rgb, double *h, unsigned char *s, unsigned char *v);
+
+int compf(const void *e1, const void *e2)
+{
+    const unsigned char *rgb_a = (const unsigned char *)e1;
+    const unsigned char *rgb_b = (const unsigned char *)e2;
+    long a = (rgb_a[0] << 16) + (rgb_a[1] << 8) + rgb_a[2];
+    long b = (rgb_b[0] << 16) + (rgb_b[1] << 8) + rgb_b[2];
+    double hue_a, hue_b;
+    unsigned char sat_a, sat_b;
+    unsigned char val_a, val_b;
+    
+    rgb2hsv(a, &hue_a, &sat_a, &val_a);
+    rgb2hsv(b, &hue_b, &sat_b, &val_b);
+
+    if(hue_a < hue_b)
+        return -1;
+    else if (hue_a > hue_b)
+        return 1;
+    else
+        return 0;
+}
+int sortpalette(unsigned char *pal, int Npal)
+{
+    qsort(pal, Npal, 3, compf);
+}
