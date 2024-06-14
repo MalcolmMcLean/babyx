@@ -102,7 +102,7 @@ static void mousefunc(void *obj, int action, int x, int y, int buttons)
         drawpalette(ped);
       }
     }
-    else if(action == BBX_MOUSE_CLICK && (buttons & BBX_MOUSE_BUTTON2))
+    else if(action == BBX_MOUSE_CLICK && (buttons & BBX_MOUSE_BUTTON3))
     { 
       oldcol = (ped->pal->rgb[index*3] << 16) |
              (ped->pal->rgb[index*3+1] << 8) |

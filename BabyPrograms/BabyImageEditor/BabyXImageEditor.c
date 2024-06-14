@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <string.h>
 #include "BabyX.h"
 #include "paletteeditor.h"
 #include "loadimage.h"
@@ -13,6 +14,7 @@ typedef struct
 	BBX_Button *ok_but;
     BBX_Menubar *menubar;
     unsigned char *image;
+    unsigned char *index;
     PALETTE pal;
     int Npal;
     int width;
@@ -24,6 +26,9 @@ void killapp(void *obj);
 void layoutapp(void *obj, int width, int height);
 void ok_pressed(void *obj);
 void menuhandler(void *obj, int id);
+
+int generateindexfromrgba(unsigned char *index, int width, int height, unsigned char *rgba, unsigned char *pal, int Npal);
+int generatergbafromindex(unsigned char *rgba, int width, int height, unsigned char *index, unsigned char *pal, int Npal);
 
 int main(int argc, char**argv)
 {
@@ -40,7 +45,11 @@ int main(int argc, char**argv)
         app.image = rgba;
         app.pal.rgb = malloc(3 * 256);
         app.pal.N = 256;
+        app.index = malloc(app.width * app.height);
+        memset(app.index, 0, app.width *app.height);
         makepalette(app.pal.rgb, 256, rgba, app.width, app.height);
+        generateindexfromrgba(app.index, app.width, app.height, app.image, app.pal.rgb, app.pal.N);
+        generatergbafromindex(app.image, app.width, app.height, app.index, app.pal.rgb, app.Npal);
     }
     else
         exit(EXIT_FAILURE);
@@ -201,8 +210,14 @@ void menuhandler(void *obj, int id)
   char *fname;
     
   if (id == 4)
+  {
+      unsigned char *can;
       openpaletteeditor(app->bbx, &app->pal);
-    
+      generatergbafromindex(app->image, app->width, app->height, app->index, app->pal.rgb, app->pal.N);
+      bbx_canvas_setimage(app->can, app->image, app->width, app->height);
+      bbx_canvas_flush(app->can);
+  }
+     
 /*
   switch(id)
   {
@@ -280,4 +295,63 @@ void menuhandler(void *obj, int id)
     break;
   }
  */
+}
+
+int generateindexfromrgba(unsigned char *index, int width, int height, unsigned char *rgba, unsigned char *pal, int Npal)
+{
+    int x, y;
+    int j;
+    int best;
+    int bestj;
+    BBX_RGBA pix;
+    int d;
+    
+    for (y = 0; y < height; y++)
+    {
+        for (x = 0; x < width; x++)
+        {
+            best = 10000;
+            bestj = 0;
+            for (j = 0; j < Npal; j++)
+            {
+                pix = bbx_rgba(
+                               rgba[(y * width + x) * 4],
+                               rgba[(y * width + x) * 4 + 1],
+                               rgba[(y * width + x) * 4 + 2],
+                               rgba[(y * width + x) * 4 + 3]);
+                d = abs((int) bbx_red(pix) - pal[j * 3]) +
+                    abs((int) bbx_green(pix) - pal[j * 3 + 1]) +
+                    abs((int) bbx_blue(pix) - pal[j * 3 + 2]);
+                
+                if (d < best)
+                {
+                    best = d;
+                    bestj = j;
+                }
+            }
+            index[y*width+x] = bestj;
+        }
+    }
+        
+    return 0;
+}
+/*
+ *pal rgb
+ */
+int generatergbafromindex(unsigned char *rgba, int width, int height, unsigned char *index, unsigned char *pal, int Npal)
+{
+    int x, y;
+    int ci;
+    for (y = 0; y < height; y++)
+    {
+        for (x = 0; x < width; x++)
+        {
+            ci = index[y * width+ x];
+            rgba[(y * width + x) * 4] = pal[ci * 3 + 0];
+            rgba[(y * width + x) * 4 + 1] = pal[ci * 3 + 1];
+            rgba[(y * width + x) * 4 + 2] = pal[ci * 3 + 2];
+        }
+    }
+    
+    return  0;
 }
