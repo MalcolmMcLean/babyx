@@ -11,14 +11,20 @@ typedef struct
 	BABYX *bbx;
 	BBX_Panel *root;
     BBX_Canvas *can;
+    BBX_Scrollbar *v_scroll_sb;
+    BBX_Scrollbar *h_scroll_sb;
 	BBX_Button *ok_but;
     BBX_Menubar *menubar;
+    BBX_Spinner *zoom_spn;
     unsigned char *image;
     unsigned char *index;
     PALETTE pal;
     int Npal;
     int width;
     int height;
+    int zoom;
+    int vpos;
+    int hpos;
 } APP;
 
 void createapp(void *obj, BABYX *bbx, BBX_Panel *root);
@@ -26,7 +32,9 @@ void killapp(void *obj);
 void layoutapp(void *obj, int width, int height);
 void ok_pressed(void *obj);
 void menuhandler(void *obj, int id);
+void zoom(void *obj, double val);
 
+int redrawcanvas(APP * app);
 int generateindexfromrgba(unsigned char *index, int width, int height, unsigned char *rgba, unsigned char *pal, int Npal);
 int generatergbafromindex(unsigned char *rgba, int width, int height, unsigned char *index, unsigned char *pal, int Npal);
 
@@ -50,11 +58,12 @@ int main(int argc, char**argv)
         makepalette(app.pal.rgb, 256, rgba, app.width, app.height);
         generateindexfromrgba(app.index, app.width, app.height, app.image, app.pal.rgb, app.pal.N);
         generatergbafromindex(app.image, app.width, app.height, app.index, app.pal.rgb, app.Npal);
+        app.zoom = 1;
     }
     else
         exit(EXIT_FAILURE);
     
-	startbabyx("Baby X Image Editor", 20 + app.width, 80 + app.height, createapp, layoutapp, &app);
+	startbabyx("Baby X Image Editor", 40 + app.width, 100 + app.height, createapp, layoutapp, &app);
     free(app.image);
 
 	return 0;
@@ -71,6 +80,8 @@ void createapp(void *obj, BABYX *bbx, BBX_Panel *root)
 	app->bbx = bbx;
 	app->root = root;
     app->can = bbx_canvas(bbx, root, app->width, app->height, bbx_color("white"));
+    app->v_scroll_sb = bbx_scrollbar(bbx, root, BBX_SCROLLBAR_VERTICAL, 0, app);
+    app->h_scroll_sb = bbx_scrollbar(bbx, root, BBX_SCROLLBAR_HORIZONTAL, 0, app);
 	app->ok_but = bbx_button(bbx, root, "OK", ok_pressed, app);
     
     
@@ -113,6 +124,8 @@ void createapp(void *obj, BABYX *bbx, BBX_Panel *root)
     bbx_menubar_addmenu(app->menubar, "File", filemenu);
     bbx_menubar_addmenu(app->menubar, "Palette", palettemenu);
     bbx_menubar_addmenu(app->menubar, "Help", helpmenu);
+    
+    app->zoom_spn = bbx_spinner(app->bbx, root, 1.0, 1.0, 10.0, 1, zoom, app);
 
     /*
     app->can = bbx_canvas(bbx, root, app->width, app->height, BBX_Color("white"));
@@ -190,8 +203,11 @@ void layoutapp(void *obj, int width, int height)
 	APP *app = obj;
     
     bbx_setpos(app->bbx, app->menubar, 0, 0, width, 20);
-    bbx_setpos(app->bbx, app->can, 10, 10, app->width, app->height);
+    bbx_setpos(app->bbx, app->can, 10, 20, app->width, app->height);
+    bbx_setpos(app->bbx, app->v_scroll_sb, 10 + app->width, 20, 10, app->height);
+    bbx_setpos(app->bbx, app->h_scroll_sb, 10, 20 + app->height, app->width, 10);
 	bbx_setpos(app->bbx, app->ok_but, width / 2 - 25, height - 50, 50, 25);
+    bbx_setpos(app->bbx, app->zoom_spn, 10, height - 50, 60, 25);
     bbx_canvas_setimage(app->can, app->image, app->width, app->height);
     bbx_canvas_flush(app->can);
 }
@@ -295,6 +311,91 @@ void menuhandler(void *obj, int id)
     break;
   }
  */
+}
+
+void zoom(void *obj, double val)
+{
+    APP *app = obj;
+    
+    app->zoom = val;
+    
+    redrawcanvas(app);
+    
+}
+
+#include <stdio.h>
+unsigned char *rgba_copy(unsigned char *rgba, int width, int height, int x, int y, int cwidth, int cheight);
+int expandimage(unsigned char *dest, int width, int height, unsigned char *source, int swidth, int sheight);
+
+int redrawcanvas(APP * app)
+{
+    printf("called\n");
+    generatergbafromindex(app->image, app->width, app->height, app->index, app->pal.rgb, app->pal.N);
+    if (app->zoom != 1)
+    {
+        int zoom = app->zoom;
+        printf("zoom %d\n", zoom);
+        unsigned char *view = rgba_copy(app->image, app->width, app->height, 0, 0, app->width/zoom, app->height/zoom);
+        printf("got view\n");
+        expandimage(app->image, app->width, app->height, view, app->width/zoom, app->height/zoom);
+        
+    }
+    bbx_canvas_setimage(app->can, app->image, app->width, app->height);
+    bbx_canvas_flush(app->can);
+}
+
+int expandimage(unsigned char *dest, int width, int height, unsigned char *source, int swidth, int sheight)
+{
+    int zoom;
+    int x, y;
+    
+    zoom = width / swidth;
+    
+    for (y = 0; y < sheight; y++)
+    {
+        for (x = 0; x < swidth; x++)
+        {
+            int iy = y * zoom;
+            int ix = x * zoom;
+            int jx, jy;
+            
+            for (jy = 0; jy < zoom; jy++)
+            {
+                for (jx=0; jx < zoom; jx++)
+                {
+                    dest[((iy + jy)*width + ix + jx) * 4] = source[(y*swidth+x) *4];
+                    dest[((iy + jy)*width + ix + jx) * 4+1] = source[(y*swidth+x) *4+1];
+                    dest[((iy + jy)*width + ix + jx) * 4+2] = source[(y*swidth+x) *4+2];
+                    dest[((iy + jy)*width + ix + jx) * 4+3] = source[(y*swidth+x) *4+3];
+                }
+            }
+        }
+    }
+}
+
+unsigned char *rgba_copy(unsigned char *rgba, int width, int height, int x, int y, int cwidth, int cheight)
+{
+    unsigned char *copy;
+    int cy = 0;
+    int cx = 0;
+    int sx, sy;
+    
+    copy = bbx_malloc(cwidth * cheight * 4);
+    for (sy = y; sy < y + cheight; sy++)
+    {
+        for (sx = x; sx < x + cwidth; sx++)
+        {
+            copy[(cy * cwidth + cx)*4] = rgba[(sy * width +sx)*4];
+            copy[(cy * cwidth + cx)*4+1] = rgba[(sy * width +sx)*4+1];
+            copy[(cy * cwidth + cx)*4+2] = rgba[(sy * width +sx)*4+2];
+            copy[(cy * cwidth + cx)*4+3] = rgba[(sy * width +sx)*4+3];
+            cx++;
+        }
+        cy++;
+        cx = 0;
+    }
+    
+    return copy;
 }
 
 int generateindexfromrgba(unsigned char *index, int width, int height, unsigned char *rgba, unsigned char *pal, int Npal)
