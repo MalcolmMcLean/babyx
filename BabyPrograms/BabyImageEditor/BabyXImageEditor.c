@@ -33,6 +33,8 @@ void layoutapp(void *obj, int width, int height);
 void ok_pressed(void *obj);
 void menuhandler(void *obj, int id);
 void zoom(void *obj, double val);
+void hscroll(void *obj, int pos);
+void vscroll(void *obj, int pos);
 
 int redrawcanvas(APP * app);
 int generateindexfromrgba(unsigned char *index, int width, int height, unsigned char *rgba, unsigned char *pal, int Npal);
@@ -59,6 +61,8 @@ int main(int argc, char**argv)
         generateindexfromrgba(app.index, app.width, app.height, app.image, app.pal.rgb, app.pal.N);
         generatergbafromindex(app.image, app.width, app.height, app.index, app.pal.rgb, app.Npal);
         app.zoom = 1;
+        app.hpos = 0;
+        app.vpos = 0;
     }
     else
         exit(EXIT_FAILURE);
@@ -80,8 +84,8 @@ void createapp(void *obj, BABYX *bbx, BBX_Panel *root)
 	app->bbx = bbx;
 	app->root = root;
     app->can = bbx_canvas(bbx, root, app->width, app->height, bbx_color("white"));
-    app->v_scroll_sb = bbx_scrollbar(bbx, root, BBX_SCROLLBAR_VERTICAL, 0, app);
-    app->h_scroll_sb = bbx_scrollbar(bbx, root, BBX_SCROLLBAR_HORIZONTAL, 0, app);
+    app->v_scroll_sb = bbx_scrollbar(bbx, root, BBX_SCROLLBAR_VERTICAL, vscroll, app);
+    app->h_scroll_sb = bbx_scrollbar(bbx, root, BBX_SCROLLBAR_HORIZONTAL, hscroll, app);
 	app->ok_but = bbx_button(bbx, root, "OK", ok_pressed, app);
     
     
@@ -208,6 +212,9 @@ void layoutapp(void *obj, int width, int height)
     bbx_setpos(app->bbx, app->h_scroll_sb, 10, 20 + app->height, app->width, 10);
 	bbx_setpos(app->bbx, app->ok_but, width / 2 - 25, height - 50, 50, 25);
     bbx_setpos(app->bbx, app->zoom_spn, 10, height - 50, 60, 25);
+    
+    bbx_scrollbar_set(app->h_scroll_sb, app->width, app->height/app->zoom, 0);
+    bbx_scrollbar_set(app->v_scroll_sb, app->height - app->height/app->zoom, app->height/app->zoom, 0);
     bbx_canvas_setimage(app->can, app->image, app->width, app->height);
     bbx_canvas_flush(app->can);
 }
@@ -313,14 +320,41 @@ void menuhandler(void *obj, int id)
  */
 }
 
+#include <stdio.h>
+
 void zoom(void *obj, double val)
 {
     APP *app = obj;
+    int hpos, vpos;
     
+    vpos = (app->vpos  + app->height/2) - (app->height * val)/(app->zoom * 2);
+    if (vpos < 0)
+        vpos = 0;
+     
+    hpos = 0;
+    vpos = 0;
     app->zoom = val;
-    
+    app->vpos = vpos;
+
+    bbx_scrollbar_set(app->v_scroll_sb, app->height, app->height/app->zoom, vpos);
+    bbx_scrollbar_set(app->h_scroll_sb, app->width, app->width/app->zoom, hpos);
     redrawcanvas(app);
+}
+
+void hscroll(void *obj, int pos)
+{
+    APP *app = obj;
     
+    app->hpos = pos;
+    redrawcanvas(app);
+}
+
+void vscroll(void *obj, int pos)
+{
+    APP *app = obj;
+    
+    app->vpos = pos;
+    redrawcanvas(app);
 }
 
 #include <stdio.h>
@@ -329,14 +363,11 @@ int expandimage(unsigned char *dest, int width, int height, unsigned char *sourc
 
 int redrawcanvas(APP * app)
 {
-    printf("called\n");
     generatergbafromindex(app->image, app->width, app->height, app->index, app->pal.rgb, app->pal.N);
     if (app->zoom != 1)
     {
         int zoom = app->zoom;
-        printf("zoom %d\n", zoom);
-        unsigned char *view = rgba_copy(app->image, app->width, app->height, 0, 0, app->width/zoom, app->height/zoom);
-        printf("got view\n");
+        unsigned char *view = rgba_copy(app->image, app->width, app->height, app->hpos, app->vpos, app->width/zoom, app->height/zoom);
         expandimage(app->image, app->width, app->height, view, app->width/zoom, app->height/zoom);
         
     }
