@@ -6,18 +6,21 @@
 //
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 #include "makepalette.h"
 #include "anneal.h"
 
+int makepalette_splitk(unsigned char *pal, int Npal, unsigned char *rgba, int width, int height);
 int sortpalette(unsigned char *pal, int Npal);
 
 unsigned char *kmeans(unsigned char *rgba, int N, int Nmeans);
 
 int makepalette(unsigned char *pal, int Npal, unsigned char *rgba, int width, int height)
 {
-    unsigned char *clusters;
- //   clusters = kmeans(rgba, width * height, 2);
+    makepalette_splitk(pal, Npal, rgba, width, height);
+    sortpalette(pal, Npal);
+    return 0;
     
     if (Npal == 256)
     {
@@ -43,7 +46,6 @@ int makepalette(unsigned char *pal, int Npal, unsigned char *rgba, int width, in
     }
     return -1;
 }
-#include <stdio.h>
 
 typedef struct node
 {
@@ -53,6 +55,19 @@ typedef struct node
     struct node *child;
     struct node *next;
 } NODE;
+
+void node_kill_r(NODE *node)
+{
+    if (node)
+    {
+        if (node->child)
+            node_kill_r(node->child);
+        if (node->next)
+            node_kill_r(node->next);
+        free(node->pixels);
+        free(node);
+    }
+}
 
 int node_split(NODE *node)
 {
@@ -68,9 +83,13 @@ int node_split(NODE *node)
     
     if (node->child)
         return -1;
+    if (node->Npixels <= 1)
+        return -1;
+    
     clusters = kmeans(node->pixels, node->Npixels, 2);
     first_child = malloc(sizeof(NODE));
     second_child = malloc(sizeof(NODE));
+    
     for (i = 0; i < node->Npixels; i++)
     {
         if (clusters[i] == 0)
@@ -78,6 +97,7 @@ int node_split(NODE *node)
         else if (clusters[i] == 1)
             Nsecond++;
     }
+
     if (Nfirst == 0 || Nsecond == 0)
     {
         
@@ -125,53 +145,181 @@ int node_split(NODE *node)
     return 0;
 }
 
+void getmean(unsigned char *rgba, int width, int height, unsigned char *mean)
+{
+    int i;
+    int red = 0;
+    int green = 0;
+    int blue = 0;
+    int alpha = 0;;
+    
+    for (i = 0; i <width * height; i++)
+    {
+        red += rgba[i*4];
+        green += rgba[i*4+1];
+        blue += rgba[i*4+2];
+        alpha += rgba[i*4+3];
+    }
+    
+    if (width * height)
+    {
+        red /= (width * height);
+        green /= (width * height);
+        blue /= (width * height);
+        alpha /= (width * height);
+    }
+    mean[0] = red;
+    mean[1] = green;
+    mean[2] = blue;
+    mean[3] = alpha;
+}
+
+void split_r(NODE *node)
+{
+    while (node)
+    {
+        if (node->child)
+            split_r(node->child);
+        else
+            node_split(node);
+        node = node->next;
+    }
+}
+
+void split_r_n(NODE *node, int *n)
+{
+    while (node)
+    {
+        if (*n <= 0)
+            return;
+        if (node->child)
+            split_r(node->child);
+        else
+        {
+            node_split(node);
+            (*n)--;
+        }
+        node = node->next;
+    }
+}
+
+void getmeans_r(NODE *node, unsigned char *pal, int *n)
+{
+    while (node)
+    {
+        if (*n <= 0)
+            break;
+        if (node->child)
+            getmeans_r(node->child, pal, n);
+        else
+        {
+            int redtot = 0;
+            int greentot = 0;
+            int bluetot = 0;
+            int index = *n - 1;
+            int i;
+            
+            for (i = 0 ; i < node->Npixels; i++)
+            {
+                redtot += node->pixels[i*4];
+                greentot += node->pixels[i*4+1];
+                bluetot += node->pixels[i*4+2];
+            }
+            if (node->Npixels)
+            {
+                redtot /= node->Npixels;
+                greentot /= node->Npixels;
+                bluetot /= node->Npixels;
+            }
+            pal[index *3] = redtot;
+            pal[index * 3 + 1] = greentot;
+            pal[index * 3 + 2] = bluetot;
+            (*n)--;
+        }
+        node = node->next;
+    }
+}
+
+int makepalette_splitk(unsigned char *pal, int Npal, unsigned char *rgba, int width, int height)
+{
+    NODE *root;
+    int pallog2;
+    int temp;
+    
+    memset(pal, 0, Npal * 3);
+    
+    root = malloc(sizeof(NODE));
+    root->child = 0;
+    root->next = 0;
+    root->Npixels = width * height;
+    root->pixels = malloc(width * height * 4);
+    memcpy(root->pixels, rgba, width * height * 4);
+    
+    temp = Npal;
+    pallog2 = -1;
+    while (temp)
+    {
+        pallog2++;
+        temp >>= 1;
+    }
+    temp = pallog2;
+    
+    while (temp--)
+    {
+        split_r(root);
+    }
+    temp = Npal - (1 << pallog2);
+    split_r_n(root, &temp);
+    
+    temp = Npal;
+    getmeans_r(root, pal, &temp);
+    
+    node_kill_r(root);
+    
+    return 0;
+}
+
 unsigned char *kmeans(unsigned char *rgba, int N, int Nmeans)
 {
     unsigned char *clusters;
-    unsigned char *nextcluster;
     unsigned char *means;
+    unsigned char rgba_mean[4];
+    double rgba_var[3] = {0};
     int *totals;
     int *counts;
     int converged = 0;
     int i;
     
     clusters = malloc(N);
-    nextcluster = malloc(N);
     means = malloc(Nmeans * 4);
     totals = malloc(Nmeans * 3 * sizeof(int));
     counts = malloc(Nmeans * sizeof(int));
     
+    for (i =0; i <Nmeans; i++)
+    {
+        int loopbreaker = 0;
+        do
+        {
+            int target = rand() % N;
+            
+            means[i*4] = rgba[target * 4];
+            means[i*4+1] = rgba[target*4+1];
+            means[i*4+2] = rgba[target*4+2];
+            means[i*4+3] = rgba[target*4+3];
+            loopbreaker++;
+        } while (i > 0 && !memcmp(&means[i*4], &means[(i-1)*4], 4) && loopbreaker < N);
+    }
+    
     for (i = 0; i < N; i++)
         clusters[i] = rand() % Nmeans;
+    
+   
     
     int nsteps = 0;
     while (!converged)
     {
-        printf("Nsteps %d\n", nsteps);
         nsteps++;
-        
         converged = 1;
-        
-        for (i = 0; i <Nmeans * 3 ; i++)
-            totals[i] = 0;
-        for (i =0; i <Nmeans; i++)
-            counts[i] = 0;
-        for (i = 0; i < N; i++)
-        {
-            totals[clusters[i]*3] += rgba[i* 4];
-            totals[clusters[i]*3+1] += rgba[i*4+1];
-            totals[clusters[i]*3+2] += rgba[i*4+2];
-            counts[clusters[i]]++;
-        }
-        for (i =0; i <Nmeans; i++)
-        {
-            if (counts[i])
-            {
-                means[i*4] = totals[i*3] / counts[i];
-                means[i*4+1] = totals[i*3+1] / counts[i];
-                means[i*4+2] = totals[i*3+2] / counts[i];
-            }
-        }
         
         for (i =0; i < N; i++)
         {
@@ -182,9 +330,9 @@ unsigned char *kmeans(unsigned char *rgba, int N, int Nmeans)
             
             for (j =0; j < Nmeans; j++)
             {
-                d = abs(rgba[i*4] - means[j*3]) +
-                abs(rgba[i*4+1] - means[j*3+1]) +
-                abs(rgba[i*4+2] - means[j*3+2]);
+                d = abs((int) rgba[i*4] - means[j*4]) +
+                abs((int) rgba[i*4+1] - means[j*4+1]) +
+                abs((int) rgba[i*4+2] - means[j*4+2]);
                 
                 if (d < best)
                 {
@@ -199,12 +347,38 @@ unsigned char *kmeans(unsigned char *rgba, int N, int Nmeans)
             }
             
         }
+        
+        for (i = 0; i <Nmeans * 4 ; i++)
+            totals[i] = 0;
+        for (i =0; i <Nmeans; i++)
+            counts[i] = 0;
+        for (i = 0; i < N; i++)
+        {
+            totals[clusters[i]*3] += rgba[i* 4];
+            totals[clusters[i]*3+1] += rgba[i*4+1];
+            totals[clusters[i]*3+2] += rgba[i*4+2];
+            counts[clusters[i]]++;
+        }
+        for (i = 0; i <Nmeans; i++)
+        {
+            if (counts[i])
+            {
+                means[i*4] = totals[i*3] / counts[i];
+                means[i*4+1] = totals[i*3+1] / counts[i];
+                means[i*4+2] = totals[i*3+2] / counts[i];
+            }
+        }
     }
     
+    free(means);
+    free(totals);
+    free(counts);
     
+    return clusters;
     
 }
 
+/*
 typedef struct
 {
     unsigned char *rgb;
@@ -268,7 +442,7 @@ void mutate(void *obj, void *ptr)
         pal->rgb[indexb*3+i] = temp;
     }
 }
-
+*/
 
 void rgb2hsv(unsigned long rgb, double *h, unsigned char *s, unsigned char *v);
 
