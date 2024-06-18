@@ -9,15 +9,16 @@
 #include <math.h>
 
 #include "makepalette.h"
-#include "anneal.h"
 
-int makepalette_splitk(unsigned char *pal, int Npal, unsigned char *rgba, int width, int height);
+static int makepalette_splitk(unsigned char *pal, int Npal, unsigned char *rgba, int width, int height);
 int sortpalette(unsigned char *pal, int Npal);
 
-unsigned char *kmeans(unsigned char *rgba, int N, int Nmeans);
+static unsigned char *kmeans(unsigned char *rgba, int N, int Nmeans);
 
 int makepalette(unsigned char *pal, int Npal, unsigned char *rgba, int width, int height)
 {
+    if (Npal > 256)
+        return -1;
     makepalette_splitk(pal, Npal, rgba, width, height);
     sortpalette(pal, Npal);
     return 0;
@@ -56,7 +57,7 @@ typedef struct node
     struct node *next;
 } NODE;
 
-void node_kill_r(NODE *node)
+static void node_kill_r(NODE *node)
 {
     if (node)
     {
@@ -69,7 +70,7 @@ void node_kill_r(NODE *node)
     }
 }
 
-int node_split(NODE *node)
+static int node_split(NODE *node)
 {
     NODE *first_child = 0;
     NODE *second_child = 0;
@@ -100,7 +101,7 @@ int node_split(NODE *node)
 
     if (Nfirst == 0 || Nsecond == 0)
     {
-        
+        return -1;
     }
     first_child->pixels = malloc(Nfirst * 4);
     second_child->pixels = malloc(Nsecond * 4);
@@ -145,7 +146,7 @@ int node_split(NODE *node)
     return 0;
 }
 
-void getmean(unsigned char *rgba, int width, int height, unsigned char *mean)
+static void getmean(unsigned char *rgba, int width, int height, unsigned char *mean)
 {
     int i;
     int red = 0;
@@ -174,7 +175,7 @@ void getmean(unsigned char *rgba, int width, int height, unsigned char *mean)
     mean[3] = alpha;
 }
 
-void split_r(NODE *node)
+static void split_r(NODE *node)
 {
     while (node)
     {
@@ -186,7 +187,7 @@ void split_r(NODE *node)
     }
 }
 
-void split_r_n(NODE *node, int *n)
+static void split_r_n(NODE *node, int *n)
 {
     while (node)
     {
@@ -203,7 +204,7 @@ void split_r_n(NODE *node, int *n)
     }
 }
 
-void getmeans_r(NODE *node, unsigned char *pal, int *n)
+static void getmeans_r(NODE *node, unsigned char *pal, int *n)
 {
     while (node)
     {
@@ -240,7 +241,7 @@ void getmeans_r(NODE *node, unsigned char *pal, int *n)
     }
 }
 
-int makepalette_splitk(unsigned char *pal, int Npal, unsigned char *rgba, int width, int height)
+static int makepalette_splitk(unsigned char *pal, int Npal, unsigned char *rgba, int width, int height)
 {
     NODE *root;
     int pallog2;
@@ -279,7 +280,7 @@ int makepalette_splitk(unsigned char *pal, int Npal, unsigned char *rgba, int wi
     return 0;
 }
 
-unsigned char *kmeans(unsigned char *rgba, int N, int Nmeans)
+static unsigned char *kmeans(unsigned char *rgba, int N, int Nmeans)
 {
     unsigned char *clusters;
     unsigned char *means;
@@ -378,75 +379,45 @@ unsigned char *kmeans(unsigned char *rgba, int N, int Nmeans)
     
 }
 
-/*
-typedef struct
-{
-    unsigned char *rgb;
-    int N;
-} PALETTE;
 
-void *clone(void *obj, void *ptr)
+#define max2(a,b) ( (a) > (b) ? (a) : (b) )
+#define min2(a,b) ( (a) < (b) ? (a) : (b) )
+#define max3(a,b,c) max2(max2((a),(b)),(c))
+#define min3(a,b,c) min2(min2((a),(b)),(c))
+#define PI 3.14159265359 
+  
+static void rgb2hsv(unsigned long rgb, double *h, unsigned char *s, unsigned char *v)
 {
-    void *answer;
+  int r, g, b;
+  int V;
+  int S = 0;
+  double hue;
+
+  r = (rgb >> 16) & 0xFF;
+  g = (rgb >> 8) & 0xFF;
+  b = rgb & 0xFF;
+   
+  V = max3(r, g, b);
+  if(V > 0)
+    S = ((V - min3(r, g, b)) * 255)/ V;
+  if(V == r)
+    hue = (g - b)/(6.0)/S;
+  else if(V == g)
+    hue = 1.0/3.0 + (b - r)/(6.0)/S;
+  else if(V == b)
+    hue = 2.0/3.0 +  (r - g)/(6.0)/S;
+
+  *s = S;
+  *v = V;
+  if(hue < 0.0)
+    hue += 1.0;
+  if(hue >= 1.0)
+    hue -= 1.0;
     
-    answer = malloc(sizeof(PALETTE));
-    if (answer)
-        memcpy(answer, obj, sizeof(PALETTE));
-    
-    return answer;
+  *h = hue * 2 * PI;
 }
 
-void  kill(void *obj, void *ptr)
-{
-    free (obj);
-}
-
-int  copy(void *dest, void *src, void *ptr)
-{
-    memcpy(dest, src, sizeof(PALETTE));
-}
-
-double score(void *obj, void *ptr)
-{
-    PALETTE *pal = obj;
-    double answer = 0;
-    int d;
-    int i;
-    
-    for (i = 0; i <pal->N -1; i++)
-    {
-        d = abs(pal->rgb[i*3] - pal->rgb[(i+1)*3]) +
-        abs(pal->rgb[i*3+1] - pal->rgb[(i+1)*3+1]) +
-        abs(pal->rgb[i*3+2] - pal->rgb[(i+1)*3+2]);
-        
-        answer += d;
-    }
-    
-    return answer;
-}
-
-void mutate(void *obj, void *ptr)
-{
-    PALETTE *pal = obj;
-    int indexa;
-    int indexb;
-    int i;
-    unsigned char temp;
-    
-    indexa = rand() % pal->N;
-    indexb = rand() % pal->N;
-    for (i = 0; i < 3; i++)
-    {
-        temp = pal->rgb[indexa*3+i];
-        pal->rgb[indexa*3+i] = pal->rgb[indexb *3+ i];
-        pal->rgb[indexb*3+i] = temp;
-    }
-}
-*/
-
-void rgb2hsv(unsigned long rgb, double *h, unsigned char *s, unsigned char *v);
-
-int compf(const void *e1, const void *e2)
+static int compf(const void *e1, const void *e2)
 {
     const unsigned char *rgb_a = (const unsigned char *)e1;
     const unsigned char *rgb_b = (const unsigned char *)e2;
