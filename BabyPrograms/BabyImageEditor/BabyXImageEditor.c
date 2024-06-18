@@ -7,6 +7,7 @@
 #include "gif.h"
 #include "makepalette.h"
 
+#include <stdio.h>
 #define TOOL_NONE 0
 #define TOOL_BRUSH 1
 #define TOOLFLOODFILL 2
@@ -14,6 +15,16 @@
 // TOOL_EYEDROPPER
 #define TOOL_RECTANGLE 4
 #define TOOL_CIRCLE 5
+
+typedef struct undo
+{
+    int i_width;
+    int i_height;
+    unsigned char *index;
+    PALETTE pal;
+    struct undo *prev;
+    struct undo *next;
+}UNDO;
 
 typedef struct
 {
@@ -32,6 +43,9 @@ typedef struct
     int Npal;
     int i_width;
     int i_height;
+    UNDO *undolist;
+    UNDO *redolist;
+    int dirty;
     int c_width;
     int c_height;
     int zoom;
@@ -57,6 +71,14 @@ int generatergbafromindex(unsigned char *rgba, int width, int height, unsigned c
 static void palettemouse(void *ptr, int action, int x, int y, int buttons);
 static void drawpalette(APP *app);
 
+void undo_commit(APP *app);
+void undo_undo(APP *app);
+void undo_redo(APP *app);
+UNDO *makeundo(unsigned char *index, int width, int height, PALETTE *pal);
+void undo_unlink(UNDO *undo);
+void undo_kill(UNDO *undo);
+void undo_kill_r(UNDO *undo);
+
 int main(int argc, char**argv)
 {
 	APP app;
@@ -81,6 +103,7 @@ int main(int argc, char**argv)
         app.hpos = 0;
         app.vpos = 0;
         app.sel_col = 1;
+        app.dirty = 0;
     }
     else
         exit(EXIT_FAILURE);
@@ -99,6 +122,7 @@ void createapp(void *obj, BABYX *bbx, BBX_Panel *root)
 {
 	APP *app = obj;
     BBX_Popup *filemenu;
+    BBX_Popup *editmenu;
     BBX_Popup *palettemenu;
     BBX_Popup *helpmenu;
     BBX_Popup *custompalettesmenu;
@@ -140,6 +164,10 @@ void createapp(void *obj, BABYX *bbx, BBX_Panel *root)
     filemenu = bbx_popup(bbx);
     bbx_popup_append(filemenu, 1, "Save as GIF", "...", 0);
     bbx_popup_append(filemenu, 2, "Exit", "", 0);
+    
+    editmenu = bbx_popup(bbx);
+    bbx_popup_append(editmenu, 201, "Undo", "", 0);
+    bbx_popup_append(editmenu, 202, "Redo", "", 0);
 
     palettemenu = bbx_popup(bbx);
     bbx_popup_append(palettemenu, 4, "Edit palette", "...", 0);
@@ -150,10 +178,14 @@ void createapp(void *obj, BABYX *bbx, BBX_Panel *root)
     bbx_popup_append(helpmenu, 3, "About", "", 0);
 
     bbx_menubar_addmenu(app->menubar, "File", filemenu);
+    bbx_menubar_addmenu(app->menubar, "Edit", editmenu);
     bbx_menubar_addmenu(app->menubar, "Palette", palettemenu);
     bbx_menubar_addmenu(app->menubar, "Help", helpmenu);
     
     app->zoom_spn = bbx_spinner(app->bbx, root, 1.0, 1.0, 10.0, 1, zoom, app);
+    
+    undo_commit(app);
+    bbx_menubar_disable(app->menubar, 201);
 
     /*
     app->can = bbx_canvas(bbx, root, app->width, app->height, BBX_Color("white"));
@@ -255,7 +287,13 @@ void canvasmouse(void *ptr, int action, int x, int y, int buttons)
         int iy = app->vpos + y/app->zoom;
         
         app->index[iy * app->i_width + ix] = app->sel_col;
+        app->dirty = 1;
         redrawcanvas(app);
+    }
+    if (action == BBX_MOUSE_RELEASE && app->dirty)
+    {
+        printf("Committing undo\n");
+        undo_commit(app);
     }
 }
 
@@ -289,7 +327,16 @@ void menuhandler(void *obj, int id)
       bbx_canvas_setimage(app->can, app->image, app->c_width, app->c_height);
       bbx_canvas_flush(app->can);
   }
-     
+    if (id == 201)
+    {
+        printf("doing undo\n");
+        undo_undo(app);
+    }
+    if (id == 202)
+    {
+        printf("doing redo\n");
+        undo_redo(app);
+    }
 /*
   switch(id)
   {
@@ -648,3 +695,138 @@ static void drawpalette(APP *app)
   }
   bbx_canvas_flush(app->pal_can);
 }
+
+
+void undo_commit(APP *app)
+{
+    UNDO *undo;
+    undo = makeundo(app->index, app->i_width, app->i_height, &app->pal);
+    undo->next = app->undolist;
+    if (undo->next)
+        undo->next->prev = undo;
+    app->undolist = undo;
+    undo_kill_r(app->redolist);
+    app->redolist = 0;
+    bbx_menubar_enable(app->menubar, 201);
+    bbx_menubar_disable(app->menubar, 202);
+    app->dirty = 0;
+}
+
+void undo_restore(APP *app, UNDO *undo)
+{
+    if (undo->i_width == app->i_width &&
+        undo->i_height == app->i_height)
+    {
+        memcpy(app->index, undo->index, app->i_width * app->i_height);
+    }
+    if (undo->pal.N == app->pal.N)
+    {
+        memcpy(app->pal.rgb, undo->pal.rgb, app->pal.N * 3);
+    }
+}
+
+void undo_undo(APP *app)
+{
+    if (app->undolist)
+    {
+       
+        if (!app->dirty && app->undolist->next)
+        {
+            printf("restoring clean\n");
+            undo_restore(app, app->undolist->next);
+        }
+        else
+        {
+            undo_restore(app, app->undolist);
+        }
+        if (app->undolist->next)
+        {
+            UNDO *undo = app->undolist;
+            app->undolist = app->undolist->next;
+            undo_unlink(undo);
+            undo->next = app->redolist;
+            if (undo->next)
+                undo->next->prev = undo;
+            app->redolist = undo;
+        }
+        if (!app->dirty && !app->undolist->next)
+        {
+            bbx_menubar_disable(app->menubar, 201);
+        }
+       if (app->redolist)
+           bbx_menubar_enable(app->menubar, 202);
+        redrawcanvas(app);
+        app->dirty = 0;
+    }
+}
+
+void undo_redo(APP *app)
+{
+    if (app->redolist)
+    {
+        UNDO *redo = app->redolist;
+        app->redolist = redo->next;
+        undo_unlink(redo);
+        
+        undo_restore(app, redo);
+        redo->next = app->undolist;
+        if (redo->next)
+            redo->next->prev = redo;
+        app->undolist = redo;
+        bbx_menubar_enable(app->menubar, 201);
+        if (!app->redolist)
+            bbx_menubar_disable(app->menubar, 202);
+        redrawcanvas(app);
+        app->dirty = 0;
+    }
+}
+    
+
+UNDO *makeundo(unsigned char *index, int width, int height, PALETTE *pal)
+{
+    UNDO *undo;
+    
+    undo = bbx_malloc(sizeof(UNDO));
+    undo->index = bbx_malloc(width * height);
+    memcpy(undo->index, index, width * height);
+    undo->i_width = width;
+    undo->i_height = height;
+    undo->pal.rgb = bbx_malloc(pal->N * 3);
+    memcpy(undo->pal.rgb, pal->rgb, pal->N * 3);
+    undo->pal.N = pal->N;
+    undo->prev = 0;
+    undo->next = 0;
+    
+    return undo;
+}
+
+void undo_kill(UNDO *undo)
+{
+    if (undo)
+    {
+        free(undo->index);
+        free(undo->pal.rgb);
+        free(undo);
+    }
+}
+
+void undo_kill_r(UNDO *undo)
+{
+    if (undo)
+    {
+        undo_kill_r(undo->next);
+        undo_kill(undo);
+    }
+}
+
+void undo_unlink(UNDO *undo)
+{
+    if (undo->prev)
+        undo->prev->next = undo->next;
+    if (undo->next)
+        undo->next->prev = undo->prev;
+    undo->next = 0;
+    undo->prev = 0;
+}
+
+
