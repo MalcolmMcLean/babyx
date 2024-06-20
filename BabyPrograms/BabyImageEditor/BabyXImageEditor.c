@@ -68,7 +68,7 @@ void vscroll(void *obj, int pos);
 
 int redrawcanvas(APP * app);
 int generateindexfromrgba(unsigned char *index, int width, int height, unsigned char *rgba, unsigned char *pal, int Npal);
-int generatergbafromindex(unsigned char *rgba, int width, int height, unsigned char *index, unsigned char *pal, int Npal);
+int generatergbafromindex(unsigned char *rgba, int width, int height, unsigned char *index, unsigned char *pal, int Npal, int transparent);
 void transparentbackground(unsigned char *rgba, int width, int height);
 
 void initialdefaultpalette(unsigned char *pal, int Npal);
@@ -103,7 +103,7 @@ int main(int argc, char**argv)
             app.pal.N = 256;
             app.index = loadgif(argv[1], &app.i_width, &app.i_height, app.pal.rgb, &app.transparent);
             app.image = bbx_malloc(app.i_width * app.i_height * 4);
-            generatergbafromindex(app.image, app.i_width, app.i_height, app.index, app.pal.rgb, app.Npal);
+            generatergbafromindex(app.image, app.i_width, app.i_height, app.index, app.pal.rgb, app.Npal, app.transparent);
             app.zoom = 1;
             app.hpos = 0;
             app.vpos = 0;
@@ -121,9 +121,10 @@ int main(int argc, char**argv)
             app.index = malloc(app.i_width * app.i_height);
             memset(app.index, 0, app.i_width *app.i_height);
             makepalette(app.pal.rgb+3, 255, rgba, app.i_width, app.i_height);
-            generateindexfromrgba(app.index, app.i_width, app.i_height, app.image, app.pal.rgb, app.pal.N);
-            generatergbafromindex(app.image, app.i_width, app.i_height, app.index, app.pal.rgb, app.Npal);
             app.transparent = 0;
+            generateindexfromrgba(app.index, app.i_width, app.i_height, app.image, app.pal.rgb, app.pal.N);
+            generatergbafromindex(app.image, app.i_width, app.i_height, app.index, app.pal.rgb, app.Npal, app.transparent);
+          
             app.zoom = 1;
             app.hpos = 0;
             app.vpos = 0;
@@ -140,9 +141,10 @@ int main(int argc, char**argv)
         app.index = bbx_malloc(256 * 256);
         app.image = bbx_malloc(app.i_width * app.i_height * 4);
         initialdefaultpalette(app.pal.rgb, 256);
-        memset(app.index, 255, app.i_width * app.i_height);
-        generatergbafromindex(app.image, app.i_width, app.i_height, app.index, app.pal.rgb, app.Npal);
         app.transparent = 0;
+        memset(app.index, 255, app.i_width * app.i_height);
+        generatergbafromindex(app.image, app.i_width, app.i_height, app.index, app.pal.rgb, app.Npal, app.transparent);
+    
         app.zoom = 1;
         app.hpos = 0;
         app.vpos = 0;
@@ -324,8 +326,16 @@ void layoutapp(void *obj, int width, int height)
 	bbx_setpos(app->bbx, app->ok_but, width / 2 - 25, height - 50, 50, 25);
     bbx_setpos(app->bbx, app->zoom_spn, 10, height - 50, 60, 25);
     
-    bbx_scrollbar_set(app->h_scroll_sb, app->i_width, app->i_height/app->zoom, 0);
-    bbx_scrollbar_set(app->v_scroll_sb, app->i_height - app->i_height/app->zoom, app->i_height/app->zoom, 0);
+    
+    int Nx, Ny;
+    Nx = (app->i_width - app->hpos);
+    Ny = (app->i_height - app->vpos);
+    if (Nx * app->zoom > app->c_width)
+        Nx = app->c_width/app->zoom;
+    if (Ny * app->zoom > app->c_height)
+        Ny = app->c_height/app->zoom;
+    bbx_scrollbar_set(app->h_scroll_sb, app->i_width, Nx, app->hpos);
+    bbx_scrollbar_set(app->v_scroll_sb, app->i_height, Ny, app->vpos);
     redrawcanvas(app);
     drawpalette(app);
 }
@@ -375,7 +385,7 @@ void menuhandler(void *obj, int id)
   if (id == 4)
   {
       openpaletteeditor(app->bbx, &app->pal);
-      generatergbafromindex(app->image, app->i_width, app->i_height, app->index, app->pal.rgb, app->pal.N);
+      generatergbafromindex(app->image, app->i_width, app->i_height, app->index, app->pal.rgb, app->pal.N, app->transparent);
       redrawcanvas(app);
       drawpalette(app);
   }
@@ -406,6 +416,7 @@ void menuhandler(void *obj, int id)
         app->i_width = width;
         app->i_height = height;
         memcpy(app->pal.rgb, pal, 256 * 3);
+        app->transparent = transparent;
         app->image = bbx_realloc(app->image, width * height * 4);
         
         app->hpos = 0;
@@ -448,8 +459,9 @@ void menuhandler(void *obj, int id)
         app->index = malloc(app->i_width * app->i_height);
         memset(app->index, 0, app->i_width *app->i_height);
         makepalette(app->pal.rgb+3, 255, rgba, app->i_width, app->i_height);
+        app->transparent = 0;
         generateindexfromrgba(app->index, app->i_width, app->i_height, app->image, app->pal.rgb, app->pal.N);
-        generatergbafromindex(app->image, app->i_width, app->i_height, app->index, app->pal.rgb, app->Npal);
+        generatergbafromindex(app->image, app->i_width, app->i_height, app->index, app->pal.rgb, app->Npal, app->transparent);
         app->zoom = 1;
         app->hpos = 0;
         app->vpos = 0;
@@ -604,8 +616,8 @@ int redrawcanvas(APP * app)
     rgba = bbx_canvas_rgba(app->can, &cw, &ch);
     bbx_rectangle(rgba, cw, ch, 0.0, 0.0, cw, ch, bbx_color("yellow"));
     transparentbackground(rgba, cw, ch);
-    generatergbafromindex(app->image, app->i_width, app->i_height, app->index, app->pal.rgb, app->pal.N);
-    if (app->zoom != 1)
+    generatergbafromindex(app->image, app->i_width, app->i_height, app->index, app->pal.rgb, app->pal.N, app->transparent);
+    if (app->zoom > 0)
     {
         int zoom = app->zoom;
         int Nx, Ny;
@@ -623,8 +635,6 @@ int redrawcanvas(APP * app)
         free(view);
         free(expanded);
     }
-    else
-        bbx_paste(rgba, cw, ch, app->image, app->i_width, app->i_height, 0, 0);
 
     bbx_canvas_flush(app->can);
 }
@@ -726,7 +736,7 @@ int generateindexfromrgba(unsigned char *index, int width, int height, unsigned 
 /*
  *pal rgb
  */
-int generatergbafromindex(unsigned char *rgba, int width, int height, unsigned char *index, unsigned char *pal, int Npal)
+int generatergbafromindex(unsigned char *rgba, int width, int height, unsigned char *index, unsigned char *pal, int Npal, int transparent)
 {
     int x, y;
     int ci;
@@ -738,7 +748,7 @@ int generatergbafromindex(unsigned char *rgba, int width, int height, unsigned c
             rgba[(y * width + x) * 4] = pal[ci * 3 + 0];
             rgba[(y * width + x) * 4 + 1] = pal[ci * 3 + 1];
             rgba[(y * width + x) * 4 + 2] = pal[ci * 3 + 2];
-            rgba[(y * width + x) * 4 + 3] = (ci == 0 )? 0 : 255;
+            rgba[(y * width + x) * 4 + 3] = (ci == transparent ) ? 0 : 255;
         }
     }
     
@@ -914,9 +924,11 @@ static void drawpalette(APP *app)
     for(iy=0;iy<12;iy++)
       for(ix=0;ix<12;ix++)
       {
-        rgba[((0*16+iy+2)*width+(0*16+ix+2))*4] = 0xFF;
-        rgba[((0*16+iy+2)*width+(0*16+ix+2))*4+1] = 0xFF;
-        rgba[((0*16+iy+2)*width+(0*16+ix+2))*4+2] = 0xFF;
+          int tx = app->transparent % 16;
+          int ty = app->transparent /16;
+        rgba[((ty*16+iy+2)*width+(tx*16+ix+2))*4] = 0xFF;
+        rgba[((ty*16+iy+2)*width+(tx*16+ix+2))*4+1] = 0xFF;
+        rgba[((ty*16+iy+2)*width+(tx*16+ix+2))*4+2] = 0xFF;
       }
     bbx_lineaa(rgba, width, height, 3, 14, 14, 3, 2.0, bbx_color("red"));
   bbx_canvas_flush(app->pal_can);
