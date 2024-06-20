@@ -37,12 +37,14 @@ typedef struct
 	BBX_Button *ok_but;
     BBX_Menubar *menubar;
     BBX_Spinner *zoom_spn;
+    BBX_CheckBox *transparent_chk;
     unsigned char *image;
     unsigned char *index;
     PALETTE pal;
     int Npal;
     int i_width;
     int i_height;
+    int transparent;
     UNDO *undolist;
     UNDO *redolist;
     int dirty;
@@ -67,7 +69,9 @@ void vscroll(void *obj, int pos);
 int redrawcanvas(APP * app);
 int generateindexfromrgba(unsigned char *index, int width, int height, unsigned char *rgba, unsigned char *pal, int Npal);
 int generatergbafromindex(unsigned char *rgba, int width, int height, unsigned char *index, unsigned char *pal, int Npal);
+void transparentbackground(unsigned char *rgba, int width, int height);
 
+void initialdefaultpalette(unsigned char *pal, int Npal);
 static void palettemouse(void *ptr, int action, int x, int y, int buttons);
 static void drawpalette(APP *app);
 
@@ -79,26 +83,66 @@ void undo_unlink(UNDO *undo);
 void undo_kill(UNDO *undo);
 void undo_kill_r(UNDO *undo);
 
+char *getextension(char *fname);
+
 int main(int argc, char**argv)
 {
 	APP app;
     
     if (argc == 2)
     {
+        char *ext;
         unsigned char *rgba;
         int err;
         
-        rgba = loadrgba(argv[1], &app.i_width, &app.i_height, &err);
-        if (!rgba)
-            exit(EXIT_FAILURE);
-        app.image = rgba;
+        ext = getextension(argv[1]);
+        
+        if (!strcmp(ext, ".gif"))
+        {
+            app.pal.rgb = malloc(3 * 256);
+            app.pal.N = 256;
+            app.index = loadgif(argv[1], &app.i_width, &app.i_height, app.pal.rgb, &app.transparent);
+            app.image = bbx_malloc(app.i_width * app.i_height * 4);
+            generatergbafromindex(app.image, app.i_width, app.i_height, app.index, app.pal.rgb, app.Npal);
+            app.zoom = 1;
+            app.hpos = 0;
+            app.vpos = 0;
+            app.sel_col = 1;
+            app.dirty = 0;
+        }
+        else
+        {
+            rgba = loadrgba(argv[1], &app.i_width, &app.i_height, &err);
+            if (!rgba)
+                exit(EXIT_FAILURE);
+            app.image = rgba;
+            app.pal.rgb = malloc(3 * 256);
+            app.pal.N = 256;
+            app.index = malloc(app.i_width * app.i_height);
+            memset(app.index, 0, app.i_width *app.i_height);
+            makepalette(app.pal.rgb+3, 255, rgba, app.i_width, app.i_height);
+            generateindexfromrgba(app.index, app.i_width, app.i_height, app.image, app.pal.rgb, app.pal.N);
+            generatergbafromindex(app.image, app.i_width, app.i_height, app.index, app.pal.rgb, app.Npal);
+            app.transparent = 0;
+            app.zoom = 1;
+            app.hpos = 0;
+            app.vpos = 0;
+            app.sel_col = 1;
+            app.dirty = 0;
+        }
+    }
+    else if (argc == 1)
+    {
         app.pal.rgb = malloc(3 * 256);
         app.pal.N = 256;
-        app.index = malloc(app.i_width * app.i_height);
-        memset(app.index, 0, app.i_width *app.i_height);
-        makepalette(app.pal.rgb, 256, rgba, app.i_width, app.i_height);
-        generateindexfromrgba(app.index, app.i_width, app.i_height, app.image, app.pal.rgb, app.pal.N);
+        app.i_width = 256;
+        app.i_height = 256;
+        app.index = bbx_malloc(256 * 256);
+        app.image = bbx_malloc(app.i_width * app.i_height * 4);
+        initialdefaultpalette(app.pal.rgb, 256);
+        memset(app.index, 255, app.i_width * app.i_height);
         generatergbafromindex(app.image, app.i_width, app.i_height, app.index, app.pal.rgb, app.Npal);
+        app.transparent = 0;
         app.zoom = 1;
         app.hpos = 0;
         app.vpos = 0;
@@ -107,6 +151,7 @@ int main(int argc, char**argv)
     }
     else
         exit(EXIT_FAILURE);
+   
     
     app.c_width = 512;
     app.c_height = 512;
@@ -134,6 +179,7 @@ void createapp(void *obj, BABYX *bbx, BBX_Panel *root)
     bbx_canvas_setmousefunc(app->pal_can, palettemouse, app);
     app->v_scroll_sb = bbx_scrollbar(bbx, root, BBX_SCROLLBAR_VERTICAL, vscroll, app);
     app->h_scroll_sb = bbx_scrollbar(bbx, root, BBX_SCROLLBAR_HORIZONTAL, hscroll, app);
+    app->transparent_chk = bbx_checkbox(bbx, root, "Transparent", 0, app);
 	app->ok_but = bbx_button(bbx, root, "OK", ok_pressed, app);
     
     
@@ -162,12 +208,19 @@ void createapp(void *obj, BABYX *bbx, BBX_Panel *root)
     bbx_popup_append(custompalettesmenu, 113, "No Green", "", 0);
 
     filemenu = bbx_popup(bbx);
+    bbx_popup_append(filemenu, 211, "New", "...", 0);
+    bbx_popup_append(filemenu, 210, "Open", "...", 0);
+    bbx_popup_append(filemenu, 213, "Import", "...", 0);
     bbx_popup_append(filemenu, 1, "Save as GIF", "...", 0);
+    bbx_popup_append(filemenu, 212, "Close", "", 0);
     bbx_popup_append(filemenu, 2, "Exit", "", 0);
     
     editmenu = bbx_popup(bbx);
     bbx_popup_append(editmenu, 201, "Undo", "", 0);
     bbx_popup_append(editmenu, 202, "Redo", "", 0);
+    bbx_popup_append(editmenu, 203, "Select", "", 0);
+    bbx_popup_append(editmenu, 204, "Resize", "...", 0);
+
 
     palettemenu = bbx_popup(bbx);
     bbx_popup_append(palettemenu, 4, "Edit palette", "...", 0);
@@ -267,13 +320,13 @@ void layoutapp(void *obj, int width, int height)
     bbx_setpos(app->bbx, app->pal_can, 20 + app->c_width + 15, 25, 256, 256);
     bbx_setpos(app->bbx, app->v_scroll_sb, 10 + app->c_width, 20, 10, app->c_height);
     bbx_setpos(app->bbx, app->h_scroll_sb, 10, 20 + app->c_height, app->c_width, 10);
+    bbx_setpos(app->bbx, app->transparent_chk, 20 + app->c_width  + 13, 285, 120, 20);
 	bbx_setpos(app->bbx, app->ok_but, width / 2 - 25, height - 50, 50, 25);
     bbx_setpos(app->bbx, app->zoom_spn, 10, height - 50, 60, 25);
     
     bbx_scrollbar_set(app->h_scroll_sb, app->i_width, app->i_height/app->zoom, 0);
     bbx_scrollbar_set(app->v_scroll_sb, app->i_height - app->i_height/app->zoom, app->i_height/app->zoom, 0);
-    bbx_canvas_setimage(app->can, app->image, app->c_width, app->c_height);
-    bbx_canvas_flush(app->can);
+    redrawcanvas(app);
     drawpalette(app);
 }
 
@@ -321,21 +374,101 @@ void menuhandler(void *obj, int id)
     }
   if (id == 4)
   {
-      unsigned char *can;
       openpaletteeditor(app->bbx, &app->pal);
       generatergbafromindex(app->image, app->i_width, app->i_height, app->index, app->pal.rgb, app->pal.N);
-      bbx_canvas_setimage(app->can, app->image, app->c_width, app->c_height);
-      bbx_canvas_flush(app->can);
+      redrawcanvas(app);
+      drawpalette(app);
   }
     if (id == 201)
     {
-        printf("doing undo\n");
         undo_undo(app);
     }
     if (id == 202)
     {
-        printf("doing redo\n");
         undo_redo(app);
+    }
+    if (id == 210)
+    {
+        unsigned char pal[256*3];
+        int width, height;
+        int transparent;
+        unsigned char *index;
+        char *fname;
+        
+        fname = bbx_getopenfile(app->bbx, "*.gif");
+        if (!fname)
+            return;
+        index = loadgif(fname, &width, &height, pal, &transparent);
+        if (!index)
+            return;
+        free(app->index);
+        app->index = index;
+        app->i_width = width;
+        app->i_height = height;
+        memcpy(app->pal.rgb, pal, 256 * 3);
+        app->image = bbx_realloc(app->image, width * height * 4);
+        
+        app->hpos = 0;
+        app->vpos = 0;
+        
+        int Nx, Ny;
+        Nx = (app->i_width - app->hpos);
+        Ny = (app->i_height - app->vpos);
+        if (Nx * app->zoom > app->c_width)
+            Nx = app->c_width/app->zoom;
+        if (Ny * app->zoom > app->c_height)
+            Ny = app->c_height/app->zoom;
+
+        bbx_scrollbar_set(app->v_scroll_sb, app->i_height, Nx, app->vpos);
+        bbx_scrollbar_set(app->h_scroll_sb, app->i_width, Ny, app->hpos);
+        redrawcanvas(app);
+        drawpalette(app);
+    }
+    if (id == 213)
+    {
+        unsigned char pal[256*3];
+        int width, height;
+        int transparent;
+        unsigned char *index;
+        char *fname;
+        
+        fname = bbx_getopenfile(app->bbx, "*.png");
+        if (!fname)
+            return;
+        
+        unsigned char *rgba;
+        int err;
+        
+        rgba = loadrgba(fname, &app->i_width, &app->i_height, &err);
+        if (!rgba)
+            return;
+        free(app->image);
+        app->image = rgba;
+        free(app->index);
+        app->index = malloc(app->i_width * app->i_height);
+        memset(app->index, 0, app->i_width *app->i_height);
+        makepalette(app->pal.rgb+3, 255, rgba, app->i_width, app->i_height);
+        generateindexfromrgba(app->index, app->i_width, app->i_height, app->image, app->pal.rgb, app->pal.N);
+        generatergbafromindex(app->image, app->i_width, app->i_height, app->index, app->pal.rgb, app->Npal);
+        app->zoom = 1;
+        app->hpos = 0;
+        app->vpos = 0;
+        app->sel_col = 1;
+        app->dirty = 0;
+        
+        int Nx, Ny;
+        Nx = (app->i_width - app->hpos);
+        Ny = (app->i_height - app->vpos);
+        if (Nx * app->zoom > app->c_width)
+            Nx = app->c_width/app->zoom;
+        if (Ny * app->zoom > app->c_height)
+            Ny = app->c_height/app->zoom;
+
+        bbx_scrollbar_set(app->v_scroll_sb, app->i_height, Nx, app->vpos);
+        bbx_scrollbar_set(app->h_scroll_sb, app->i_width, Ny, app->hpos);
+        
+        redrawcanvas(app);
+        drawpalette(app);
     }
 /*
   switch(id)
@@ -431,9 +564,16 @@ void zoom(void *obj, double val)
     vpos = 0;
     app->zoom = val;
     app->vpos = vpos;
+    int Nx, Ny;
+    Nx = (app->i_width - app->hpos);
+    Ny = (app->i_height - app->vpos);
+    if (Nx * app->zoom > app->c_width)
+        Nx = app->c_width/app->zoom;
+    if (Ny * app->zoom > app->c_height)
+        Ny = app->c_height/app->zoom;
 
-    bbx_scrollbar_set(app->v_scroll_sb, app->i_height, app->i_height/app->zoom, vpos);
-    bbx_scrollbar_set(app->h_scroll_sb, app->i_width, app->i_width/app->zoom, hpos);
+    bbx_scrollbar_set(app->v_scroll_sb, app->i_height, Nx, vpos);
+    bbx_scrollbar_set(app->h_scroll_sb, app->i_width, Ny, hpos);
     redrawcanvas(app);
 }
 
@@ -459,16 +599,33 @@ int expandimage(unsigned char *dest, int width, int height, unsigned char *sourc
 
 int redrawcanvas(APP * app)
 {
+    unsigned char *rgba;
+    int cw, ch;
+    rgba = bbx_canvas_rgba(app->can, &cw, &ch);
+    bbx_rectangle(rgba, cw, ch, 0.0, 0.0, cw, ch, bbx_color("yellow"));
+    transparentbackground(rgba, cw, ch);
     generatergbafromindex(app->image, app->i_width, app->i_height, app->index, app->pal.rgb, app->pal.N);
     if (app->zoom != 1)
     {
         int zoom = app->zoom;
-        unsigned char *view = rgba_copy(app->image, app->i_width, app->i_height, app->hpos, app->vpos, app->i_width/zoom, app->i_height/zoom);
-        expandimage(app->image, app->i_width, app->i_height, view, app->i_width/zoom, app->i_height/zoom);
+        int Nx, Ny;
+        Nx = (app->i_width - app->hpos);
+        Ny = (app->i_height - app->vpos);
+        if (Nx * zoom > cw)
+            Nx = cw/zoom;
+        if (Ny * zoom > ch)
+            Ny = ch/zoom;
+  
+        unsigned char *view = rgba_copy(app->image, app->i_width, app->i_height, app->hpos, app->vpos, Nx, Ny);
+        unsigned char *expanded = bbx_malloc(Nx * zoom * Ny * zoom * 4);
+        expandimage(expanded, Nx * zoom, Ny *zoom, view, Nx, Ny);
+        bbx_paste(rgba, cw, ch, expanded, Nx*zoom, Ny*zoom, 0, 0);
         free(view);
-        
+        free(expanded);
     }
-    bbx_canvas_setimage(app->can, app->image, app->c_width, app->c_height);
+    else
+        bbx_paste(rgba, cw, ch, app->image, app->i_width, app->i_height, 0, 0);
+
     bbx_canvas_flush(app->can);
 }
 
@@ -559,6 +716,8 @@ int generateindexfromrgba(unsigned char *index, int width, int height, unsigned 
                 }
             }
             index[y*width+x] = bestj;
+            if (rgba[(y * width + x) * 4 + 3] < 128)
+                index[y*width+x] = 0;
         }
     }
         
@@ -579,10 +738,63 @@ int generatergbafromindex(unsigned char *rgba, int width, int height, unsigned c
             rgba[(y * width + x) * 4] = pal[ci * 3 + 0];
             rgba[(y * width + x) * 4 + 1] = pal[ci * 3 + 1];
             rgba[(y * width + x) * 4 + 2] = pal[ci * 3 + 2];
+            rgba[(y * width + x) * 4 + 3] = (ci == 0 )? 0 : 255;
         }
     }
     
     return  0;
+}
+
+void transparentbackground(unsigned char *rgba, int width, int height)
+{
+    BBX_RGBA dim = bbx_color("AliceWhite");
+    BBX_RGBA light = bbx_color("LightGray");
+    int x, y;
+    
+    for (y=0; y < height; y++)
+        for(x = 0; x <width; x++)
+        {
+            if (((x/4) ^ (y/4)) & 0x1)
+            {
+                rgba[(y*width+x)*4+0] = bbx_red(dim);
+                rgba[(y*width+x)*4+1] = bbx_green(dim);
+                rgba[(y*width+x)*4+2] = bbx_blue(dim);
+            }
+            else
+            {
+                rgba[(y*width+x)*4+0] = bbx_red(light);
+                rgba[(y*width+x)*4+1] = bbx_green(light);
+                rgba[(y*width+x)*4+2] = bbx_blue(light);
+            }
+            //rgba[(y*width+x)*4+0] = 255;
+            //rgba[(y*width+x)*4+1] = 0;
+            //rgba[(y*width+x)*4+2] = 0;
+            rgba[(y*width+x)*4+3] = 255;
+        }
+}
+
+void initialdefaultpalette(unsigned char *pal, int Npal)
+{
+    int red, green, blue;
+    int i = 0;
+    
+    if (Npal != 256)
+        return;
+    
+    for (red = 0 ; red < 8; red++)
+    {
+        for (green = 0; green < 8; green++)
+        {
+            for (blue = 0; blue < 4; blue++)
+            {
+                pal[i * 3] = red * 32;
+                pal[i * 3 + 1] = green * 32;
+                pal[i * 3 + 2] = blue * 64;
+                i++;
+            }
+        }
+    }
+   // sortpalette(pal, Npal);
 }
 
 static void palettemouse(void *ptr, int action, int x, int y, int buttons)
@@ -602,15 +814,20 @@ static void palettemouse(void *ptr, int action, int x, int y, int buttons)
     if (action == BBX_MOUSE_CLICK &&
         ! (buttons & BBX_MOUSE_BUTTON1))
     {
-        unsigned long rgb = ((unsigned long) app->pal.rgb[app->sel_col*3] << 16 |
+        unsigned long oldrgb = ((unsigned long) app->pal.rgb[app->sel_col*3] << 16 |
                                  (unsigned long) app->pal.rgb[app->sel_col*3+1] << 8 |
                                  (unsigned long) app->pal.rgb[app->sel_col*3+ 2]);
-        rgb = pickcolor(app->bbx, rgb);
-        app->pal.rgb[app->sel_col*3] = (rgb >> 16) & 0xFF;
-        app->pal.rgb[app->sel_col*3+1] = (rgb >> 8) & 0xFF;
-        app->pal.rgb[app->sel_col*3+2] = rgb & 0xFF;
-        drawpalette(app);
-        redrawcanvas(app);
+        unsigned long rgb;
+        rgb = pickcolor(app->bbx, oldrgb);
+        if (rgb != oldrgb)
+        {
+            app->pal.rgb[app->sel_col*3] = (rgb >> 16) & 0xFF;
+            app->pal.rgb[app->sel_col*3+1] = (rgb >> 8) & 0xFF;
+            app->pal.rgb[app->sel_col*3+2] = rgb & 0xFF;
+            drawpalette(app);
+            redrawcanvas(app);
+            undo_commit(app);
+        }
     }
 }
 
@@ -693,6 +910,15 @@ static void drawpalette(APP *app)
       }
     
   }
+    
+    for(iy=0;iy<12;iy++)
+      for(ix=0;ix<12;ix++)
+      {
+        rgba[((0*16+iy+2)*width+(0*16+ix+2))*4] = 0xFF;
+        rgba[((0*16+iy+2)*width+(0*16+ix+2))*4+1] = 0xFF;
+        rgba[((0*16+iy+2)*width+(0*16+ix+2))*4+2] = 0xFF;
+      }
+    bbx_lineaa(rgba, width, height, 3, 14, 14, 3, 2.0, bbx_color("red"));
   bbx_canvas_flush(app->pal_can);
 }
 
@@ -732,7 +958,6 @@ void undo_undo(APP *app)
        
         if (!app->dirty && app->undolist->next)
         {
-            printf("restoring clean\n");
             undo_restore(app, app->undolist->next);
         }
         else
@@ -830,3 +1055,23 @@ void undo_unlink(UNDO *undo)
 }
 
 
+char *getextension(char *fname)
+{
+  char *ext;
+  char *answer;
+
+  ext = strrchr(fname, '.');
+  if(!ext || ext == fname || strchr(ext, '/') || strchr(ext, '\\'))
+  {
+    answer = malloc(1);
+    if(answer)
+      answer[0] = 0;
+  }
+  else
+  {
+    answer = malloc(strlen(ext) + 1);
+    if(answer)
+      strcpy(answer, ext);
+  }
+  return answer;
+}
