@@ -10,7 +10,7 @@
 #include <stdio.h>
 #define TOOL_NONE 0
 #define TOOL_BRUSH 1
-#define TOOLFLOODFILL 2
+#define TOOL_FLOODFILL 2
 #define TOOL_ERASER 3
 // TOOL_EYEDROPPER
 #define TOOL_RECTANGLE 4
@@ -26,6 +26,16 @@ typedef struct undo
     struct undo *next;
 }UNDO;
 
+typedef struct{
+    BBX_RadioBox *brushtype_rad;
+    BBX_Spinner *size_spn;
+    
+} BRUSH;
+
+typedef struct{
+    BBX_Label * floodfill_lab;
+} FLOODFILL;
+
 typedef struct
 {
 	BABYX *bbx;
@@ -38,6 +48,11 @@ typedef struct
     BBX_Menubar *menubar;
     BBX_Spinner *zoom_spn;
     BBX_CheckBox *transparent_chk;
+    BBX_Button *brush_but;
+    BBX_Button *floodfill_but;
+    BBX_Button *select_but;
+    BRUSH brush;
+    FLOODFILL floodfill;
     unsigned char *image;
     unsigned char *index;
     PALETTE pal;
@@ -54,6 +69,7 @@ typedef struct
     int vpos;
     int hpos;
     int sel_col;
+    int current_tool;
 } APP;
 
 void createapp(void *obj, BABYX *bbx, BBX_Panel *root);
@@ -65,7 +81,10 @@ void menuhandler(void *obj, int id);
 void zoom(void *obj, double val);
 void hscroll(void *obj, int pos);
 void vscroll(void *obj, int pos);
+void brush_pressed(void *obj);
+void floodfill_pressed(void *obj);
 
+void setcurrenttool(APP *app, int tool);
 int redrawcanvas(APP * app);
 int generateindexfromrgba(unsigned char *index, int width, int height, unsigned char *rgba, unsigned char *pal, int Npal);
 int generatergbafromindex(unsigned char *rgba, int width, int height, unsigned char *index, unsigned char *pal, int Npal, int transparent);
@@ -158,6 +177,8 @@ int main(int argc, char**argv)
     app.c_width = 512;
     app.c_height = 512;
     
+    app.current_tool = TOOL_NONE;
+    
 	startbabyx("Baby X Image Editor", 40 + app.c_width + 256 + 10, 100 + app.c_height, createapp, layoutapp, &app);
     free(app.image);
 
@@ -182,6 +203,9 @@ void createapp(void *obj, BABYX *bbx, BBX_Panel *root)
     app->v_scroll_sb = bbx_scrollbar(bbx, root, BBX_SCROLLBAR_VERTICAL, vscroll, app);
     app->h_scroll_sb = bbx_scrollbar(bbx, root, BBX_SCROLLBAR_HORIZONTAL, hscroll, app);
     app->transparent_chk = bbx_checkbox(bbx, root, "Transparent", 0, app);
+    app->brush_but = bbx_button(bbx, root, "Br", brush_pressed, app);
+    app->floodfill_but = bbx_button(bbx, root, "Ff", floodfill_pressed, app);
+    app->select_but = bbx_button(bbx, root, "Sel", 0, app);
 	app->ok_but = bbx_button(bbx, root, "OK", ok_pressed, app);
     
     
@@ -322,7 +346,10 @@ void layoutapp(void *obj, int width, int height)
     bbx_setpos(app->bbx, app->pal_can, 20 + app->c_width + 15, 25, 256, 256);
     bbx_setpos(app->bbx, app->v_scroll_sb, 10 + app->c_width, 20, 10, app->c_height);
     bbx_setpos(app->bbx, app->h_scroll_sb, 10, 20 + app->c_height, app->c_width, 10);
-    bbx_setpos(app->bbx, app->transparent_chk, 20 + app->c_width  + 13, 285, 120, 20);
+    bbx_setpos(app->bbx, app->transparent_chk, 20 + app->c_width  + 13, 285,120, 20);
+    bbx_setpos(app->bbx, app->brush_but, 20 + app->c_width  + 13, 310, 40, 25);
+    bbx_setpos(app->bbx, app->floodfill_but, 20 + app->c_width  + 13 + 50, 310, 40, 25);
+    bbx_setpos(app->bbx, app->select_but, 20 + app->c_width  + 13 + 100, 310, 40, 25);
 	bbx_setpos(app->bbx, app->ok_but, width / 2 - 25, height - 50, 50, 25);
     bbx_setpos(app->bbx, app->zoom_spn, 10, height - 50, 60, 25);
     
@@ -603,6 +630,73 @@ void vscroll(void *obj, int pos)
     
     app->vpos = pos;
     redrawcanvas(app);
+}
+
+void brush_pressed(void *obj)
+{
+    APP *app = obj;
+    
+    setcurrenttool(app, TOOL_BRUSH);
+}
+
+void floodfill_pressed(void *obj)
+{
+    APP *app = obj;
+    
+    setcurrenttool(app, TOOL_FLOODFILL);
+}
+
+void brush_selected(APP *app);
+void brush_deselected(APP *app);
+
+void floodfill_selected(APP *app);
+void floodfill_deselected(APP *app);
+
+
+
+void setcurrenttool(APP *app, int tool)
+{
+    switch(app->current_tool)
+    {
+        case TOOL_BRUSH: brush_deselected(app); break;
+        case TOOL_FLOODFILL: floodfill_deselected(app); break;
+    }
+    app->current_tool = tool;
+    switch(app->current_tool)
+    {
+        case TOOL_BRUSH: brush_selected(app); break;
+        case TOOL_FLOODFILL: floodfill_selected(app); break;
+    }
+}
+
+void brush_selected(APP *app)
+{
+    char* shapes[] = {"rectangle", "circle"};
+    app->brush.brushtype_rad = bbx_radiobox(app->bbx, app->root, shapes, 2, 0, 0);
+    app->brush.size_spn = bbx_spinner(app->bbx, app->root, 1, 1, 10, 1, 0, 0);
+ 
+    bbx_setpos(app->bbx, app->brush.brushtype_rad, 20 + app->c_width  + 13, 350, 120, 50);
+    bbx_setpos(app->bbx, app->brush.size_spn, 20 + app->c_width + 13, 410, 50, 25);
+    
+}
+
+void brush_deselected(APP *app)
+{
+    bbx_radiobox_kill(app->brush.brushtype_rad);
+    bbx_spinner_kill(app->brush.size_spn);
+    app->brush.brushtype_rad = 0;
+    app->brush.size_spn = 0;
+}
+
+void floodfill_selected(APP *app)
+{
+    app->floodfill.floodfill_lab = bbx_label(app->bbx, app->root, "Floodfill");
+    bbx_setpos(app->bbx, app->floodfill.floodfill_lab, 20 + app->c_width  + 13, 350, 120, 25);
+}
+
+void floodfill_deselected(APP *app)
+{
+    bbx_label_kill(app->floodfill.floodfill_lab);
 }
 
 #include <stdio.h>
