@@ -28,6 +28,7 @@ typedef struct undo
     int i_height;
     unsigned char *index;
     PALETTE pal;
+    int transparent;
     struct undo *prev;
     struct undo *next;
 }UNDO;
@@ -54,6 +55,10 @@ typedef struct {
     BBX_Spinner *y_spn;
     BBX_Spinner *width_spn;
     BBX_Spinner *height_spn;
+    int x;
+    int y;
+    int width;
+    int height;
 } SELECT;
 
 typedef struct
@@ -108,6 +113,7 @@ void select_pressed(void *obj);
 
 void brush_canvasmouse(APP *app, int action, int x, int y, int buttons);
 void floodfill_canvasmouse(APP *app, int action, int x, int y, int buttons);
+void select_canvasmouse(APP *app, int action, int x, int y, int buttons);
 
 void setcurrenttool(APP *app, int tool);
 int redrawcanvas(APP * app);
@@ -119,13 +125,17 @@ void initialdefaultpalette(unsigned char *pal, int Npal);
 static void palettemouse(void *ptr, int action, int x, int y, int buttons);
 static void drawpalette(APP *app);
 
+void transparent_pressed(void *obj);
+
 void undo_commit(APP *app);
 void undo_undo(APP *app);
 void undo_redo(APP *app);
-UNDO *makeundo(unsigned char *index, int width, int height, PALETTE *pal);
+UNDO *makeundo(unsigned char *index, int width, int height, PALETTE *pal, int transparent);
 void undo_unlink(UNDO *undo);
 void undo_kill(UNDO *undo);
 void undo_kill_r(UNDO *undo);
+
+int setsize(BABYX *bbx, int *width, int *height);
 
 char *getextension(char *fname);
 int floodfill4(unsigned char *grey, int width, int height, int x, int y, unsigned char target, unsigned char dest);
@@ -208,6 +218,11 @@ int main(int argc, char**argv)
     app.brush.shape = SHAPE_RECTANGLE;
     app.brush.size = 1;
     
+    app.select.x = 0;
+    app.select.y = 0;
+    app.select.width = app.i_width;
+    app.select.height = app.i_height;
+    
 	startbabyx("Baby X Image Editor", 40 + app.c_width + 256 + 10, 100 + app.c_height, createapp, layoutapp, &app);
     free(app.image);
 
@@ -231,7 +246,7 @@ void createapp(void *obj, BABYX *bbx, BBX_Panel *root)
     bbx_canvas_setmousefunc(app->pal_can, palettemouse, app);
     app->v_scroll_sb = bbx_scrollbar(bbx, root, BBX_SCROLLBAR_VERTICAL, vscroll, app);
     app->h_scroll_sb = bbx_scrollbar(bbx, root, BBX_SCROLLBAR_HORIZONTAL, hscroll, app);
-    app->transparent_chk = bbx_checkbox(bbx, root, "Transparent", 0, app);
+    app->transparent_chk = bbx_checkbox(bbx, root, "Transparent", transparent_pressed, app);
     app->brush_but = bbx_button(bbx, root, "Br", brush_pressed, app);
     app->floodfill_but = bbx_button(bbx, root, "Ff", floodfill_pressed, app);
     app->select_but = bbx_button(bbx, root, "Sel", select_pressed, app);
@@ -422,7 +437,7 @@ void canvasmouse(void *ptr, int action, int x, int y, int buttons)
         }
         else if (app->current_tool == TOOL_SELECT)
         {
-            
+            select_canvasmouse(app, action, x, y, buttons);
         }
     }
     if (action == BBX_MOUSE_RELEASE && app->dirty)
@@ -460,7 +475,29 @@ void menuhandler(void *obj, int id)
       generatergbafromindex(app->image, app->i_width, app->i_height, app->index, app->pal.rgb, app->pal.N, app->transparent);
       redrawcanvas(app);
       drawpalette(app);
+      undo_commit(app);
   }
+    if (id == 6)
+    {
+        unsigned char pal[256*3];
+        int width, height;
+        int transparent;
+        unsigned char *index;
+        char *fname;
+        
+        fname = bbx_getopenfile(app->bbx, "*.gif");
+        if (!fname)
+            return;
+        index = loadgif(fname, &width, &height, pal, &transparent);
+        if (!index)
+            return;
+        free(index);
+        memcpy(app->pal.rgb, pal, 256 * 3);
+        app->transparent = transparent;
+        redrawcanvas(app);
+        drawpalette(app);
+        undo_commit(app);
+    }
     if (id == 201)
     {
         undo_undo(app);
@@ -506,6 +543,41 @@ void menuhandler(void *obj, int id)
         bbx_scrollbar_set(app->h_scroll_sb, app->i_width, Nx, app->hpos);
         redrawcanvas(app);
         drawpalette(app);
+        undo_commit(app);
+    }
+    if (id == 211)
+    {
+        unsigned char pal[256*3];
+        int width, height;
+        int transparent;
+        unsigned char *index;
+        char *fname;
+        
+        width = 256;
+        height = 256;
+        setsize(app->bbx, &width, &height);
+        app->index = bbx_malloc(width * height);
+        memset(app->index, 255, width * height);
+        app->i_width = width;
+        app->i_height = height;
+        app->image = bbx_realloc(app->image, width * height * 4);
+        
+        app->hpos = 0;
+        app->vpos = 0;
+        
+        int Nx, Ny;
+        Nx = (app->i_width - app->hpos);
+        Ny = (app->i_height - app->vpos);
+        if (Nx * app->zoom > app->c_width)
+            Nx = app->c_width/app->zoom;
+        if (Ny * app->zoom > app->c_height)
+            Ny = app->c_height/app->zoom;
+
+        bbx_scrollbar_set(app->v_scroll_sb, app->i_height, Ny, app->vpos);
+        bbx_scrollbar_set(app->h_scroll_sb, app->i_width, Nx, app->hpos);
+        redrawcanvas(app);
+        drawpalette(app);
+        undo_commit(app);
     }
     if (id == 213)
     {
@@ -553,6 +625,7 @@ void menuhandler(void *obj, int id)
         
         redrawcanvas(app);
         drawpalette(app);
+        undo_commit(app);
     }
 /*
   switch(id)
@@ -729,6 +802,17 @@ void setcurrenttool(APP *app, int tool)
     }
 }
 
+void setselectedcolour(APP *app, int sel_col)
+{
+    if (sel_col == app->transparent)
+        bbx_checkbox_setstate(app->transparent_chk, 1);
+    else
+        bbx_checkbox_setstate(app->transparent_chk, 0);
+    if (sel_col != app->sel_col)
+        app->sel_col = sel_col;
+    drawpalette(app);
+}
+
 void brush_selected(APP *app)
 {
     char* shapes[] = {"rectangle", "circle"};
@@ -842,11 +926,25 @@ void floodfill_canvasmouse(APP *app, int action, int x, int y, int buttons)
 
 void select_selected(APP *app)
 {
+    int x = app->select.x;
+    int y = app->select.y;
+    int width = app->select.width;
+    int height = app->select.height;
+    
+    if (x > app->i_width -1 )
+        x = 0;
+    if (y > app->i_height - 1)
+        y = 0;
+    if (x + width > app->i_width)
+        width = app->i_width - x;
+    if (y + height > app->i_height)
+        height = app->i_height - y;
+    
     app->select.select_lab = bbx_label(app->bbx, app->root, "Select");
-    app->select.x_spn = bbx_spinner(app->bbx, app->root, 0.0, 0.0, app->i_width-1, 1, 0, 0);
-    app->select.y_spn = bbx_spinner(app->bbx, app->root, 0.0, 0.0, app->i_height-1, 1, 0, 0);
-    app->select.width_spn = bbx_spinner(app->bbx, app->root, app->i_width, 0.0, app->i_width-1, 1, 0, 0);
-    app->select.height_spn = bbx_spinner(app->bbx, app->root, app->i_height, 0.0, app->i_width-1, 1, 0, 0);
+    app->select.x_spn = bbx_spinner(app->bbx, app->root, x, 0.0, app->i_width-1, 1, 0, 0);
+    app->select.y_spn = bbx_spinner(app->bbx, app->root, y, 0.0, app->i_height-1, 1, 0, 0);
+    app->select.width_spn = bbx_spinner(app->bbx, app->root, width, 0.0, app->i_width, 1, 0, 0);
+    app->select.height_spn = bbx_spinner(app->bbx, app->root, height, 0.0, app->i_height, 1, 0, 0);
  
  
     bbx_setpos(app->bbx, app->select.select_lab, 20 + app->c_width  + 13, 350, 120, 25);
@@ -870,6 +968,61 @@ void select_deselected(APP *app)
     app->select.height_spn = 0;
 }
 
+void select_canvasmouse(APP *app, int action, int x, int y, int buttons)
+{
+    unsigned char *rgba;
+    int cw, ch;
+    
+    if (action == BBX_MOUSE_CLICK && (buttons & BBX_MOUSE_BUTTON1))
+    {
+        int ix = app->hpos + x/app->zoom;
+        int iy = app->vpos + y/app->zoom;
+        
+        app->select.x = ix;
+        app->select.y = iy;
+        app->select.width = 1;
+        app->select.height = 1;
+        redrawcanvas(app);
+        bbx_spinner_setvalue(app->select.x_spn, app->select.x);
+        bbx_spinner_setvalue(app->select.y_spn, app->select.y);
+        bbx_spinner_setvalue(app->select.width_spn, app->select.width);
+        bbx_spinner_setvalue(app->select.height_spn, app->select.height);
+    }
+    if (action == BBX_MOUSE_MOVE && (buttons & BBX_MOUSE_BUTTON1))
+    {
+        int ix = app->hpos + x/app->zoom;
+        int iy = app->vpos + y/app->zoom;
+        
+        app->select.width = ix - app->select.x;
+        app->select.height = iy - app->select.y;
+        bbx_spinner_setvalue(app->select.x_spn, app->select.x);
+        bbx_spinner_setvalue(app->select.y_spn, app->select.y);
+        bbx_spinner_setvalue(app->select.width_spn, app->select.width);
+        bbx_spinner_setvalue(app->select.height_spn, app->select.height);
+        redrawcanvas(app);
+        rgba = bbx_canvas_rgba(app->can, &cw, &ch);
+        for (y = 0; y < ch; y++)
+        {
+            for (x = 0; x < cw; x++)
+            {
+                ix = app->hpos + x/app->zoom;
+                iy = app->vpos + y/app->zoom;
+                
+                if (! (ix >= app->select.x &&
+                       ix < app->select.x + app->select.width &&
+                    iy >= app->select.y &&
+                    iy < app->select.y + app->select.height))
+                {
+                    rgba[(y *cw + x) *4] /= 2;
+                    rgba[(y *cw + x) *4+1] /= 2;
+                    rgba[(y *cw + x) * 4 + 2] /= 2;
+                }
+            }
+        }
+        bbx_canvas_flush(app->can);
+        
+    }
+}
 #include <stdio.h>
 unsigned char *rgba_copy(unsigned char *rgba, int width, int height, int x, int y, int cwidth, int cheight);
 int expandimage(unsigned char *dest, int width, int height, unsigned char *source, int swidth, int sheight);
@@ -1083,7 +1236,9 @@ static void palettemouse(void *ptr, int action, int x, int y, int buttons)
     
     if (action == BBX_MOUSE_CLICK)
     {
-        app->sel_col = iy * 16 + ix;
+        if (ix < 0 || ix >= 16 || iy < 0 || iy >= 16)
+            return;
+        setselectedcolour(app, iy * 16 + ix);
         drawpalette(app);
     }
     if (action == BBX_MOUSE_CLICK &&
@@ -1105,6 +1260,8 @@ static void palettemouse(void *ptr, int action, int x, int y, int buttons)
         }
     }
 }
+
+
 
 static void drawpalette(APP *app)
 {
@@ -1186,24 +1343,42 @@ static void drawpalette(APP *app)
     
   }
     
-    for(iy=0;iy<12;iy++)
-      for(ix=0;ix<12;ix++)
-      {
-          int tx = app->transparent % 16;
-          int ty = app->transparent /16;
-        rgba[((ty*16+iy+2)*width+(tx*16+ix+2))*4] = 0xFF;
-        rgba[((ty*16+iy+2)*width+(tx*16+ix+2))*4+1] = 0xFF;
-        rgba[((ty*16+iy+2)*width+(tx*16+ix+2))*4+2] = 0xFF;
-      }
-    bbx_lineaa(rgba, width, height, 3, 14, 14, 3, 2.0, bbx_color("red"));
+  if (app->transparent > 0)
+  {
+      int tx = app->transparent % 16;
+      int ty = app->transparent /16;
+      for(iy=0;iy<12;iy++)
+          for(ix=0;ix<12;ix++)
+          {
+              rgba[((ty*16+iy+2)*width+(tx*16+ix+2))*4] = 0xFF;
+              rgba[((ty*16+iy+2)*width+(tx*16+ix+2))*4+1] = 0xFF;
+              rgba[((ty*16+iy+2)*width+(tx*16+ix+2))*4+2] = 0xFF;
+          }
+      bbx_lineaa(rgba, width, height, 3 +tx *16 , 14 +ty*16, 14 + tx *16, 3 + ty * 16, 2.0, bbx_color("red"));
+  }
   bbx_canvas_flush(app->pal_can);
 }
 
+void transparent_pressed(void *obj)
+{
+    APP *app = obj;
+    int transon = bbx_checkbox_getstate(app->transparent_chk);
+    
+    if (transon)
+        app->transparent = app->sel_col;
+    else
+        app->transparent = -1;
+    
+    redrawcanvas(app);
+    drawpalette(app);
+    
+    undo_commit(app);
+}
 
 void undo_commit(APP *app)
 {
     UNDO *undo;
-    undo = makeundo(app->index, app->i_width, app->i_height, &app->pal);
+    undo = makeundo(app->index, app->i_width, app->i_height, &app->pal, app->transparent);
     undo->next = app->undolist;
     if (undo->next)
         undo->next->prev = undo;
@@ -1222,10 +1397,22 @@ void undo_restore(APP *app, UNDO *undo)
     {
         memcpy(app->index, undo->index, app->i_width * app->i_height);
     }
+    else
+    {
+        app->index = bbx_realloc(app->index, undo->i_width * undo->i_height);
+        app->image = bbx_realloc(app->image, undo->i_width * undo->i_height *4);
+        app->i_width = undo->i_width;
+        app->i_height = undo->i_height;
+        app->hpos = 0;
+        app->vpos = 0;
+        
+        memcpy(app->index, undo->index, app->i_width * app->i_height);
+    }
     if (undo->pal.N == app->pal.N)
     {
         memcpy(app->pal.rgb, undo->pal.rgb, app->pal.N * 3);
     }
+    app->transparent = undo->transparent;
 }
 
 void undo_undo(APP *app)
@@ -1236,11 +1423,32 @@ void undo_undo(APP *app)
         if (!app->dirty && app->undolist->next)
         {
             undo_restore(app, app->undolist->next);
+            int Nx, Ny;
+            Nx = (app->i_width - app->hpos);
+            Ny = (app->i_height - app->vpos);
+            if (Nx * app->zoom > app->c_width)
+                Nx = app->c_width/app->zoom;
+            if (Ny * app->zoom > app->c_height)
+                Ny = app->c_height/app->zoom;
+
+            bbx_scrollbar_set(app->v_scroll_sb, app->i_height, Ny, app->vpos);
+            bbx_scrollbar_set(app->h_scroll_sb, app->i_width, Nx, app->hpos);
         }
         else
         {
             undo_restore(app, app->undolist);
+            int Nx, Ny;
+            Nx = (app->i_width - app->hpos);
+            Ny = (app->i_height - app->vpos);
+            if (Nx * app->zoom > app->c_width)
+                Nx = app->c_width/app->zoom;
+            if (Ny * app->zoom > app->c_height)
+                Ny = app->c_height/app->zoom;
+
+            bbx_scrollbar_set(app->v_scroll_sb, app->i_height, Ny, app->vpos);
+            bbx_scrollbar_set(app->h_scroll_sb, app->i_width, Nx, app->hpos);
         }
+        
         if (app->undolist->next)
         {
             UNDO *undo = app->undolist;
@@ -1257,7 +1465,9 @@ void undo_undo(APP *app)
         }
        if (app->redolist)
            bbx_menubar_enable(app->menubar, 202);
+        setselectedcolour(app, app->sel_col);
         redrawcanvas(app);
+        drawpalette(app);
         app->dirty = 0;
     }
 }
@@ -1272,19 +1482,31 @@ void undo_redo(APP *app)
         
         undo_restore(app, redo);
         redo->next = app->undolist;
+        int Nx, Ny;
+        Nx = (app->i_width - app->hpos);
+        Ny = (app->i_height - app->vpos);
+        if (Nx * app->zoom > app->c_width)
+            Nx = app->c_width/app->zoom;
+        if (Ny * app->zoom > app->c_height)
+            Ny = app->c_height/app->zoom;
+
+        bbx_scrollbar_set(app->v_scroll_sb, app->i_height, Ny, app->vpos);
+        bbx_scrollbar_set(app->h_scroll_sb, app->i_width, Nx, app->hpos);
         if (redo->next)
             redo->next->prev = redo;
         app->undolist = redo;
         bbx_menubar_enable(app->menubar, 201);
         if (!app->redolist)
             bbx_menubar_disable(app->menubar, 202);
+        setselectedcolour(app, app->sel_col);
         redrawcanvas(app);
+        drawpalette(app);
         app->dirty = 0;
     }
 }
     
 
-UNDO *makeundo(unsigned char *index, int width, int height, PALETTE *pal)
+UNDO *makeundo(unsigned char *index, int width, int height, PALETTE *pal, int transparent)
 {
     UNDO *undo;
     
@@ -1296,6 +1518,7 @@ UNDO *makeundo(unsigned char *index, int width, int height, PALETTE *pal)
     undo->pal.rgb = bbx_malloc(pal->N * 3);
     memcpy(undo->pal.rgb, pal->rgb, pal->N * 3);
     undo->pal.N = pal->N;
+    undo->transparent = transparent;
     undo->prev = 0;
     undo->next = 0;
     
@@ -1331,6 +1554,93 @@ void undo_unlink(UNDO *undo)
     undo->prev = 0;
 }
 
+typedef struct
+{
+    BABYX *bbx;
+    BBX_Panel *pan;
+    BBX_Label *width_lab;
+    BBX_Label *height_lab;
+    BBX_Spinner *width_spn;
+    BBX_Spinner *height_spn;
+    BBX_Button *ok_but;
+    BBX_Button *cancel_but;
+    int ok;
+} SETSIZE;
+
+void layoutsize(void *obj, int width, int height);
+void killsize(void *ptr);
+void pressok(void *obj);
+void presscancel(void *obj);
+
+int setsize(BABYX *bbx, int *width, int *height)
+{
+    SETSIZE ss;
+    double hue;
+    unsigned char s, v;
+    
+    ss.bbx = bbx;
+    ss.pan = bbx_dialogpanel(bbx, "Set size", 400, 300, layoutsize, &ss);
+    
+    ss.width_lab = bbx_label(bbx, ss.pan, "Width");
+    ss.height_lab = bbx_label(bbx, ss.pan, "Height");
+    ss.width_spn = bbx_spinner(bbx, ss.pan, *width, 1, 4096, 1, 0, 0);
+    ss.height_spn = bbx_spinner(bbx, ss.pan, *height, 1, 4096, 1, 0, 0);
+    ss.ok_but = bbx_button(bbx, ss.pan, "Ok", pressok, &ss);
+    ss.cancel_but = bbx_button(bbx, ss.pan, "Cancel", presscancel, &ss);
+    
+    ss.ok = 0;
+    bbx_dialogpanel_setclosefunc(ss.pan, killsize, &ss);
+    
+    
+    bbx_panel_setbackground(ss.pan, bbx_color("gray"));
+    bbx_dialogpanel_makemodal(ss.pan);
+    
+    if (ss.ok)
+    {
+        *width = bbx_spinner_getvalue(ss.width_spn);
+        *height = bbx_spinner_getvalue(ss.height_spn);
+    }
+    bbx_label_kill(ss.width_lab);
+    bbx_spinner_kill(ss.width_spn);
+    bbx_label_kill(ss.height_lab);
+    bbx_spinner_kill(ss.height_spn);
+    bbx_button_kill(ss.ok_but);
+    bbx_button_kill(ss.cancel_but);
+    bbx_dialogpanel_kill(ss.pan);
+    
+    return ss.ok ? 0 : -1;
+}
+
+void layoutsize(void *obj, int width, int height)
+{
+    SETSIZE *ss = obj;
+    
+    bbx_setpos(ss->bbx, ss->width_lab, 10, 10, 50, 25);
+    bbx_setpos(ss->bbx, ss->width_spn, 65, 10, 50, 25);
+    bbx_setpos(ss->bbx, ss->height_lab, 120, 10, 50, 25);
+    bbx_setpos(ss->bbx, ss->height_spn, 175, 10, 50, 25);
+    
+    bbx_setpos(ss->bbx, ss->ok_but, 10, height - 50, 50, 25);
+    bbx_setpos(ss->bbx, ss->cancel_but, 70, height - 50, 50, 25);
+}
+
+void killsize(void *ptr)
+{
+    
+}
+
+void pressok(void *obj)
+{
+    SETSIZE *ss = obj;
+    ss->ok = 1;
+    bbx_dialogpanel_dropmodal(ss->pan);
+}
+
+void presscancel(void *obj)
+{
+    SETSIZE *ss = obj;
+    bbx_dialogpanel_dropmodal(ss->pan);
+}
 
 char *getextension(char *fname)
 {
