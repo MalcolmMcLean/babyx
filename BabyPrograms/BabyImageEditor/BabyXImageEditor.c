@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 #include "BabyX.h"
 #include "paletteeditor.h"
 #include "colorpicker.h"
@@ -11,10 +12,15 @@
 #define TOOL_NONE 0
 #define TOOL_BRUSH 1
 #define TOOL_FLOODFILL 2
-#define TOOL_ERASER 3
+#define TOOL_SHAPE 3
+#define TOOL_SELECT 4
 // TOOL_EYEDROPPER
 #define TOOL_RECTANGLE 4
 #define TOOL_CIRCLE 5
+
+#define SHAPE_NONE 0
+#define SHAPE_RECTANGLE 1
+#define SHAPE_CIRCLE 2
 
 typedef struct undo
 {
@@ -29,12 +35,26 @@ typedef struct undo
 typedef struct{
     BBX_RadioBox *brushtype_rad;
     BBX_Spinner *size_spn;
-    
+    int shape;
+    int size;
 } BRUSH;
 
 typedef struct{
     BBX_Label * floodfill_lab;
 } FLOODFILL;
+
+typedef struct {
+    BBX_Label *shape_lab;
+    BBX_RadioBox *type_rad;
+} SHAPE;
+
+typedef struct {
+    BBX_Label *select_lab;
+    BBX_Spinner *x_spn;
+    BBX_Spinner *y_spn;
+    BBX_Spinner *width_spn;
+    BBX_Spinner *height_spn;
+} SELECT;
 
 typedef struct
 {
@@ -53,6 +73,7 @@ typedef struct
     BBX_Button *select_but;
     BRUSH brush;
     FLOODFILL floodfill;
+    SELECT select;
     unsigned char *image;
     unsigned char *index;
     PALETTE pal;
@@ -83,6 +104,10 @@ void hscroll(void *obj, int pos);
 void vscroll(void *obj, int pos);
 void brush_pressed(void *obj);
 void floodfill_pressed(void *obj);
+void select_pressed(void *obj);
+
+void brush_canvasmouse(APP *app, int action, int x, int y, int buttons);
+void floodfill_canvasmouse(APP *app, int action, int x, int y, int buttons);
 
 void setcurrenttool(APP *app, int tool);
 int redrawcanvas(APP * app);
@@ -103,6 +128,7 @@ void undo_kill(UNDO *undo);
 void undo_kill_r(UNDO *undo);
 
 char *getextension(char *fname);
+int floodfill4(unsigned char *grey, int width, int height, int x, int y, unsigned char target, unsigned char dest);
 
 int main(int argc, char**argv)
 {
@@ -179,6 +205,9 @@ int main(int argc, char**argv)
     
     app.current_tool = TOOL_NONE;
     
+    app.brush.shape = SHAPE_RECTANGLE;
+    app.brush.size = 1;
+    
 	startbabyx("Baby X Image Editor", 40 + app.c_width + 256 + 10, 100 + app.c_height, createapp, layoutapp, &app);
     free(app.image);
 
@@ -205,7 +234,7 @@ void createapp(void *obj, BABYX *bbx, BBX_Panel *root)
     app->transparent_chk = bbx_checkbox(bbx, root, "Transparent", 0, app);
     app->brush_but = bbx_button(bbx, root, "Br", brush_pressed, app);
     app->floodfill_but = bbx_button(bbx, root, "Ff", floodfill_pressed, app);
-    app->select_but = bbx_button(bbx, root, "Sel", 0, app);
+    app->select_but = bbx_button(bbx, root, "Sel", select_pressed, app);
 	app->ok_but = bbx_button(bbx, root, "OK", ok_pressed, app);
     
     
@@ -371,14 +400,30 @@ void canvasmouse(void *ptr, int action, int x, int y, int buttons)
 {
     APP *app = ptr;
     
+    if (action == BBX_MOUSE_CLICK && (buttons & BBX_MOUSE_BUTTON1))
+    {
+        if (app->current_tool == TOOL_FLOODFILL)
+        {
+            floodfill_canvasmouse(app, action, x, y, buttons);
+        }
+    }
     if (action == BBX_MOUSE_CLICK || (action == BBX_MOUSE_MOVE && (buttons & BBX_MOUSE_BUTTON1)))
     {
         int ix = app->hpos + x/app->zoom;
         int iy = app->vpos + y/app->zoom;
         
-        app->index[iy * app->i_width + ix] = app->sel_col;
-        app->dirty = 1;
-        redrawcanvas(app);
+        if (app->current_tool == TOOL_BRUSH)
+        {
+            brush_canvasmouse(app, action, x, y, buttons);
+        }
+        else if (app->current_tool == TOOL_FLOODFILL)
+        {
+            
+        }
+        else if (app->current_tool == TOOL_SELECT)
+        {
+            
+        }
     }
     if (action == BBX_MOUSE_RELEASE && app->dirty)
     {
@@ -457,8 +502,8 @@ void menuhandler(void *obj, int id)
         if (Ny * app->zoom > app->c_height)
             Ny = app->c_height/app->zoom;
 
-        bbx_scrollbar_set(app->v_scroll_sb, app->i_height, Nx, app->vpos);
-        bbx_scrollbar_set(app->h_scroll_sb, app->i_width, Ny, app->hpos);
+        bbx_scrollbar_set(app->v_scroll_sb, app->i_height, Ny, app->vpos);
+        bbx_scrollbar_set(app->h_scroll_sb, app->i_width, Nx, app->hpos);
         redrawcanvas(app);
         drawpalette(app);
     }
@@ -503,8 +548,8 @@ void menuhandler(void *obj, int id)
         if (Ny * app->zoom > app->c_height)
             Ny = app->c_height/app->zoom;
 
-        bbx_scrollbar_set(app->v_scroll_sb, app->i_height, Nx, app->vpos);
-        bbx_scrollbar_set(app->h_scroll_sb, app->i_width, Ny, app->hpos);
+        bbx_scrollbar_set(app->v_scroll_sb, app->i_height, Ny, app->vpos);
+        bbx_scrollbar_set(app->h_scroll_sb, app->i_width, Nx, app->hpos);
         
         redrawcanvas(app);
         drawpalette(app);
@@ -603,6 +648,7 @@ void zoom(void *obj, double val)
     vpos = 0;
     app->zoom = val;
     app->vpos = vpos;
+    app->hpos = hpos;
     int Nx, Ny;
     Nx = (app->i_width - app->hpos);
     Ny = (app->i_height - app->vpos);
@@ -611,8 +657,8 @@ void zoom(void *obj, double val)
     if (Ny * app->zoom > app->c_height)
         Ny = app->c_height/app->zoom;
 
-    bbx_scrollbar_set(app->v_scroll_sb, app->i_height, Nx, vpos);
-    bbx_scrollbar_set(app->h_scroll_sb, app->i_width, Ny, hpos);
+    bbx_scrollbar_set(app->v_scroll_sb, app->i_height, Ny, vpos);
+    bbx_scrollbar_set(app->h_scroll_sb, app->i_width, Nx, hpos);
     redrawcanvas(app);
 }
 
@@ -646,11 +692,23 @@ void floodfill_pressed(void *obj)
     setcurrenttool(app, TOOL_FLOODFILL);
 }
 
+void select_pressed(void *obj)
+{
+    APP *app = obj;
+    
+    setcurrenttool(app, TOOL_SELECT);
+}
+
+
 void brush_selected(APP *app);
 void brush_deselected(APP *app);
 
 void floodfill_selected(APP *app);
 void floodfill_deselected(APP *app);
+
+void select_selected(APP *app);
+void select_deselected(APP *app);
+
 
 
 
@@ -660,20 +718,31 @@ void setcurrenttool(APP *app, int tool)
     {
         case TOOL_BRUSH: brush_deselected(app); break;
         case TOOL_FLOODFILL: floodfill_deselected(app); break;
+        case TOOL_SELECT: select_deselected(app); break;
     }
     app->current_tool = tool;
     switch(app->current_tool)
     {
         case TOOL_BRUSH: brush_selected(app); break;
         case TOOL_FLOODFILL: floodfill_selected(app); break;
+        case TOOL_SELECT: select_selected(app); break;
     }
 }
 
 void brush_selected(APP *app)
 {
     char* shapes[] = {"rectangle", "circle"};
+    int brushindex = 0;
     app->brush.brushtype_rad = bbx_radiobox(app->bbx, app->root, shapes, 2, 0, 0);
     app->brush.size_spn = bbx_spinner(app->bbx, app->root, 1, 1, 10, 1, 0, 0);
+    
+    bbx_spinner_setvalue(app->brush.size_spn, app->brush.size);
+    switch (app->brush.shape)
+    {
+        case SHAPE_RECTANGLE: brushindex = 0; break;
+        case SHAPE_CIRCLE: brushindex = 1; break;
+    }
+    bbx_radiobox_setselected(app->brush.brushtype_rad, brushindex);
  
     bbx_setpos(app->bbx, app->brush.brushtype_rad, 20 + app->c_width  + 13, 350, 120, 50);
     bbx_setpos(app->bbx, app->brush.size_spn, 20 + app->c_width + 13, 410, 50, 25);
@@ -688,6 +757,63 @@ void brush_deselected(APP *app)
     app->brush.size_spn = 0;
 }
 
+void brush_canvasmouse(APP *app, int action, int x, int y, int buttons)
+{
+    if (action == BBX_MOUSE_CLICK && (buttons & BBX_MOUSE_BUTTON1))
+    {
+        if (app->brush.brushtype_rad && app->brush.size_spn)
+        {
+            app->brush.size = (int) bbx_spinner_getvalue(app->brush.size_spn);
+            app->brush.shape = bbx_radiobox_getselected(app->brush.brushtype_rad);
+            if (app->brush.shape == 0)
+                app->brush.shape = SHAPE_RECTANGLE;
+            else
+                app->brush.shape = SHAPE_CIRCLE;
+        }
+    }
+    if ((action == BBX_MOUSE_CLICK || action == BBX_MOUSE_MOVE) && (buttons & BBX_MOUSE_BUTTON1))
+    {
+        int ix = app->hpos + x/app->zoom;
+        int iy = app->vpos + y/app->zoom;
+        int x, y;
+        
+        if (app->brush.shape == SHAPE_RECTANGLE)
+        {
+            ix -= app->brush.size / 2;
+            iy -= app->brush.size / 2;
+            for (y =0; y <app->brush.size; y++)
+                for(x = 0; x < app->brush.size; x++ )
+                {
+                    if (iy + y >+ 0 && iy + y < app->i_height &&
+                        ix + x >= 0 && ix + x < app->i_width)
+                        app->index[(iy + y) * app->i_width + ix + x] = app->sel_col;
+                }
+        }
+        else if (app->brush.shape == SHAPE_CIRCLE)
+        {
+            int size = app->brush.size;
+            
+            if ((size % 2) == 0)
+                size++;
+            
+            ix -= size / 2;
+            iy -= size / 2;
+            for (y =0; y <size; y++)
+                for(x = 0; x < size; x++ )
+                {
+                    double d = sqrt((x - size/2) * (x - size/2) + (y - size/2) * (y -size/2));
+                    if (d > size/2.0)
+                        continue;
+                    if (iy + y >+ 0 && iy + y < app->i_height &&
+                        ix + x >= 0 && ix + x < app->i_width)
+                        app->index[(iy + y) * app->i_width + ix + x] = app->sel_col;
+                }
+        }
+        app->dirty = 1;
+        redrawcanvas(app);
+    }
+}
+
 void floodfill_selected(APP *app)
 {
     app->floodfill.floodfill_lab = bbx_label(app->bbx, app->root, "Floodfill");
@@ -697,6 +823,51 @@ void floodfill_selected(APP *app)
 void floodfill_deselected(APP *app)
 {
     bbx_label_kill(app->floodfill.floodfill_lab);
+    
+    app->floodfill.floodfill_lab = 0;
+}
+
+void floodfill_canvasmouse(APP *app, int action, int x, int y, int buttons)
+{
+    if (action == BBX_MOUSE_CLICK && (buttons & BBX_MOUSE_BUTTON1))
+    {
+        int ix = app->hpos + x/app->zoom;
+        int iy = app->vpos + y/app->zoom;
+        
+        floodfill4(app->index, app->i_width, app->i_height, ix, iy, app->index[iy * app->i_width + ix], app->sel_col);
+        app->dirty = 1;
+        redrawcanvas(app);
+    }
+}
+
+void select_selected(APP *app)
+{
+    app->select.select_lab = bbx_label(app->bbx, app->root, "Select");
+    app->select.x_spn = bbx_spinner(app->bbx, app->root, 0.0, 0.0, app->i_width-1, 1, 0, 0);
+    app->select.y_spn = bbx_spinner(app->bbx, app->root, 0.0, 0.0, app->i_height-1, 1, 0, 0);
+    app->select.width_spn = bbx_spinner(app->bbx, app->root, app->i_width, 0.0, app->i_width-1, 1, 0, 0);
+    app->select.height_spn = bbx_spinner(app->bbx, app->root, app->i_height, 0.0, app->i_width-1, 1, 0, 0);
+ 
+ 
+    bbx_setpos(app->bbx, app->select.select_lab, 20 + app->c_width  + 13, 350, 120, 25);
+    bbx_setpos(app->bbx, app->select.x_spn, 20 + app->c_width + 13, 410, 50, 25);
+    bbx_setpos(app->bbx, app->select.y_spn, 20 + app->c_width + 13 + 60, 410, 50, 25);
+    bbx_setpos(app->bbx, app->select.width_spn, 20 + app->c_width + 13 + 120, 410, 50, 25);
+    bbx_setpos(app->bbx, app->select.height_spn, 20 + app->c_width + 13 + 180, 410, 50, 25);
+}
+
+void select_deselected(APP *app)
+{
+    bbx_label_kill(app->select.select_lab);
+    bbx_spinner_kill(app->select.x_spn);
+    bbx_spinner_kill(app->select.y_spn);
+    bbx_spinner_kill(app->select.width_spn);
+    bbx_spinner_kill(app->select.height_spn);
+    app->select.select_lab = 0;
+    app->select.x_spn = 0;
+    app->select.y_spn = 0;
+    app->select.width_spn = 0;
+    app->select.height_spn = 0;
 }
 
 #include <stdio.h>
@@ -1180,4 +1351,130 @@ char *getextension(char *fname)
       strcpy(answer, ext);
   }
   return answer;
+}
+
+/**
+  Floodfill4 - floodfill, 4 connectivity.
+
+  @param[in,out] grey - the image (formally it's greyscale but it could be binary or indexed)
+  @param width - image width
+  @param height - image height
+  @param x - seed point x
+  @param y - seed point y
+  @param target - the colour to flood
+  @param dest - the colur to replace it by.
+  @returns Number of pixels flooded.
+*/
+int floodfill4(unsigned char *grey, int width, int height, int x, int y, unsigned char target, unsigned char dest)
+{
+  int *qx = 0;
+  int *qy = 0;
+  int qN = 0;
+  int qpos = 0;
+  int qcapacity = 0;
+  int wx, wy;
+  int ex, ey;
+  int tx, ty;
+  int ix;
+  int *temp;
+  int answer = 0;
+
+  if(grey[y * width + x] != target)
+    return 0;
+  qx = malloc(width * sizeof(int));
+  qy = malloc(width * sizeof(int));
+  if(qx == 0 || qy == 0)
+    goto error_exit;
+  qcapacity = width;
+  qx[qpos] = x;
+  qy[qpos] = y;
+  qN = 1;
+
+  while(qN != 0)
+  {
+    tx = qx[qpos];
+    ty = qy[qpos];
+    qpos++;
+    qN--;
+   
+    if(qpos == 256)
+    {
+      memmove(qx, qx + 256, qN*sizeof(int));
+      memmove(qy, qy + 256, qN*sizeof(int));
+      qpos = 0;
+    }
+    if(grey[ty*width+tx] != target)
+      continue;
+    wx = tx;
+    wy = ty;
+    while(wx >= 0 && grey[wy*width+wx] == target)
+      wx--;
+    wx++;
+    ex = tx;
+    ey = ty;
+    while(ex < width && grey[ey*width+ex] == target)
+      ex++;
+    ex--;
+     
+
+    for(ix=wx;ix<=ex;ix++)
+    {
+      grey[ty*width+ix] = dest;
+      answer++;
+    }
+
+    if(ty > 0)
+      for(ix=wx;ix<=ex;ix++)
+      {
+        if(grey[(ty-1)*width+ix] == target)
+        {
+          if(qpos + qN == qcapacity)
+          {
+            temp = realloc(qx, (qcapacity + width) * sizeof(int));
+            if(temp == 0)
+              goto error_exit;
+            qx = temp;
+            temp = realloc(qy, (qcapacity + width) * sizeof(int));
+            if(temp == 0)
+              goto error_exit;
+            qy = temp;
+            qcapacity += width;
+          }
+          qx[qpos+qN] = ix;
+          qy[qpos+qN] = ty-1;
+          qN++;
+        }
+      }
+    if(ty < height -1)
+      for(ix=wx;ix<=ex;ix++)
+      {
+        if(grey[(ty+1)*width+ix] == target)
+        {
+          if(qpos + qN == qcapacity)
+          {
+            temp = realloc(qx, (qcapacity + width) * sizeof(int));
+            if(temp == 0)
+              goto error_exit;
+            qx = temp;
+            temp = realloc(qy, (qcapacity + width) * sizeof(int));
+            if(temp == 0)
+              goto error_exit;
+            qy = temp;
+            qcapacity += width;
+          }
+          qx[qpos+qN] = ix;
+          qy[qpos+qN] = ty+1;
+          qN++;
+        }
+      }
+  }
+
+  free(qx);
+  free(qy);
+
+  return answer;
+ error_exit:
+  free(qx);
+  free(qy);
+  return -1;
 }
