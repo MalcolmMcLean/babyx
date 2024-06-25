@@ -9,6 +9,9 @@
 #include "makepalette.h"
 
 #include <stdio.h>
+
+extern struct bitmap_font walkway_font;
+
 #define TOOL_NONE 0
 #define TOOL_BRUSH 1
 #define TOOL_FLOODFILL 2
@@ -51,6 +54,10 @@ typedef struct {
 
 typedef struct {
     BBX_Label *select_lab;
+    BBX_Label *x_lab;
+    BBX_Label *y_lab;
+    BBX_Label *width_lab;
+    BBX_Label *height_lab;
     BBX_Spinner *x_spn;
     BBX_Spinner *y_spn;
     BBX_Spinner *width_spn;
@@ -125,7 +132,7 @@ void initialdefaultpalette(unsigned char *pal, int Npal);
 static void palettemouse(void *ptr, int action, int x, int y, int buttons);
 static void drawpalette(APP *app);
 
-void transparent_pressed(void *obj);
+void transparent_pressed(void *obj, int checked);
 
 void undo_commit(APP *app);
 void undo_undo(APP *app);
@@ -135,6 +142,7 @@ void undo_unlink(UNDO *undo);
 void undo_kill(UNDO *undo);
 void undo_kill_r(UNDO *undo);
 
+int resize(BABYX *bbx, int *width, int *height);
 int setsize(BABYX *bbx, int *width, int *height);
 
 char *getextension(char *fname);
@@ -238,6 +246,8 @@ void createapp(void *obj, BABYX *bbx, BBX_Panel *root)
     BBX_Popup *palettemenu;
     BBX_Popup *helpmenu;
     BBX_Popup *custompalettesmenu;
+    
+    bbx->gui_font = &walkway_font;
 	app->bbx = bbx;
 	app->root = root;
     app->can = bbx_canvas(bbx, root, app->c_width, app->c_height, bbx_color("white"));
@@ -505,6 +515,50 @@ void menuhandler(void *obj, int id)
     if (id == 202)
     {
         undo_redo(app);
+    }
+    if (id == 204)
+    {
+        unsigned char pal[256*3];
+        int width, height;
+        int transparent;
+        unsigned char *index;
+        int x, y;
+        
+        width = app->i_width;
+        height = app->i_height;
+        resize(app->bbx, &width, &height);
+        index = bbx_malloc(width * height);
+        memset(index, 255, width * height);
+        for (y = 0; y < height; y++)
+            for (x = 0; x < width; x++)
+            {
+                if (y >= app->i_height || x >= app->i_width)
+                    index[y*width+x] = 255;
+                else
+                    index[y*width+x] = app->index[y * app->i_width + x];
+            }
+        app->i_width = width;
+        app->i_height = height;
+        free(app->index);
+        app->index = index;
+        app->image = bbx_realloc(app->image, width * height * 4);
+        
+        app->hpos = 0;
+        app->vpos = 0;
+        
+        int Nx, Ny;
+        Nx = (app->i_width - app->hpos);
+        Ny = (app->i_height - app->vpos);
+        if (Nx * app->zoom > app->c_width)
+            Nx = app->c_width/app->zoom;
+        if (Ny * app->zoom > app->c_height)
+            Ny = app->c_height/app->zoom;
+
+        bbx_scrollbar_set(app->v_scroll_sb, app->i_height, Ny, app->vpos);
+        bbx_scrollbar_set(app->h_scroll_sb, app->i_width, Nx, app->hpos);
+        redrawcanvas(app);
+        drawpalette(app);
+        undo_commit(app);
     }
     if (id == 210)
     {
@@ -781,6 +835,7 @@ void floodfill_deselected(APP *app);
 
 void select_selected(APP *app);
 void select_deselected(APP *app);
+void select_spinners(void *obj, double val);
 
 
 
@@ -941,22 +996,39 @@ void select_selected(APP *app)
         height = app->i_height - y;
     
     app->select.select_lab = bbx_label(app->bbx, app->root, "Select");
-    app->select.x_spn = bbx_spinner(app->bbx, app->root, x, 0.0, app->i_width-1, 1, 0, 0);
-    app->select.y_spn = bbx_spinner(app->bbx, app->root, y, 0.0, app->i_height-1, 1, 0, 0);
-    app->select.width_spn = bbx_spinner(app->bbx, app->root, width, 0.0, app->i_width, 1, 0, 0);
-    app->select.height_spn = bbx_spinner(app->bbx, app->root, height, 0.0, app->i_height, 1, 0, 0);
+    app->select.x_lab = bbx_label(app->bbx, app->root, "x");
+    app->select.y_lab = bbx_label(app->bbx, app->root, "y");
+    app->select.width_lab = bbx_label(app->bbx, app->root, "width");
+    app->select.height_lab = bbx_label(app->bbx, app->root, "height");
+    app->select.x_spn = bbx_spinner(app->bbx, app->root, x, 0.0, app->i_width-1, 1, select_spinners, app);
+    app->select.y_spn = bbx_spinner(app->bbx, app->root, y, 0.0, app->i_height-1, 1, select_spinners, app);
+    app->select.width_spn = bbx_spinner(app->bbx, app->root, width, 0.0, app->i_width, 1, select_spinners, app);
+    app->select.height_spn = bbx_spinner(app->bbx, app->root, height, 0.0, app->i_height, 1, select_spinners, app);
+    
+    bbx_spinner_setmode(app->select.x_spn, BBX_SPINNER_INTERACTIVE);
+    bbx_spinner_setmode(app->select.y_spn, BBX_SPINNER_INTERACTIVE);
+    bbx_spinner_setmode(app->select.width_spn, BBX_SPINNER_INTERACTIVE);
+    bbx_spinner_setmode(app->select.height_spn, BBX_SPINNER_INTERACTIVE);
  
  
     bbx_setpos(app->bbx, app->select.select_lab, 20 + app->c_width  + 13, 350, 120, 25);
-    bbx_setpos(app->bbx, app->select.x_spn, 20 + app->c_width + 13, 410, 50, 25);
-    bbx_setpos(app->bbx, app->select.y_spn, 20 + app->c_width + 13 + 60, 410, 50, 25);
-    bbx_setpos(app->bbx, app->select.width_spn, 20 + app->c_width + 13 + 120, 410, 50, 25);
-    bbx_setpos(app->bbx, app->select.height_spn, 20 + app->c_width + 13 + 180, 410, 50, 25);
+    bbx_setpos(app->bbx, app->select.x_lab, 20 + app->c_width + 13, 380, 60, 20);
+    bbx_setpos(app->bbx, app->select.y_lab, 20 + app->c_width + 13 + 64, 380, 60, 20);
+    bbx_setpos(app->bbx, app->select.width_lab, 20 + app->c_width + 13 + 128, 380, 60, 20);
+    bbx_setpos(app->bbx, app->select.height_lab, 20 + app->c_width + 13 + 196, 380, 60, 20);
+    bbx_setpos(app->bbx, app->select.x_spn, 20 + app->c_width + 13, 410, 60, 25);
+    bbx_setpos(app->bbx, app->select.y_spn, 20 + app->c_width + 13 + 64, 410, 60, 25);
+    bbx_setpos(app->bbx, app->select.width_spn, 20 + app->c_width + 13 + 128, 410, 60, 25);
+    bbx_setpos(app->bbx, app->select.height_spn, 20 + app->c_width + 13 + 196, 410, 60, 25);
 }
 
 void select_deselected(APP *app)
 {
     bbx_label_kill(app->select.select_lab);
+    bbx_label_kill(app->select.x_lab);
+    bbx_label_kill(app->select.y_lab);
+    bbx_label_kill(app->select.width_lab);
+    bbx_label_kill(app->select.height_lab);
     bbx_spinner_kill(app->select.x_spn);
     bbx_spinner_kill(app->select.y_spn);
     bbx_spinner_kill(app->select.width_spn);
@@ -966,6 +1038,50 @@ void select_deselected(APP *app)
     app->select.y_spn = 0;
     app->select.width_spn = 0;
     app->select.height_spn = 0;
+}
+
+void select_spinners(void *obj, double val)
+{
+    APP *app = obj;
+    int x, y;
+    int width, height;
+    
+    x = (int) bbx_spinner_getvalue(app->select.x_spn);
+    y = (int) bbx_spinner_getvalue(app->select.y_spn);
+    width = (int) bbx_spinner_getvalue(app->select.width_spn);
+    height = (int) bbx_spinner_getvalue(app->select.height_spn);
+    
+    app->select.x = x;
+    app->select.y = y;
+    app->select.width = width;
+    app->select.height = height;
+    redrawcanvas(app);
+    
+    unsigned char *rgba;
+    int cw, ch;
+    int ix, iy;
+    
+    rgba = bbx_canvas_rgba(app->can, &cw, &ch);
+    for (y = 0; y < ch; y++)
+    {
+        for (x = 0; x < cw; x++)
+        {
+            ix = app->hpos + x/app->zoom;
+            iy = app->vpos + y/app->zoom;
+            
+            if (! (ix >= app->select.x &&
+                   ix < app->select.x + app->select.width &&
+                iy >= app->select.y &&
+                iy < app->select.y + app->select.height))
+            {
+                rgba[(y *cw + x) *4] /= 2;
+                rgba[(y *cw + x) *4+1] /= 2;
+                rgba[(y *cw + x) * 4 + 2] /= 2;
+            }
+        }
+    }
+    bbx_canvas_flush(app->can);
+    
 }
 
 void select_canvasmouse(APP *app, int action, int x, int y, int buttons)
@@ -1295,13 +1411,13 @@ static void drawpalette(APP *app)
     {
       for(iy=-1;iy<17;iy++)
         for(ix=-1;ix<17;ix++)
-    {
+        {
           if(y + iy < 0 || y + iy >= height || x + ix < 0 || x + ix >= width)
             continue;
           rgba[((y*16+iy)*width+(x*16+ix))*4] = 0;
           rgba[((y*16+iy)*width+(x*16+ix))*4+1] = 255;
           rgba[((y*16+iy)*width+(x*16+ix))*4+2] = 255;
-    }
+        }
     }
     else
     {
@@ -1343,7 +1459,7 @@ static void drawpalette(APP *app)
     
   }
     
-  if (app->transparent > 0)
+  if (app->transparent >= 0)
   {
       int tx = app->transparent % 16;
       int ty = app->transparent /16;
@@ -1359,7 +1475,7 @@ static void drawpalette(APP *app)
   bbx_canvas_flush(app->pal_can);
 }
 
-void transparent_pressed(void *obj)
+void transparent_pressed(void *obj, int checked)
 {
     APP *app = obj;
     int transon = bbx_checkbox_getstate(app->transparent_chk);
@@ -1553,6 +1669,105 @@ void undo_unlink(UNDO *undo)
     undo->next = 0;
     undo->prev = 0;
 }
+
+typedef struct
+{
+    BABYX *bbx;
+    BBX_Panel *pan;
+    BBX_Label *width_lab;
+    BBX_Label *height_lab;
+    BBX_Spinner *width_spn;
+    BBX_Spinner *height_spn;
+    BBX_RadioBox *padding_rad;
+    BBX_CheckBox *cropselection_chk;
+    BBX_Button *ok_but;
+    BBX_Button *cancel_but;
+    int ok;
+} RESIZE;
+
+void layoutresize(void *obj, int width, int height);
+void killresize(void *ptr);
+void resize_pressok(void *obj);
+void resize_presscancel(void *obj);
+
+int resize(BABYX *bbx, int *width, int *height)
+{
+    RESIZE rs;
+    char* position[] = {"top left", "top right", "centre","bottom left", "bottom right"};
+    
+    rs.bbx = bbx;
+    rs.pan = bbx_dialogpanel(bbx, "Resize", 400, 300, layoutresize, &rs);
+    
+    rs.width_lab = bbx_label(bbx, rs.pan, "Width");
+    rs.height_lab = bbx_label(bbx, rs.pan, "Height");
+    rs.width_spn = bbx_spinner(bbx, rs.pan, *width, 1, 4096, 1, 0, 0);
+    rs.height_spn = bbx_spinner(bbx, rs.pan, *height, 1, 4096, 1, 0, 0);
+    rs.padding_rad = bbx_radiobox(bbx, rs.pan, position, 5, 0, 0);
+    rs.cropselection_chk = bbx_checkbox(bbx, rs.pan, "crop selection", 0, 0);
+    rs.ok_but = bbx_button(bbx, rs.pan, "Ok", resize_pressok, &rs);
+    rs.cancel_but = bbx_button(bbx, rs.pan, "Cancel", resize_presscancel, &rs);
+    
+    
+    bbx_checkbox_disable(rs.cropselection_chk);
+    
+    rs.ok = 0;
+    bbx_dialogpanel_setclosefunc(rs.pan, killresize, &rs);
+    
+    
+    bbx_panel_setbackground(rs.pan, bbx_color("gray"));
+    bbx_dialogpanel_makemodal(rs.pan);
+    
+    if (rs.ok)
+    {
+        *width = bbx_spinner_getvalue(rs.width_spn);
+        *height = bbx_spinner_getvalue(rs.height_spn);
+    }
+    bbx_label_kill(rs.width_lab);
+    bbx_spinner_kill(rs.width_spn);
+    bbx_label_kill(rs.height_lab);
+    bbx_spinner_kill(rs.height_spn);
+    bbx_button_kill(rs.ok_but);
+    bbx_button_kill(rs.cancel_but);
+    bbx_dialogpanel_kill(rs.pan);
+    
+    return rs.ok ? 0 : -1;
+}
+
+void layoutresize(void *obj, int width, int height)
+{
+    RESIZE *rs = obj;
+    
+    bbx_setpos(rs->bbx, rs->width_lab, 10, 10, 50, 25);
+    bbx_setpos(rs->bbx, rs->width_spn, 65, 10, 50, 25);
+    bbx_setpos(rs->bbx, rs->height_lab, 120, 10, 50, 25);
+    bbx_setpos(rs->bbx, rs->height_spn, 175, 10, 50, 25);
+    
+    bbx_setpos(rs->bbx, rs->cropselection_chk, 10, 50, 200, 20);
+    bbx_setpos(rs->bbx, rs->padding_rad, 10, 100, 200, 100);
+    
+    bbx_setpos(rs->bbx, rs->ok_but, 10, height - 50, 50, 25);
+    bbx_setpos(rs->bbx, rs->cancel_but, 70, height - 50, 50, 25);
+}
+
+void killresize(void *ptr)
+{
+    
+}
+
+void resize_pressok(void *obj)
+{
+    RESIZE *ss = obj;
+    ss->ok = 1;
+    bbx_dialogpanel_dropmodal(ss->pan);
+}
+
+void resize_presscancel(void *obj)
+{
+    RESIZE *ss = obj;
+    bbx_dialogpanel_dropmodal(ss->pan);
+}
+
+
 
 typedef struct
 {
