@@ -76,6 +76,7 @@ typedef struct
     BBX_Canvas * pal_can;
     BBX_Scrollbar *v_scroll_sb;
     BBX_Scrollbar *h_scroll_sb;
+    BBX_Canvas *zoom_can;
 	BBX_Button *ok_but;
     BBX_Menubar *menubar;
     BBX_Spinner *zoom_spn;
@@ -95,6 +96,9 @@ typedef struct
     int transparent;
     UNDO *undolist;
     UNDO *redolist;
+    unsigned char *clip;
+    int clip_width;
+    int clip_height;
     int dirty;
     int c_width;
     int c_height;
@@ -231,6 +235,10 @@ int main(int argc, char**argv)
     app.select.width = app.i_width;
     app.select.height = app.i_height;
     
+    app.clip = 0;
+    app.clip_width = 0;
+    app.clip_height = 0;
+    
 	startbabyx("Baby X Image Editor", 40 + app.c_width + 256 + 10, 100 + app.c_height, createapp, layoutapp, &app);
     free(app.image);
 
@@ -245,6 +253,7 @@ void createapp(void *obj, BABYX *bbx, BBX_Panel *root)
     BBX_Popup *editmenu;
     BBX_Popup *palettemenu;
     BBX_Popup *helpmenu;
+    BBX_Popup *pastemenu;
     BBX_Popup *custompalettesmenu;
     
     bbx->gui_font = &walkway_font;
@@ -257,6 +266,7 @@ void createapp(void *obj, BABYX *bbx, BBX_Panel *root)
     app->v_scroll_sb = bbx_scrollbar(bbx, root, BBX_SCROLLBAR_VERTICAL, vscroll, app);
     app->h_scroll_sb = bbx_scrollbar(bbx, root, BBX_SCROLLBAR_HORIZONTAL, hscroll, app);
     app->transparent_chk = bbx_checkbox(bbx, root, "Transparent", transparent_pressed, app);
+    app->zoom_can = bbx_canvas(bbx, root, 22, 22, bbx_color("gray"));
     app->brush_but = bbx_button(bbx, root, "Br", brush_pressed, app);
     app->floodfill_but = bbx_button(bbx, root, "Ff", floodfill_pressed, app);
     app->select_but = bbx_button(bbx, root, "Sel", select_pressed, app);
@@ -298,6 +308,8 @@ void createapp(void *obj, BABYX *bbx, BBX_Panel *root)
     editmenu = bbx_popup(bbx);
     bbx_popup_append(editmenu, 201, "Undo", "", 0);
     bbx_popup_append(editmenu, 202, "Redo", "", 0);
+    bbx_popup_append(editmenu, 205, "Copy", "", 0);
+    bbx_popup_append(editmenu, 206, "Paste", "", 0);
     bbx_popup_append(editmenu, 203, "Select", "", 0);
     bbx_popup_append(editmenu, 204, "Resize", "...", 0);
 
@@ -400,12 +412,14 @@ void layoutapp(void *obj, int width, int height)
     bbx_setpos(app->bbx, app->pal_can, 20 + app->c_width + 15, 25, 256, 256);
     bbx_setpos(app->bbx, app->v_scroll_sb, 10 + app->c_width, 20, 10, app->c_height);
     bbx_setpos(app->bbx, app->h_scroll_sb, 10, 20 + app->c_height, app->c_width, 10);
+ 
     bbx_setpos(app->bbx, app->transparent_chk, 20 + app->c_width  + 13, 285,120, 20);
     bbx_setpos(app->bbx, app->brush_but, 20 + app->c_width  + 13, 310, 40, 25);
     bbx_setpos(app->bbx, app->floodfill_but, 20 + app->c_width  + 13 + 50, 310, 40, 25);
     bbx_setpos(app->bbx, app->select_but, 20 + app->c_width  + 13 + 100, 310, 40, 25);
 	bbx_setpos(app->bbx, app->ok_but, width / 2 - 25, height - 50, 50, 25);
     bbx_setpos(app->bbx, app->zoom_spn, 10, height - 50, 60, 25);
+    bbx_setpos(app->bbx, app->zoom_can, 80, height - 50 + 3, 22, 22);
     
     
     int Nx, Ny;
@@ -419,6 +433,7 @@ void layoutapp(void *obj, int width, int height)
     bbx_scrollbar_set(app->v_scroll_sb, app->i_height, Ny, app->vpos);
     redrawcanvas(app);
     drawpalette(app);
+    
 }
 
 void canvasmouse(void *ptr, int action, int x, int y, int buttons)
